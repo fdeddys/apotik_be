@@ -2,15 +2,15 @@ package services
 
 import (
 	"fmt"
-	repository "oasis-be/database"
-	"oasis-be/models"
-	dbmodels "oasis-be/models/dbModels"
-	dto "oasis-be/models/dto"
+	repository "distribution-system-be/database"
+	"distribution-system-be/models"
+	dbmodels "distribution-system-be/models/dbModels"
+	dto "distribution-system-be/models/dto"
 
-	// router "oasis-be/routers"
+	// router "distribution-system-be/routers"
 	"time"
 
-	kons "oasis-be/constants"
+	kons "distribution-system-be/constants"
 
 	jwt "github.com/dgrijalva/jwt-go"
 )

@@ -1,8 +1,8 @@
 package services
 
 import (
-	repository "oasis-be/database"
-	dbmodels "oasis-be/models/dbModels"
+	repository "distribution-system-be/database"
+	dbmodels "distribution-system-be/models/dbModels"
 )
 
 // MenuService ...

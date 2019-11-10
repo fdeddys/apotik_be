@@ -1,9 +1,9 @@
 package services
 
 import (
-	repository "oasis-be/database"
-	"oasis-be/models"
-	"oasis-be/models/dto"
+	repository "distribution-system-be/database"
+	"distribution-system-be/models"
+	"distribution-system-be/models/dto"
 )
 
 // DashboardService ...

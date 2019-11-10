@@ -1,59 +1,56 @@
 package controllers
 
 import (
+	"distribution-system-be/models"
+	dto "distribution-system-be/models/dto"
+	"distribution-system-be/services"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"oasis-be/models"
-	dto "oasis-be/models/dto"
-	"oasis-be/services"
 	"strconv"
+
+	"distribution-system-be/constants"
+	"distribution-system-be/models/dbModels"
+	"log"
 
 	"github.com/astaxie/beego/logs"
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
-	"oasis-be/models/dbModels"
-	"log"
-	"oasis-be/constants"
 )
 
-
-// MerchantController ...
-type MerchantController struct {
+// CustomerController ...
+type CustomerController struct {
 	DB *gorm.DB
 }
 
+// CustomerService ...
+var CustomerService = new(services.CustomerService)
 
-// MerchantService ...
-var MerchantService = new(services.MerchantService)
-
-
-// Save Data Merchant
-func (m *MerchantController) SaveDataMerchant(c *gin.Context) {
-	MerchantReq := dbmodels.Merchant{} 
+// Save Data Customer
+func (m *CustomerController) SaveDataCustomer(c *gin.Context) {
+	CustomerReq := dbmodels.Customer{}
 	res := models.Response{}
-	
+
 	body := c.Request.Body
 	dataBodyReq, _ := ioutil.ReadAll(body)
-	
-	if err := json.Unmarshal(dataBodyReq, &MerchantReq); err != nil {
+
+	if err := json.Unmarshal(dataBodyReq, &CustomerReq); err != nil {
 		fmt.Println("Error, body Request")
 		res.ErrCode = constants.ERR_CODE_03
 		res.ErrDesc = constants.ERR_CODE_03_MSG
 		c.JSON(http.StatusBadRequest, res)
 		c.Abort()
 		return
-	} 
+	}
 
-	c.JSON(http.StatusOK,MerchantService.SaveDataMerchant(&MerchantReq))
-	
-	return 
+	c.JSON(http.StatusOK, CustomerService.SaveDataCustomer(&CustomerReq))
+
+	return
 }
 
-
-// List and Paging Merchant
-func (m *MerchantController) FilterDataMerchant(c *gin.Context) {
+// List and Paging Customer
+func (m *CustomerController) FilterDataCustomer(c *gin.Context) {
 	req := dto.FilterName{}
 	res := models.ResponsePagination{}
 
@@ -90,15 +87,15 @@ func (m *MerchantController) FilterDataMerchant(c *gin.Context) {
 
 	temp, _ := json.Marshal(req)
 	log.Println("searchName-->", string(temp))
-	res = MerchantService.GetDataMerchantPaging(req, page, count)
+	res = CustomerService.GetDataCustomerPaging(req, page, count)
 
 	c.JSON(http.StatusOK, res)
 	return
 }
 
-// Edit Data Merchant
-func (m *MerchantController) EditDataMerchant(c *gin.Context) {
-	req := dbmodels.Merchant{}
+// Edit Data Customer
+func (m *CustomerController) EditDataCustomer(c *gin.Context) {
+	req := dbmodels.Customer{}
 	res := models.Response{}
 	body := c.Request.Body
 	dataBodyReq, _ := ioutil.ReadAll(body)
@@ -113,21 +110,10 @@ func (m *MerchantController) EditDataMerchant(c *gin.Context) {
 	}
 
 	fmt.Println("Edit data")
-	c.JSON(http.StatusOK, MerchantService.UpdateDataMerchant(&req))
+	c.JSON(http.StatusOK, CustomerService.UpdateDataCustomer(&req))
 }
 
-
-// List Data Merchant
-func (m *MerchantController) ListDataMerchant(c *gin.Context) {
-	res := models.ResponseMerchant{}
-	res = MerchantService.GetDataMerchantList()
-
-	c.JSON(http.StatusOK, res)
-	return
-}
-
-
-func (m *MerchantController) ListDataMerchantByName(c *gin.Context) {
+func (m *CustomerController) ListDataCustomerByName(c *gin.Context) {
 	res := models.ContentResponse{}
 
 	name := c.Query("search")
@@ -138,21 +124,20 @@ func (m *MerchantController) ListDataMerchantByName(c *gin.Context) {
 		return
 	}
 
-	res = MerchantService.GetDataMerchantListByName(name)
+	res = CustomerService.GetDataCustomerListByName(name)
 	c.JSON(http.StatusOK, res)
 	c.Abort()
 	return
 }
 
-
-// func (m *MerchantController) CheckOrderMerchantSupplier(c *gin.Context) {
-// 	var checkSupplierReq dbmodels.MerchantCheckSupplier
+// func (m *CustomerController) CheckOrderCustomerSupplier(c *gin.Context) {
+// 	var checkSupplierReq dbmodels.CustomerCheckSupplier
 // 	var res models.ResponseSFA
 // 	var data string
 
 // 	body := c.Request.Body
 // 	dataBodyReq, _ := ioutil.ReadAll(body)
-	
+
 // 	if err := json.Unmarshal(dataBodyReq, &checkSupplierReq); err != nil {
 // 		fmt.Println("Error, body Request")
 // 		res.Data = ""
@@ -162,10 +147,10 @@ func (m *MerchantController) ListDataMerchantByName(c *gin.Context) {
 // 		c.JSON(http.StatusBadRequest, res)
 // 		c.Abort()
 // 		return
-// 	} 
+// 	}
 
-// 	checkSupplier := MerchantService.GetDataCheckOrder(checkSupplierReq.SupplierID, checkSupplierReq.MerchantID)
-	
+// 	checkSupplier := CustomerService.GetDataCheckOrder(checkSupplierReq.SupplierID, checkSupplierReq.CustomerID)
+
 // 	if len(checkSupplier) > 0 {
 // 		data = "Data tersedia"
 // 	}else {
@@ -176,7 +161,7 @@ func (m *MerchantController) ListDataMerchantByName(c *gin.Context) {
 // 	res.Meta.Status = true
 // 	res.Meta.Code = 200
 // 	res.Meta.Message = "OK"
-	
+
 // 	c.JSON(http.StatusOK, res)
 // 	return
 // }

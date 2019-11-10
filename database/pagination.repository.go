@@ -3,20 +3,14 @@ package database
 import (
 	"crypto/aes"
 	"crypto/cipher"
-	"log"
-	"mime/multipart"
 
 	// "crypto/rand"
 
+	"distribution-system-be/constants"
 	"encoding/hex"
 	"fmt"
-	"oasis-be/constants"
-	miniocon "oasis-be/minio"
-	"oasis-be/models"
 
-	"github.com/astaxie/beego"
 	"github.com/mergermarket/go-pkcs7"
-	"github.com/minio/minio-go"
 
 	"math/rand"
 	"reflect"
@@ -201,65 +195,4 @@ func Decrypt(encrypted string) string {
 
 	cipherText, _ = pkcs7.Unpad(cipherText, aes.BlockSize)
 	return fmt.Sprintf("%s", cipherText)
-}
-
-//UploadImage ...
-func UploadImage(file multipart.File, fileName string, bucket string) models.NoContentResponse {
-	minioClient := miniocon.GetMiniConn()
-	// Make a new bucket called mymusic.
-
-	location := "us-east-1"
-
-	err := minioClient.MakeBucket(bucket, location)
-	if err != nil {
-		// Check to see if we already own this bucket (which happens if you run this twice)
-		exists, errBucketExists := minioClient.BucketExists(bucket)
-		if errBucketExists == nil && exists {
-			log.Printf("We already own %s\n", bucket)
-		} else {
-			log.Fatalln(err)
-		}
-	} else {
-		log.Printf("Successfully created %s\n", bucket)
-	}
-
-	n, err := minioClient.PutObject(bucket, fileName, file, -1, minio.PutObjectOptions{ContentType: "application/octet-stream"})
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	fmt.Printf("%d", n)
-
-	var res models.NoContentResponse
-	res.ErrCode = constants.ERR_CODE_00
-	res.ErrDesc = constants.ERR_CODE_00_MSG
-	return res
-}
-
-// GetImage ...
-func GetImage(code string, bucket string) string {
-	minioClient := miniocon.GetMiniConn()
-	// reqParams := make(url.Values)
-	// reqParams.Set("response-content-disposition", "attachment; filename=\""+code+".png"+"\"")
-
-	presignedURL, err := minioClient.PresignedGetObject(bucket, code+".png", time.Second*24*60*60, nil)
-	if err != nil {
-		fmt.Println(err)
-		return "error"
-	}
-
-	// fmt.Println("test ini url", presignedURL)
-	return "http://" + beego.AppConfig.String("minio.endpoint") + presignedURL.RequestURI()
-}
-
-// CheckImage ...
-func CheckImage(code string, bucket string) bool {
-	minioClient := miniocon.GetMiniConn()
-	objInfo, err := minioClient.StatObject(bucket, code+".png", minio.StatObjectOptions{})
-	if err != nil {
-		fmt.Println(err)
-		return false
-	}
-	fmt.Println(objInfo)
-	return true
 }

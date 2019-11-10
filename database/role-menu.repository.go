@@ -2,9 +2,9 @@ package database
 
 import (
 	"fmt"
-	"oasis-be/models"
-	dbmodels "oasis-be/models/dbModels"
-	"oasis-be/models/dto"
+	"distribution-system-be/models"
+	dbmodels "distribution-system-be/models/dbModels"
+	"distribution-system-be/models/dto"
 	"strconv"
 	"time"
 )

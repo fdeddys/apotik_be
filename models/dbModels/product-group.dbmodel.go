@@ -11,8 +11,7 @@ type ProductGroup struct {
 	Status       int       `json:"status" gorm:"column:status"`
 	LastUpdateBy string    `json:"last_update_by" gorm:"column:last_update_by"`
 	LastUpdate   time.Time `json:"last_update"`
-	// StockStatus  string    `json:"stock_status" gorm:"column:stock_status"`
-	Code string `json:"code" gorm:"column:code"`
+	Code         string    `json:"code" gorm:"column:code"`
 }
 
 // TableName ...

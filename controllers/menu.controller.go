@@ -2,9 +2,9 @@ package controllers
 
 import (
 	"net/http"
-	dbmodels "oasis-be/models/dbModels"
-	dto "oasis-be/models/dto"
-	"oasis-be/services"
+	dbmodels "distribution-system-be/models/dbModels"
+	dto "distribution-system-be/models/dto"
+	"distribution-system-be/services"
 
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"

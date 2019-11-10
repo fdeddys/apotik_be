@@ -1,21 +1,21 @@
 package controllers
 
 import (
+	"distribution-system-be/database"
+	"distribution-system-be/models"
+	"distribution-system-be/models/dbModels"
+	"distribution-system-be/models/dto"
+	"distribution-system-be/services"
 	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
-	"oasis-be/database"
-	"oasis-be/models"
-	"oasis-be/models/dbModels"
-	"oasis-be/models/dto"
-	"oasis-be/services"
 	"os"
 	"strconv"
 
-	"oasis-be/constants"
+	"distribution-system-be/constants"
 
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/logs"
@@ -136,132 +136,10 @@ func (s *OrderController) FilterData(c *gin.Context) {
 	return
 }
 
-// Autodebet ...
-func (s *OrderController) Autodebet(c *gin.Context) {
-
-	req := dto.OrderAutodebetRequest{}
-	body := c.Request.Body
-	res := dto.OrderAutodebetResult{}
-	dataBodyReq, _ := ioutil.ReadAll(body)
-
-	if err := json.Unmarshal(dataBodyReq, &req); err != nil {
-		fmt.Println("Error, unmarshal body Request to Sales Order stuct ", dataBodyReq)
-		res.ErrDesc = constants.ERR_CODE_03_MSG
-		res.ErrCode = constants.ERR_CODE_03
-		c.JSON(http.StatusBadRequest, res)
-		c.Abort()
-		return
-	}
-
-	if req.OrderNo == "" {
-		res.ErrDesc = constants.ERR_CODE_90
-		res.ErrCode = constants.ERR_CODE_90_MSG + " [orderNo or paymentSuccess]"
-		c.JSON(http.StatusOK, res)
-		return
-	}
-
-	// newNumb, errCode, errMsg := OrderService.Save(&req)
-	errCode, errDesc := OrderService.PaymentAutodebet(&req)
-	res.ErrDesc = errDesc
-	res.ErrCode = errCode
-	c.JSON(http.StatusOK, res)
-
-	return
-
-}
-
-// ManualPay ...
-func (s *OrderController) ManualPay(c *gin.Context) {
-
-	req := dbmodels.Order{}
-	body := c.Request.Body
-	res := dto.OrderSaveResult{}
-	dataBodyReq, _ := ioutil.ReadAll(body)
-
-	if err := json.Unmarshal(dataBodyReq, &req); err != nil {
-		fmt.Println("Error, unmarshal body Request to Sales Order stuct ", dataBodyReq)
-		res.ErrDesc = constants.ERR_CODE_03_MSG
-		res.ErrCode = constants.ERR_CODE_03
-		c.JSON(http.StatusBadRequest, res)
-		c.Abort()
-		return
-	}
-
-	fmt.Println("-------->", req)
-	errCode, errMsg := OrderService.ManualPay(&req)
-	res.ErrDesc = errMsg
-	res.ErrCode = errCode
-	// res.OrderNo = newNumb
-	c.JSON(http.StatusOK, res)
-
-	return
-}
-
-// ReleaseSO ...
-func (s *OrderController) ReleaseSO(c *gin.Context) {
-
-	req := dbmodels.Order{}
-	body := c.Request.Body
-	res := dto.OrderSaveResult{}
-	dataBodyReq, _ := ioutil.ReadAll(body)
-
-	if err := json.Unmarshal(dataBodyReq, &req); err != nil {
-		fmt.Println("Error, unmarshal body Request to Sales Order stuct ", dataBodyReq)
-		res.ErrDesc = constants.ERR_CODE_03_MSG
-		res.ErrCode = constants.ERR_CODE_03
-		c.JSON(http.StatusBadRequest, res)
-		c.Abort()
-		return
-	}
-
-	fmt.Println("-------->", req)
-	errCode, errMsg := OrderService.ReleaseSO(req.OrderNo)
-
-	// orderStatus.OrderID = fmt.Sprintf("%v", req.OrderNo)
-	// orderStatus.StatusName = constants.SO_RELEASE_SO
-
-	// go orderStatusService.Save(&orderStatus)
-	// orderStatusSer
-
-	res.ErrDesc = errMsg
-	res.ErrCode = errCode
-	// res.OrderNo = newNumb
-	c.JSON(http.StatusOK, res)
-
-	return
-}
-
-// RejectSO ...
-func (s *OrderController) RejectSO(c *gin.Context) {
-
-	req := dbmodels.Order{}
-	body := c.Request.Body
-	res := dto.OrderSaveResult{}
-	dataBodyReq, _ := ioutil.ReadAll(body)
-
-	if err := json.Unmarshal(dataBodyReq, &req); err != nil {
-		fmt.Println("Error, unmarshal body Request to Sales Order stuct ", dataBodyReq)
-		res.ErrDesc = constants.ERR_CODE_03_MSG
-		res.ErrCode = constants.ERR_CODE_03
-		c.JSON(http.StatusBadRequest, res)
-		c.Abort()
-		return
-	}
-
-	fmt.Println("-------->", req)
-	errCode, errMsg := OrderService.RejectSO(req.OrderNo)
-
-	res.ErrDesc = errMsg
-	res.ErrCode = errCode
-	c.JSON(http.StatusOK, res)
-
-	return
-}
-
 // SaveSO ...
 func (s *OrderController) SaveSO(c *gin.Context) {
 
-	req := dbmodels.Order{}
+	req := dbmodels.SalesOrder{}
 	body := c.Request.Body
 	res := dto.OrderSaveResult{}
 	dataBodyReq, _ := ioutil.ReadAll(body)
@@ -287,7 +165,7 @@ func (s *OrderController) SaveSO(c *gin.Context) {
 // PrintInvoice ...
 func (s *OrderController) PrintInvoice(c *gin.Context) {
 
-	req := dbmodels.Order{}
+	req := dbmodels.SalesOrder{}
 	body := c.Request.Body
 	res := dto.OrderSaveResult{}
 	dataBodyReq, _ := ioutil.ReadAll(body)
@@ -317,7 +195,7 @@ func (s *OrderController) PrintInvoice(c *gin.Context) {
 	return
 }
 
-func generateRep(order dbmodels.Order) {
+func generateRep(order dbmodels.SalesOrder) {
 
 	spaceLen = beego.AppConfig.DefaultFloat("report.space-len", 15)
 	pageMargin = beego.AppConfig.DefaultFloat("report.page-margin", 12)
@@ -359,7 +237,7 @@ func generateRep(order dbmodels.Order) {
 
 	// get Data mockup utk display ke grid
 	fmt.Println("data order send to fillData Details : ", order)
-	dataDetails := fillDataDetail(order.OrderNo)
+	dataDetails := fillDataDetail(order.SalesOrderNo)
 
 	fmt.Println("hasil fill")
 	for i, ordDetail := range dataDetails {
@@ -395,7 +273,7 @@ func fillDataDetail(orderNo string) []DataDetail {
 	fmt.Println(order)
 
 	// invoiceNumb = "IVyymm999999"
-	invoiceNumb = order.SIVendorNo
+	invoiceNumb = order.SalesOrderNo
 
 	orderDetails := database.GetAllDataDetail(order.ID)
 
@@ -410,8 +288,8 @@ func fillDataDetail(orderNo string) []DataDetail {
 
 	for i, ordDetail := range orderDetails {
 		data.Item = ordDetail.Product.Name
-		data.Quantity = int64(ordDetail.QtyReceive)
-		data.Unit = ordDetail.Lookup.Name
+		data.Quantity = int64(ordDetail.Qty)
+		data.Unit = ordDetail.UOM.Name
 		data.Price = int64(ordDetail.Price)
 		total := data.Price * data.Quantity
 		data.Total = int64(ordDetail.Price)
@@ -428,11 +306,11 @@ func fillDataDetail(orderNo string) []DataDetail {
 	return res
 }
 
-func fillDataCustomer(order dbmodels.Order) {
-	invInfo.CustCode = order.Merchant.Code
-	invInfo.CustName = order.Merchant.Name
+func fillDataCustomer(order dbmodels.SalesOrder) {
+	invInfo.CustCode = order.Customer.Code
+	invInfo.CustName = order.Customer.Name
 	invInfo.TransAt = order.OrderDate.Format("02-01-2006")
-	invInfo.SourceDoc = order.OrderNo
+	invInfo.SourceDoc = order.SalesOrderNo
 }
 
 func setHeader(pdf *gopdf.GoPdf) {

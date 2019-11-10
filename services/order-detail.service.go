@@ -1,8 +1,8 @@
 package services
 
-import "oasis-be/models"
-import "oasis-be/database"
-import dto "oasis-be/models/dto"
+import "distribution-system-be/models"
+import "distribution-system-be/database"
+import dto "distribution-system-be/models/dto"
 
 // OrderDetailService ...
 type OrderDetailService struct {

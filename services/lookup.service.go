@@ -1,11 +1,11 @@
 package services
 
 import (
-	repository "oasis-be/database"
-	"oasis-be/models"
-	dto "oasis-be/models/dto"
-	dbmodels "oasis-be/models/dbModels"
-	"oasis-be/constants"
+	repository "distribution-system-be/database"
+	"distribution-system-be/models"
+	dto "distribution-system-be/models/dto"
+	dbmodels "distribution-system-be/models/dbModels"
+	"distribution-system-be/constants"
 )
 
 // LookupService ...

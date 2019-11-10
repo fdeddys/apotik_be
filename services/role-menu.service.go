@@ -1,10 +1,10 @@
 package services
 
 import (
-	repository "oasis-be/database"
-	"oasis-be/models"
-	dbmodels "oasis-be/models/dbModels"
-	dto "oasis-be/models/dto"
+	repository "distribution-system-be/database"
+	"distribution-system-be/models"
+	dbmodels "distribution-system-be/models/dbModels"
+	dto "distribution-system-be/models/dto"
 )
 
 // RoleMenuService ...

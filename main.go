@@ -3,10 +3,8 @@ package main
 import (
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 
-	_ "oasis-be/database"
-	_ "oasis-be/minio"
-	_ "oasis-be/redis"
-	routers "oasis-be/routers"
+	_ "distribution-system-be/database"
+	routers "distribution-system-be/routers"
 
 	"github.com/astaxie/beego"
 	"github.com/gin-gonic/gin"

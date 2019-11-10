@@ -1,17 +1,17 @@
 package routers
 
 import (
+	"distribution-system-be/controllers"
+	"distribution-system-be/models"
+	dto "distribution-system-be/models/dto"
+	"distribution-system-be/utils/security"
 	"fmt"
 	"net/http"
-	"oasis-be/controllers"
-	"oasis-be/models"
-	dto "oasis-be/models/dto"
-	"oasis-be/utils/security"
 	"strconv"
 	"strings"
 	"time"
 
-	kons "oasis-be/constants"
+	kons "distribution-system-be/constants"
 
 	"github.com/astaxie/beego"
 	jwt "github.com/dgrijalva/jwt-go"
@@ -38,181 +38,90 @@ func InitRouter() *gin.Engine {
 	}))
 
 	UserController := new(controllers.UserController)
-	MerchantController := new(controllers.MerchantController)
+	CustomerController := new(controllers.CustomerController)
 	SupplierController := new(controllers.SupplierController)
-	IssuerController := new(controllers.IssuerController)
 	OrderController := new(controllers.OrderController)
-	VendorController := new(controllers.VendorController)
 	OrderDetailController := new(controllers.OrderDetailController)
-	SupplierGroupController := new(controllers.SupplierGroupController)
-	OrderStatusController := new(controllers.OrderStatusController)
 	DashboardController := new(controllers.DashboardController)
-	HistoryVendorController := new(controllers.HistoryVendorController)
-	FollowUpOrderController := new(controllers.FollowUpOrderController)
-	NooDocController := new(controllers.NooDocController)
 
 	api := r.Group("/user")
-	api.POST("/page/:page/count/:count", cekToken, UserController.GetUser)
-	api.POST("/", cekToken, UserController.SaveDataUser)
-	api.PUT("/", cekToken, UserController.UpdateUser)
+	api.POST("/page/:page/count/:count", UserController.GetUser)
+	api.POST("/", UserController.SaveDataUser)
+	api.PUT("/", UserController.UpdateUser)
 
 	AuthController := new(controllers.AuthController)
 	api = r.Group("/auth")
 	api.POST("/login", AuthController.Login)
-	api.GET("/get_cur_user", cekToken, AuthController.GetCurrPass)
-	api.POST("/change_pass", cekToken, AuthController.ChangePass)
+	api.GET("/get_cur_user", AuthController.GetCurrPass)
+	api.POST("/change_pass", AuthController.ChangePass)
 
-	api = r.Group("/merchant")
-	api.POST("/page/:page/count/:count", cekToken, MerchantController.FilterDataMerchant)
-	api.POST("/", cekToken, MerchantController.SaveDataMerchant)
-	api.PUT("/", cekToken, MerchantController.EditDataMerchant)
-	api.POST("/list", cekToken, MerchantController.ListDataMerchant)
-	api.GET("", cekToken, MerchantController.ListDataMerchantByName)
+	api = r.Group("/customer")
+	api.POST("/page/:page/count/:count", CustomerController.FilterDataCustomer)
+	api.POST("/", CustomerController.SaveDataCustomer)
+	api.PUT("/", CustomerController.EditDataCustomer)
+	api.POST("/list", CustomerController.ListDataCustomerByName)
 	// api.POST("/check/supplier", MerchantController.CheckOrderMerchantSupplier)
 
 	api = r.Group("/supplier")
-	api.POST("/page/:page/count/:count", cekToken, SupplierController.FilterDataSupplier)
-	api.POST("/", cekToken, SupplierController.SaveDataSupplier)
-	api.PUT("/", cekToken, SupplierController.EditDataSupplier)
-	api.POST("/detail/:supplier_id", cekToken, SupplierController.ListDataSupplierById)
-	api.POST("/upload", cekToken, SupplierController.UploadImageSupplier)
-
-	// route supplier merchant
-	api.POST("/page/:page/count/:count/merchant/:supplier_id", cekToken, SupplierController.FilterDataSupplierMerchant)
-	api.PUT("/merchant/:supplier_id", cekToken, SupplierController.UpdateDataSupplierMerchant)
-	api.POST("/merchant/:supplier_id", cekToken, SupplierController.SaveDataSupplierMerchant)
-
-	// route supplier warehouse
-	api.POST("/page/:page/count/:count/warehouse/:supplier_id", cekToken, SupplierController.FilterDataSupplierWarehouse)
-	api.POST("/warehouse/:supplier_id", cekToken, SupplierController.SaveDataSupplierWarehouse)
-	api.PUT("/warehouse/:supplier_id", cekToken, SupplierController.UpdateDataSupplierWarehouse)
-	api.POST("/warehouse", cekToken, SupplierController.GetDataWarehouseBySupplierId)
-
-	// route supplier product
-	api.POST("/page/:page/count/:count/product/:supplier_id", cekToken, SupplierController.FilterDataSupplierPrice)
-	api.POST("/product/:supplier_id", cekToken, SupplierController.SaveDataSupplierPrice)
-	api.PUT("/product/:supplier_id", cekToken, SupplierController.UpdateDataSupplierPrice)
-
-	// route supplier noo checklist
-	api.POST("/page/:page/count/:count/noo_checklist/:supplier_id", cekToken, SupplierController.FilterDataSupplierNooChecklist)
-	api.POST("/noo_checklist/:supplier_id", cekToken, SupplierController.SaveDataSupplierNooChecklist)
-	api.PUT("/noo_checklist/:supplier_id", cekToken, SupplierController.UpdateDataSupplierNooChecklist)
-
-	// route supplier noo doc
-	api.POST("/page/:page/count/:count/approve/noo_doc/:supplier_id", cekToken, SupplierController.FilterDataSupplierNooDocApprove)
-	// api.POST("/page/:page/count/:count/noo_doc/:supplier_id", cekToken, SupplierController.FilterDataSupplierNooDoc)
-	// api.POST("/noo_doc/:supplier_id", cekToken, SupplierController.SaveDataSupplierNooDoc)
-	// api.PUT("/noo_doc/:supplier_id", cekToken, SupplierController.UpdateDataSupplierNooDoc)
-
-	// route upload picture
-	api.POST("/ktp/upload", cekToken, SupplierController.UploadImageKtp)
-	api.POST("/npwp/upload", cekToken, SupplierController.UploadImageNpwp)
-	api.POST("/merchant_picture", cekToken, SupplierController.SaveDataMerchantPicture)
-	api.POST("/merchant_picture/:merchant_code", cekToken, SupplierController.ListMerchantPicture)
-
-	// route api for sfa
-	api.POST("/list", SupplierController.ListDataSupplier)
-	api.POST("/list/products", SupplierController.GetDataListProductBySupplierId)
-	api.POST("/check/merchant", SupplierController.CheckMerchantBySupplier)
-	api.POST("/register/merchant", SupplierController.SubmitNOO)
-	api.POST("/approve/NOO", SupplierController.ApproveNOO)
-
-	api = r.Group("/issuer")
-	api.POST("/page/:page/count/:count", cekToken, IssuerController.FilterDataIssuer)
-	api.POST("/", cekToken, IssuerController.SaveDataIssuer)
-	api.PUT("/", cekToken, IssuerController.EditDataIssuer)
-	api.POST("/list", cekToken, IssuerController.ListDataIssuer)
-	api.GET("", cekToken, IssuerController.ListDataIssuerByName)
+	api.POST("/page/:page/count/:count", SupplierController.FilterDataSupplier)
+	api.POST("/", SupplierController.SaveDataSupplier)
+	api.PUT("/", SupplierController.EditDataSupplier)
 
 	BrandController := new(controllers.BrandController)
 	brand := r.Group("/brand")
-	brand.POST("/page/:page/count/:count", cekToken, BrandController.GetBrand)
-	brand.GET("/id/:id", cekToken, BrandController.GetFilterBrand)
-	brand.POST("/", cekToken, BrandController.SaveBrand)
-	brand.PUT("/", cekToken, BrandController.UpdateBrand)
-	brand.GET("", cekToken, BrandController.GetBrandLike)
+	brand.POST("/page/:page/count/:count", BrandController.GetBrand)
+	brand.GET("/id/:id", BrandController.GetFilterBrand)
+	brand.POST("/", BrandController.SaveBrand)
+	brand.PUT("/", BrandController.UpdateBrand)
+	brand.GET("", BrandController.GetBrandLike)
 
 	ProductController := new(controllers.ProductController)
 	product := r.Group("/product")
-	product.POST("/page/:page/count/:count", cekToken, ProductController.GetProductListPaging)
-	product.GET("/id/:id", cekToken, ProductController.GetProductDetails)
-	product.POST("/", cekToken, ProductController.SaveProduct)
-	product.PUT("/", cekToken, ProductController.UpdateProduct)
-	product.GET("/list", cekToken, ProductController.ProductList)
-	product.POST("/upload", cekToken, ProductController.UploadImage)
-	product.GET("", cekToken, ProductController.GetProductLike)
+	product.POST("/page/:page/count/:count", ProductController.GetProductListPaging)
+	product.GET("/id/:id", ProductController.GetProductDetails)
+	product.POST("/", ProductController.SaveProduct)
+	product.PUT("/", ProductController.UpdateProduct)
+	product.GET("/list", ProductController.ProductList)
+	product.GET("", ProductController.GetProductLike)
 
 	ProductGroupController := new(controllers.ProductGroupController)
 	productGroup := r.Group("/productgroup")
-	productGroup.POST("/page/:page/count/:count", cekToken, ProductGroupController.GetProductGroupPaging)
-	productGroup.GET("/id/:id", cekToken, ProductGroupController.GetProductGroupDetails)
-	productGroup.POST("/", cekToken, ProductGroupController.SaveProductGroup)
-	productGroup.PUT("/", cekToken, ProductGroupController.UpdateProductGroup)
+	productGroup.POST("/page/:page/count/:count", ProductGroupController.GetProductGroupPaging)
+	productGroup.GET("/id/:id", ProductGroupController.GetProductGroupDetails)
+	productGroup.POST("/", ProductGroupController.SaveProductGroup)
+	productGroup.PUT("/", ProductGroupController.UpdateProductGroup)
 
 	LookupController := new(controllers.LookupController)
 	lookupGroup := r.Group("/lookup")
-	lookupGroup.GET("", cekToken, LookupController.GetLookupByGroup)
-	lookupGroup.POST("/page/:page/count/:count", cekToken, LookupController.GetLookupPaging)
-	lookupGroup.GET("/id/:id", cekToken, LookupController.GetLookupFilter)
-	lookupGroup.GET("/group", cekToken, LookupController.GetDistinctLookup)
-	lookupGroup.POST("/", cekToken, LookupController.SaveLookup)
-	lookupGroup.PUT("/", cekToken, LookupController.UpdateLookup)
+	lookupGroup.GET("", LookupController.GetLookupByGroup)
+	lookupGroup.POST("/page/:page/count/:count", LookupController.GetLookupPaging)
+	lookupGroup.GET("/id/:id", LookupController.GetLookupFilter)
+	lookupGroup.GET("/group", LookupController.GetDistinctLookup)
+	lookupGroup.POST("/", LookupController.SaveLookup)
+	lookupGroup.PUT("/", LookupController.UpdateLookup)
 
 	RoleController := new(controllers.RoleController)
 	api = r.Group("/role")
-	api.POST("/page/:page/count/:count", cekToken, RoleController.GetRole)
-	api.POST("/", cekToken, RoleController.SaveRole)
-	api.PUT("/", cekToken, RoleController.UpdateRole)
+	api.POST("/page/:page/count/:count", RoleController.GetRole)
+	api.POST("/", RoleController.SaveRole)
+	api.PUT("/", RoleController.UpdateRole)
 
 	AccMatrixController := new(controllers.AccessMatrixController)
 	MenuController := new(controllers.MenuController)
 	api = r.Group("/menu")
-	api.GET("/list-user-menu", cekToken, MenuController.GetMenuByUser)
-	api.GET("/list-all-active-menu", cekToken, AccMatrixController.GetAllActiveMenu)
-	api.GET("/role/:roleId", cekToken, AccMatrixController.GetMenuByRoleID)
-	api.POST("/role/:roleId", cekToken, AccMatrixController.SaveRoleMenu)
+	api.GET("/list-user-menu", MenuController.GetMenuByUser)
+	api.GET("/list-all-active-menu", AccMatrixController.GetAllActiveMenu)
+	api.GET("/role/:roleId", AccMatrixController.GetMenuByRoleID)
+	api.POST("/role/:roleId", AccMatrixController.SaveRoleMenu)
 
 	api = r.Group("/order")
-	api.POST("/page/:page/count/:count", cekToken, OrderController.FilterData)
-	api.POST("/save-so", cekToken, OrderController.SaveSO)
-	api.POST("/get-detail/page/:page/count/:count", cekToken, OrderDetailController.GetDetail)
-	api.POST("/autodebet", cekToken, OrderController.Autodebet)
-	api.POST("/release-so", cekToken, OrderController.ReleaseSO)
-	api.POST("/manual-pay", cekToken, OrderController.ManualPay)
-	api.POST("/get-list-status/page/:page/count/:count", cekToken, OrderStatusController.GetListStatus)
-	api.POST("/invoice", cekToken, OrderController.PrintInvoice)
-	api.POST("/reject-so", cekToken, OrderController.RejectSO)
-	api.POST("/follow-up/page/:page/count/:count", cekToken, FollowUpOrderController.GetFollowUpOrder)
-
-	api = r.Group("/api/vendor")
-	api.POST("/login", VendorController.Login)
-	api.GET("/getso", VendorController.GetSo)
-	api.POST("/update-status", VendorController.UpdateStatus)
-
-	// SupplierGroup
-	supplierGroup := r.Group("/suppliergroup")
-	supplierGroup.POST("/page/:page/count/:count", cekToken, SupplierGroupController.GetSupplierGroupPaging)
-	supplierGroup.GET("/id/:id", cekToken, SupplierGroupController.GetSupplierGroupDetails)
-	supplierGroup.POST("/", cekToken, SupplierGroupController.SaveSupplierGroup)
-	supplierGroup.PUT("/", cekToken, SupplierGroupController.UpdateSupplierGroup)
-	supplierGroup.GET("/", cekToken, SupplierGroupController.GetListSupplierGroup)
+	api.POST("/page/:page/count/:count", OrderController.FilterData)
+	api.POST("/get-detail/page/:page/count/:count", OrderDetailController.GetDetail)
+	api.POST("/invoice", OrderController.PrintInvoice)
 
 	// Dashboard
 	dashboard := r.Group("/dashboard")
-	dashboard.POST("/order-qty", cekToken, DashboardController.FilterDataDashboard)
-
-	//History Vendor
-	historyVendor := r.Group("/history")
-	historyVendor.POST("page/:page/count/:count", cekToken, HistoryVendorController.GetHistoryVendorPaging)
-
-	// Subscriber
-	apiSubscriber := r.Group("/subscriber")
-	apiSubscriber.POST("/order/page/:page/count/:count", cekSignature, OrderController.FilterData)
-
-	api = r.Group("/noo-doc")
-	api.POST("/page/:page/count/:count", cekToken, NooDocController.FilterDataNooDoc)
-	api.POST("/approve", cekToken, NooDocController.GetStatusApproveNooByMerchantAndSupplier)
-	api.PUT("/", cekToken, NooDocController.UpdateDataNooDoc)
+	dashboard.POST("/order-qty", DashboardController.FilterDataDashboard)
 
 	return r
 
@@ -338,7 +247,7 @@ func cekToken(c *gin.Context) {
 // package routers
 
 // import (
-// 	"oasis-be/controllers"
+// 	"distribution-system-be/controllers"
 
 // 	"github.com/astaxie/beego"
 // )

@@ -10,7 +10,7 @@ type Brand struct {
 	Name         string    `json:"name" gorm:"column:name"`
 	Status       int       `json:"status" gorm:"column:status"`
 	LastUpdateBy string    `json:"last_update_by" gorm:"column:last_update_by"`
-	LastUpdate   time.Time `json:"last_update"`
+	LastUpdate   time.Time `json:"last_update" gorm:"column:last_update_"`
 	Code         string    `json:"code" gorm:"column:code"`
 }
 

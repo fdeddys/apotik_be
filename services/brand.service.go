@@ -1,11 +1,11 @@
 package services
 
 import (
-	"oasis-be/constants"
-	repository "oasis-be/database"
-	"oasis-be/models"
-	dbmodels "oasis-be/models/dbModels"
-	dto "oasis-be/models/dto"
+	"distribution-system-be/constants"
+	repository "distribution-system-be/database"
+	"distribution-system-be/models"
+	dbmodels "distribution-system-be/models/dbModels"
+	dto "distribution-system-be/models/dto"
 	"time"
 )
 

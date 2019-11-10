@@ -5,13 +5,13 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"oasis-be/models"
-	dbmodels "oasis-be/models/dbModels"
-	dto "oasis-be/models/dto"
-	"oasis-be/services"
+	"distribution-system-be/models"
+	dbmodels "distribution-system-be/models/dbModels"
+	dto "distribution-system-be/models/dto"
+	"distribution-system-be/services"
 	"strconv"
 
-	"oasis-be/constants"
+	"distribution-system-be/constants"
 
 	"github.com/astaxie/beego/logs"
 	"github.com/gin-gonic/gin"

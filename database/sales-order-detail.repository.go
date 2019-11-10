@@ -1,21 +1,21 @@
 package database
 
 import (
+	dbmodels "distribution-system-be/models/dbModels"
+	dto "distribution-system-be/models/dto"
 	"fmt"
 	"log"
-	dbmodels "oasis-be/models/dbModels"
-	dto "oasis-be/models/dto"
 	"sync"
 
 	"github.com/jinzhu/gorm"
 )
 
 // GetOrderDetailPage ...
-func GetOrderDetailPage(param dto.FilterOrderDetail, offset, limit int) ([]dbmodels.OrderDetail, int, error) {
+func GetOrderDetailPage(param dto.FilterOrderDetail, offset, limit int) ([]dbmodels.SalesOrderDetail, int, error) {
 	db := GetDbCon()
 	db.Debug().LogMode(true)
 
-	var orderDetails []dbmodels.OrderDetail
+	var orderDetails []dbmodels.SalesOrderDetail
 	var total int
 
 	var err error
@@ -66,7 +66,7 @@ func AsyncQueryCountsOrderDetails(db *gorm.DB, total *int, orderID int64, offset
 	// err = db.Model(&dbmodels.OrderDetail{}).Joins().Offset(offset).Where("order_id = ? AND  order_date between ? and ? ", orderId, param.StartDate, param.EndDate).Count(&*total).Error
 	// err = db.Model(&dbmodels.OrderDetail{}).Joins("left join 'order' on 'order'.id = order_detail.id").Offset(offset).Where("order_no = ? AND  order_date between ? and ? ", param.OrderNo, param.StartDate, param.EndDate).Count(&*total).Error
 	// } else {
-	err = db.Model(&dbmodels.OrderDetail{}).Offset(offset).Where("order_id = ?", orderID).Count(total).Error
+	err = db.Model(&dbmodels.SalesOrderDetail{}).Offset(offset).Where("order_id = ?", orderID).Count(total).Error
 	// err = db.Model(&dbmodels.OrderDetail{}).Joins("left join 'order' on 'order'.id = order_detail.id").Offset(offset).Where("order_no = ?", orderID).Count(total).Error
 	// }
 
@@ -77,12 +77,12 @@ func AsyncQueryCountsOrderDetails(db *gorm.DB, total *int, orderID int64, offset
 }
 
 // GetAllDataDetail ...
-func GetAllDataDetail(orderID int64) []dbmodels.OrderDetail {
+func GetAllDataDetail(orderID int64) []dbmodels.SalesOrderDetail {
 
 	db := GetDbCon()
 	db.Debug().LogMode(true)
 
-	var orderDetails []dbmodels.OrderDetail
+	var orderDetails []dbmodels.SalesOrderDetail
 
 	db.Preload("Product").Preload("Lookup", "lookup_group = ?", "UOM").Find(&orderDetails, " order_id = ? and qty_receive > 0 ", orderID)
 
@@ -90,7 +90,7 @@ func GetAllDataDetail(orderID int64) []dbmodels.OrderDetail {
 }
 
 // AsyncQuerysOrderDetails ...
-func AsyncQuerysOrderDetails(db *gorm.DB, offset int, limit int, orderDetails *[]dbmodels.OrderDetail, orderID int64, resChan chan error) {
+func AsyncQuerysOrderDetails(db *gorm.DB, offset int, limit int, orderDetails *[]dbmodels.SalesOrderDetail, orderID int64, resChan chan error) {
 
 	var err error
 

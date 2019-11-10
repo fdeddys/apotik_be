@@ -3,8 +3,8 @@ package database
 import (
 	"fmt"
 	"log"
-	dbmodels "oasis-be/models/dbModels"
-	dto "oasis-be/models/dto"
+	dbmodels "distribution-system-be/models/dbModels"
+	dto "distribution-system-be/models/dto"
 	"strings"
 	"sync"
 

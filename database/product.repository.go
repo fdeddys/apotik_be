@@ -1,14 +1,14 @@
 package database
 
 import (
+	constants "distribution-system-be/constants"
+	"distribution-system-be/models"
+	dbmodels "distribution-system-be/models/dbModels"
+	dto "distribution-system-be/models/dto"
 	"fmt"
 	"log"
-	constants "oasis-be/constants"
-	"oasis-be/models"
-	dbmodels "oasis-be/models/dbModels"
-	dto "oasis-be/models/dto"
 
-	// "oasis-be/utils/http"
+	// "distribution-system-be/utils/http"
 	"strconv"
 	"strings"
 	"sync"
@@ -76,15 +76,6 @@ func GetProductListPaging(param dto.FilterProduct, offset int, limit int) ([]dbm
 		return product, 0, resErrCount
 	}
 
-	for i := 0; i < len(product); i++ {
-		isExist := CheckImage(product[i].Code, "product")
-		if isExist {
-			product[i].IMG1 = GetImage(product[i].Code, "product")
-		} else {
-			product[i].IMG1 = GetImage("no_image", "product")
-		}
-	}
-
 	return product, total, nil
 }
 
@@ -109,8 +100,6 @@ func UpdateProduct(updatedProduct dbmodels.Product) models.NoContentResponse {
 	product.Code = updatedProduct.Code
 	product.ProductGroupID = updatedProduct.ProductGroupID
 	product.BrandID = updatedProduct.BrandID
-	// product.StockStatus = updatedProduct.StockStatus
-	product.UOM = updatedProduct.UOM
 
 	err2 := db.Save(&product)
 	if err2 != nil {

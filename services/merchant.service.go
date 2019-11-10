@@ -1,26 +1,26 @@
 package services
 
 import (
+	"distribution-system-be/constants"
+	"distribution-system-be/database"
+	"distribution-system-be/models"
+	dbmodels "distribution-system-be/models/dbModels"
+	dto "distribution-system-be/models/dto"
 	"fmt"
-	"oasis-be/constants"
-	"oasis-be/database"
-	"oasis-be/models"
-	dbmodels "oasis-be/models/dbModels"
-	dto "oasis-be/models/dto"
 	"strconv"
 	"strings"
 	"time"
 )
 
-type MerchantService struct {
+type CustomerService struct {
 }
 
-// Get Data Merchant Paging
-func (m MerchantService) GetDataMerchantPaging(param dto.FilterName, page int, limit int) models.ResponsePagination {
+// Get Data Customer Paging
+func (m CustomerService) GetDataCustomerPaging(param dto.FilterName, page int, limit int) models.ResponsePagination {
 	var res models.ResponsePagination
 
 	offset := (page - 1) * limit
-	data, totalData, err := database.GetMerchantPaging(param, offset, limit)
+	data, totalData, err := database.GetCustomerPaging(param, offset, limit)
 	if err != nil {
 		res.Error = err.Error()
 		return res
@@ -34,93 +34,78 @@ func (m MerchantService) GetDataMerchantPaging(param dto.FilterName, page int, l
 	return res
 }
 
-// Save Data Merchant
-func (m MerchantService) SaveDataMerchant(merchant *dbmodels.Merchant) models.Response {
-	var listMerchant dbmodels.Merchant
+// SaveDataCustomer Data Customer
+func (m CustomerService) SaveDataCustomer(Customer *dbmodels.Customer) models.Response {
+	var listCustomer dbmodels.Customer
 	var code int64
-	var codeMerchant string
+	var codeCustomer string
 
-	listMerchant, error := database.GetLastMerchant()
+	listCustomer, error := database.GetLastCustomer()
 	code = 0
 
 	if error != nil {
 		code = 1
 	} else {
-		if listMerchant != (dbmodels.Merchant{}) {
-			if listMerchant.Code == "" {
+		if listCustomer != (dbmodels.Customer{}) {
+			if listCustomer.Code == "" {
 				code = code + 1
 			} else {
-				codeMerchant = strings.TrimPrefix(listMerchant.Code, string(listMerchant.Code[0]))
-				code, error = strconv.ParseInt(codeMerchant, 10, 64)
+				codeCustomer = strings.TrimPrefix(listCustomer.Code, string(listCustomer.Code[0]))
+				code, error = strconv.ParseInt(codeCustomer, 10, 64)
 				code = code + 1
 			}
 		} else {
 			code = 1
 		}
 	}
-	codeMerchant = "M" + fmt.Sprintf("%06d", code)
-	// if len(listMerchant) > 0 {
-	// 	codeMerchant = strings.TrimPrefix(listMerchant[0].Code, string(listMerchant[0].Code[0]))
-	// 	code, err := strconv.ParseInt(codeMerchant, 10, 64)
+	codeCustomer = "M" + fmt.Sprintf("%06d", code)
+	// if len(listCustomer) > 0 {
+	// 	codeCustomer = strings.TrimPrefix(listCustomer[0].Code, string(listCustomer[0].Code[0]))
+	// 	code, err := strconv.ParseInt(codeCustomer, 10, 64)
 	// 	if err != nil {
 	// 		var res models.Response
 	// 		res.ErrCode = "05"
-	// 		res.ErrCode = "Failed parse code merchant to integer"
+	// 		res.ErrCode = "Failed parse code Customer to integer"
 	// 	}
 	// 	code = code + 1
-	// 	codeMerchant = fmt.Sprintf("%06d", code)
+	// 	codeCustomer = fmt.Sprintf("%06d", code)
 	// }else{
 	// 	code = 1;
-	// 	codeMerchant = fmt.Sprintf("%06d", code)
+	// 	codeCustomer = fmt.Sprintf("%06d", code)
 	// }
 
-	merchant.Code = codeMerchant
-	merchant.LastUpdate = time.Now()
-	merchant.LastUpdateBy = dto.CurrUser
+	Customer.Code = codeCustomer
+	Customer.LastUpdate = time.Now()
+	Customer.LastUpdateBy = dto.CurrUser
 
-	res := database.SaveMerchant(merchant)
-	fmt.Println("save : ", merchant)
+	res := database.SaveCustomer(Customer)
+	fmt.Println("save : ", Customer)
 
 	return res
 }
 
-// Update Data Merchant
-func (m MerchantService) UpdateDataMerchant(merchant *dbmodels.Merchant) models.Response {
-	var data dbmodels.Merchant
-	data.ID = merchant.ID
-	data.Name = merchant.Name
-	data.Code = merchant.Code
-	data.IssuerCode = merchant.IssuerCode
-	data.Top = merchant.Top
-	data.Status = merchant.Status
+// Update Data Customer
+func (m CustomerService) UpdateDataCustomer(Customer *dbmodels.Customer) models.Response {
+	var data dbmodels.Customer
+	data.ID = Customer.ID
+	data.Name = Customer.Name
+	data.Code = Customer.Code
+	data.Top = Customer.Top
+	data.Status = Customer.Status
 	data.LastUpdateBy = dto.CurrUser
 	data.LastUpdate = time.Now()
 
 	// var res models.Response
-	res := database.UpdateMerchant(&data)
+	res := database.UpdateCustomer(&data)
 	fmt.Println("update : ", res)
 
 	return res
 }
 
-// Get Data List Merchant
-func (m MerchantService) GetDataMerchantList() models.ResponseMerchant {
-	var res models.ResponseMerchant
-
-	data, err := database.GetListMerchant()
-
-	if err != nil {
-		return res
-	}
-
-	res.Data = data
-	return res
-}
-
-func (m MerchantService) GetDataMerchantListByName(name string) models.ContentResponse {
+func (m CustomerService) GetDataCustomerListByName(name string) models.ContentResponse {
 	var res models.ContentResponse
 
-	data, err := database.GetListMerchantBySearch(name)
+	data, err := database.GetListCustomerBySearch(name)
 
 	if err != nil {
 		res.ErrCode = "05"
@@ -135,13 +120,13 @@ func (m MerchantService) GetDataMerchantListByName(name string) models.ContentRe
 	return res
 }
 
-func (m MerchantService) GetMerchantById(merchant_id int64) dbmodels.Merchant {
-	var res dbmodels.Merchant
-	res = database.GetMerchantById(merchant_id)
+func (m CustomerService) GetCustomerById(merchant_id int64) dbmodels.Customer {
+	var res dbmodels.Customer
+	res = database.GetCustomerById(merchant_id)
 	return res
 }
 
-// func (m MerchantService) GetDataCheckOrder(supplier string, merchant string) []dbmodels.Order {
-// 	res := database.GetOrderBySupplierAndMerchant(supplier, merchant)
+// func (m CustomerService) GetDataCheckOrder(supplier string, Customer string) []dbmodels.Order {
+// 	res := database.GetOrderBySupplierAndCustomer(supplier, Customer)
 // 	return res
 // }

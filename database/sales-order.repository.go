@@ -1,11 +1,11 @@
 package database
 
 import (
+	"distribution-system-be/constants"
+	dbmodels "distribution-system-be/models/dbModels"
+	dto "distribution-system-be/models/dto"
 	"fmt"
 	"log"
-	"oasis-be/constants"
-	dbmodels "oasis-be/models/dbModels"
-	dto "oasis-be/models/dto"
 	"strings"
 	"sync"
 
@@ -19,7 +19,7 @@ import (
 //    jika sudah pernah boleh manual payment
 func FindOrderReadyToPay(orderNo string) (errCode string, errDesc string, orderID int64) {
 
-	var order dbmodels.Order
+	var order dbmodels.SalesOrder
 	db := GetDbCon()
 	db.Debug().LogMode(true)
 
@@ -35,45 +35,21 @@ func FindOrderReadyToPay(orderNo string) (errCode string, errDesc string, orderI
 	return constants.ERR_CODE_00, constants.ERR_CODE_00_MSG, order.ID
 }
 
-// UpdateInternalStatus ...
-// update untuk payment Autodebet
-func UpdateInternalStatus(orderID int64, status string) (errCode string, errDesc string) {
-	fmt.Println("update internal ", orderID, status)
-
-	var order dbmodels.Order
-	db := GetDbCon()
-	db.Debug().LogMode(true)
-
-	internalStatus := 2
-	if status == "1" {
-		internalStatus = 3
-	}
-	r := db.Model(&order).Where("id = ?", orderID).Update(dbmodels.Order{Autodebet: 1, InternalStatus: internalStatus})
-	if r.Error != nil {
-		errCode = constants.ERR_CODE_80
-		errDesc = r.Error.Error()
-		fmt.Println("Error update ", errDesc)
-		return
-	}
-
-	return constants.ERR_CODE_00, constants.ERR_CODE_00_MSG
-}
-
 // InsertStatusOrder  ...
 func InsertStatusOrder(orderID int8, status string) {
 	fmt.Println("insert status => ", orderID, status)
 }
 
 //SaveSalesOrderNo ...
-func SaveSalesOrderNo(order *dbmodels.Order) (errCode string, errDesc string) {
+func SaveSalesOrderNo(order *dbmodels.SalesOrder) (errCode string, errDesc string) {
 
 	fmt.Println(" Update Sales Order numb ------------------------------------------ ")
-	var newOrder dbmodels.Order
+	var newOrder dbmodels.SalesOrder
 	db := GetDbCon()
 	db.Debug().LogMode(true)
 
-	// r := db.Model(&newOrder).Where("id = ?", order.ID).Update(dbmodels.Order{OrderNo: order.OrderNo, StatusCode: "001", WarehouseCode: order.WarehouseCode, InternalStatus: 1, OrderDate: order.OrderDate})
-	r := db.Model(&newOrder).Where("id = ?", order.ID).Update(dbmodels.Order{StatusCode: "001", WarehouseCode: order.WarehouseCode, InternalStatus: 1, Note: order.Note})
+	// r := db.Model(&newOrder).Where("id = ?", order.ID).Update(dbmodels.SalesOrder{OrderNo: order.OrderNo, StatusCode: "001", WarehouseCode: order.WarehouseCode, InternalStatus: 1, OrderDate: order.OrderDate})
+	r := db.Model(&newOrder).Where("id = ?", order.ID).Update(dbmodels.SalesOrder{Status: 20, Note: order.Note})
 	if r.Error != nil {
 		errCode = constants.ERR_CODE_80
 		errDesc = r.Error.Error()
@@ -87,10 +63,10 @@ func SaveSalesOrderNo(order *dbmodels.Order) (errCode string, errDesc string) {
 }
 
 // GetOrderByOrderNo ...
-func GetOrderByOrderNo(orderNo string) (dbmodels.Order, error) {
+func GetOrderByOrderNo(orderNo string) (dbmodels.SalesOrder, error) {
 	db := GetDbCon()
 	db.Debug().LogMode(true)
-	order := dbmodels.Order{}
+	order := dbmodels.SalesOrder{}
 
 	err := db.Preload("Supplier").Preload("Merchant").Where(" order_no = ?  ", orderNo).First(&order).Error
 
@@ -99,11 +75,11 @@ func GetOrderByOrderNo(orderNo string) (dbmodels.Order, error) {
 }
 
 // GetOrderPage ...
-func GetOrderPage(param dto.FilterOrder, offset, limit, internalStatus int) ([]dbmodels.Order, int, error) {
+func GetOrderPage(param dto.FilterOrder, offset, limit, internalStatus int) ([]dbmodels.SalesOrder, int, error) {
 	db := GetDbCon()
 	db.Debug().LogMode(true)
 
-	var orders []dbmodels.Order
+	var orders []dbmodels.SalesOrder
 	var total int
 
 	var err error
@@ -142,18 +118,18 @@ func GetOrderPage(param dto.FilterOrder, offset, limit, internalStatus int) ([]d
 }
 
 func getParam(param dto.FilterOrder, internalStatus int) (merchantCode, salesNo, orderNumber string, byStatus bool) {
-	phoneNumb := param.MerchantPhone
+	// phoneNumb := param.MerchantPhone
 	// var merchantCode string
 
 	merchantCode = "%"
-	if phoneNumb != "" {
-		merchant := FindMerchantByPhone(phoneNumb)
+	// if phoneNumb != "" {
+	// 	merchant := FindMerchantByPhone(phoneNumb)
 
-		fmt.Println("hasil search merchant ", merchant)
-		if merchant.ID != 0 {
-			merchantCode = merchant.Code
-		}
-	}
+	// 	fmt.Println("hasil search merchant ", merchant)
+	// 	if merchant.ID != 0 {
+	// 		merchantCode = merchant.Code
+	// 	}
+	// }
 
 	salesNo = param.SalesNo
 	if salesNo == "" {
@@ -178,7 +154,7 @@ func getParam(param dto.FilterOrder, internalStatus int) (merchantCode, salesNo,
 }
 
 // AsyncQueryCountsOrders ...
-func AsyncQueryCountsOrders(db *gorm.DB, total *int, internalStatus int, orders *[]dbmodels.Order, param dto.FilterOrder, resChan chan error) {
+func AsyncQueryCountsOrders(db *gorm.DB, total *int, internalStatus int, orders *[]dbmodels.SalesOrder, param dto.FilterOrder, resChan chan error) {
 
 	merchantCode, salesNo, orderNumber, byStatus := getParam(param, internalStatus)
 
@@ -201,7 +177,7 @@ func AsyncQueryCountsOrders(db *gorm.DB, total *int, internalStatus int, orders 
 }
 
 // AsyncQuerysOrders ...
-func AsyncQuerysOrders(db *gorm.DB, offset int, limit int, internalStatus int, orders *[]dbmodels.Order, param dto.FilterOrder, resChan chan error) {
+func AsyncQuerysOrders(db *gorm.DB, offset int, limit int, internalStatus int, orders *[]dbmodels.SalesOrder, param dto.FilterOrder, resChan chan error) {
 
 	var err error
 
@@ -251,62 +227,4 @@ func AsyncQuerysOrders(db *gorm.DB, offset int, limit int, internalStatus int, o
 		resChan <- err
 	}
 	resChan <- nil
-}
-
-// RejectSO ...
-func RejectSO(orderID int64) (errCode string, errDesc string) {
-	fmt.Println("Order Rejected ..... ", orderID)
-	var order dbmodels.Order
-	db := GetDbCon()
-	db.Debug().LogMode(true)
-
-	r := db.Model(&order).Where("id = ?", orderID).Update(dbmodels.Order{InternalStatus: 4})
-	if r.Error != nil {
-		errCode = constants.ERR_CODE_80
-		errDesc = r.Error.Error()
-		fmt.Println("Error update ", errDesc)
-		return
-	}
-	return constants.ERR_CODE_00, constants.ERR_CODE_00_MSG
-
-}
-
-// RjctSOByMerchantSupp ...
-func RjctSOByMerchantSupp(merchantCode, supplierCode string) (errCode string, errDesc string) {
-	fmt.Println("Order Rejected ..... MerchantCode : ", merchantCode, ", SupplierCode : ", supplierCode)
-	var order dbmodels.Order
-	db := GetDbCon()
-	db.Debug().LogMode(true)
-
-	r := db.Model(&order).Where("merchant_code = ? and supplier_code", supplierCode).Update(dbmodels.Order{InternalStatus: 4})
-	if r.Error != nil {
-		errCode = constants.ERR_CODE_80
-		errDesc = r.Error.Error()
-		fmt.Println("Error update ", errDesc)
-		return
-	}
-	return constants.ERR_CODE_00, constants.ERR_CODE_00_MSG
-}
-
-//UpdatePaymentManual ...
-func UpdatePaymentManual(order *dbmodels.Order) (errCode string, errDesc string) {
-
-	fmt.Println(" Update payment ------------------------------------------ ")
-	var newOrder dbmodels.Order
-	db := GetDbCon()
-	db.Debug().LogMode(true)
-
-	// r := db.Model(&order).Where("id = ?", orderID).Update(dbmodels.Order{Autodebet: 1, InternalStatus: internalStatus})
-	// r := db.Model(&newOrder).Where("id = ?", order.ID).Update(dbmodels.Order{OrderNo: order.OrderNo, StatusCode: "001", WarehouseCode: order.WarehouseCode, InternalStatus: 1, OrderDate: order.OrderDate})
-	r := db.Model(&newOrder).Where("id = ?", order.ID).Update(dbmodels.Order{InternalStatus: 3, PaymentNote: order.PaymentNote, ManualPaymentCode: order.ManualPaymentCode, ManualPaymentNumber: order.ManualPaymentNumber, ManualPaymentDate: order.ManualPaymentDate})
-	if r.Error != nil {
-		errCode = constants.ERR_CODE_80
-		errDesc = r.Error.Error()
-		fmt.Println("Error update ", errDesc)
-		return
-	}
-
-	// fmt.Println("Order [database]=> order id", order.OrderNo)
-
-	return constants.ERR_CODE_00, constants.ERR_CODE_00_MSG
 }

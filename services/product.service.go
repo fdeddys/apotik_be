@@ -1,12 +1,11 @@
 package services
 
 import (
-	"mime/multipart"
-	"oasis-be/constants"
-	repository "oasis-be/database"
-	"oasis-be/models"
-	dbmodels "oasis-be/models/dbModels"
-	dto "oasis-be/models/dto"
+	"distribution-system-be/constants"
+	repository "distribution-system-be/database"
+	"distribution-system-be/models"
+	dbmodels "distribution-system-be/models/dbModels"
+	dto "distribution-system-be/models/dto"
 	"time"
 )
 
@@ -78,11 +77,6 @@ func (h ProductService) UpdateProduct(product *dbmodels.Product) models.NoConten
 
 func (h ProductService) ProductList() []dbmodels.Product {
 	res := repository.ProductList()
-	return res
-}
-
-func (h ProductService) UploadImage(file multipart.File, fileName string) models.NoContentResponse {
-	res := repository.UploadImage(file, fileName, "product")
 	return res
 }
 

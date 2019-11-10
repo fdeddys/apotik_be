@@ -1,15 +1,14 @@
 package controllers
 
 import (
+	"distribution-system-be/models"
+	dbmodels "distribution-system-be/models/dbModels"
+	dto "distribution-system-be/models/dto"
+	"distribution-system-be/services"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
-	"oasis-be/models"
-	dbmodels "oasis-be/models/dbModels"
-	dto "oasis-be/models/dto"
-	"oasis-be/services"
 	"strconv"
 
 	"github.com/astaxie/beego/logs"
@@ -133,22 +132,6 @@ func (h *ProductController) ProductList(c *gin.Context) {
 	// res := []dbmodels.Product{}
 
 	c.JSON(http.StatusOK, ProductService.ProductList())
-	return
-}
-
-func (h *ProductController) UploadImage(c *gin.Context) {
-	file, header, err := c.Request.FormFile("thumb")
-	// code, exist := c.GetQuery("filename")
-	filename := header.Filename
-	fmt.Printf(filename)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// if !exist {
-	// 	log.Fatal(err)
-	// }
-	c.JSON(http.StatusOK, ProductService.UploadImage(file, filename))
 	return
 }
 

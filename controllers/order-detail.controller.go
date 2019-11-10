@@ -6,9 +6,9 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	"oasis-be/models"
-	"oasis-be/models/dto"
-	"oasis-be/services"
+	"distribution-system-be/models"
+	"distribution-system-be/models/dto"
+	"distribution-system-be/services"
 	"strconv"
 
 	"github.com/astaxie/beego/logs"

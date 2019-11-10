@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	cons "oasis-be/constants"
-	models "oasis-be/models"
-	dto "oasis-be/models/dto"
+	cons "distribution-system-be/constants"
+	models "distribution-system-be/models"
+	dto "distribution-system-be/models/dto"
 
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"

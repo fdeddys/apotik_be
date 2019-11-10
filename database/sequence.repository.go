@@ -1,8 +1,8 @@
 package database
 
 import (
-	"oasis-be/constants"
-	dbmodels "oasis-be/models/dbModels"
+	"distribution-system-be/constants"
+	dbmodels "distribution-system-be/models/dbModels"
 )
 
 // AddSequence ...

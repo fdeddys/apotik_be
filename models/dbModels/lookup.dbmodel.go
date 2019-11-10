@@ -7,6 +7,7 @@ type Lookup struct {
 	Code        string `json:"code" gorm:"column:code"`
 	LookupGroup string `json:"lookup_group" gorm:"column:lookup_group"`
 	Name        string `json:"name" gorm:"column:name"`
+	IsViewable  string `json:"isViewable" gorm:"column:is_viewable"`
 }
 
 // TableName ...

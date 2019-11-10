@@ -1,6 +1,6 @@
 package database
 
-import "oasis-be/models/dto"
+import "distribution-system-be/models/dto"
 
 // GetQtyOrd ...
 func GetQtyOrd(dateStart, dateEnd string) (dto.DBoardQtyOrderDto, error) {

@@ -2,12 +2,12 @@ package database
 
 import (
 	"log"
-	constants "oasis-be/constants"
-	"oasis-be/models"
-	dbmodels "oasis-be/models/dbModels"
+	constants "distribution-system-be/constants"
+	"distribution-system-be/models"
+	dbmodels "distribution-system-be/models/dbModels"
 	"sync"
 
-	dto "oasis-be/models/dto"
+	dto "distribution-system-be/models/dto"
 
 	"github.com/jinzhu/gorm"
 )
