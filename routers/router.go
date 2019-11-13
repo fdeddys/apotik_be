@@ -29,7 +29,7 @@ func InitRouter() *gin.Engine {
 
 	r.Use(cors.New(cors.Config{
 		AllowMethods:     []string{"GET", "POST", "OPTIONS", "DELETE", "PUT"},
-		AllowHeaders:     []string{"Origin", "authorization", "Content-Length", "Content-Type", "User-Agent", "Referrer", "Host", "Token"},
+		AllowHeaders:     []string{"Origin", "Authorization", "Content-Length", "Content-Type", "User-Agent", "Referrer", "Host", "Token"},
 		ExposeHeaders:    []string{"Content-Length", "Access-Control-Allow-Origin", "Access-Control-Allow-Headers", "Content-Type"},
 		AllowCredentials: true,
 		AllowAllOrigins:  true,
@@ -44,8 +44,8 @@ func InitRouter() *gin.Engine {
 	OrderDetailController := new(controllers.OrderDetailController)
 	DashboardController := new(controllers.DashboardController)
 
-	api := r.Group("/user")
-	api.POST("/page/:page/count/:count", UserController.GetUser)
+	api := r.Group("/api/user")
+	api.POST("/filter/page/:page/count/:count", UserController.GetUser)
 	api.POST("/", UserController.SaveDataUser)
 	api.PUT("/", UserController.UpdateUser)
 
@@ -92,24 +92,28 @@ func InitRouter() *gin.Engine {
 	productGroup.PUT("/", ProductGroupController.UpdateProductGroup)
 
 	LookupController := new(controllers.LookupController)
-	lookupGroup := r.Group("/lookup")
-	lookupGroup.GET("", LookupController.GetLookupByGroup)
-	lookupGroup.POST("/page/:page/count/:count", LookupController.GetLookupPaging)
-	lookupGroup.GET("/id/:id", LookupController.GetLookupFilter)
-	lookupGroup.GET("/group", LookupController.GetDistinctLookup)
-	lookupGroup.POST("/", LookupController.SaveLookup)
-	lookupGroup.PUT("/", LookupController.UpdateLookup)
+	lookup := r.Group("/api/lookup")
+	lookup.GET("", LookupController.GetLookupByGroup)
+	lookup.POST("/page/:page/count/:count", LookupController.GetLookupPaging)
+	lookup.GET("/id/:id", LookupController.GetLookupFilter)
+	lookup.GET("/group", LookupController.GetDistinctLookup)
+	lookup.POST("", LookupController.SaveLookup)
+	// lookup.PUT("/", LookupController.UpdateLookup)
+
+	LookupGroupController := new(controllers.LookupGroupController)
+	lookupGroup := r.Group("/api/lookup-group")
+	lookupGroup.GET("", LookupGroupController.GetLookupGroup)
 
 	RoleController := new(controllers.RoleController)
-	api = r.Group("/role")
-	api.POST("/page/:page/count/:count", RoleController.GetRole)
+	api = r.Group("/api/role")
+	api.POST("/filter/page/:page/count/:count", RoleController.GetRole)
 	api.POST("/", RoleController.SaveRole)
 	api.PUT("/", RoleController.UpdateRole)
 
 	AccMatrixController := new(controllers.AccessMatrixController)
 	MenuController := new(controllers.MenuController)
-	api = r.Group("/menu")
-	api.GET("/list-user-menu", MenuController.GetMenuByUser)
+	api = r.Group("/api/menu")
+	api.GET("/list-user-menu", cekToken, MenuController.GetMenuByUser)
 	api.GET("/list-all-active-menu", AccMatrixController.GetAllActiveMenu)
 	api.GET("/role/:roleId", AccMatrixController.GetMenuByRoleID)
 	api.POST("/role/:roleId", AccMatrixController.SaveRoleMenu)

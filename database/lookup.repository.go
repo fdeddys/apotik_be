@@ -1,12 +1,12 @@
 package database
 
 import (
-	"fmt"
-	"log"
 	"distribution-system-be/constants"
 	"distribution-system-be/models"
 	dbmodels "distribution-system-be/models/dbModels"
 	dto "distribution-system-be/models/dto"
+	"fmt"
+	"log"
 	"strconv"
 	"strings"
 	"sync"
@@ -97,6 +97,8 @@ func SaveLookup(lookup dbmodels.Lookup) models.NoContentResponse {
 	db.Debug().LogMode(true)
 
 	lookup.Code = GenerateLookupCode(lookup.LookupGroup)
+
+	fmt.Println("Lookup ====> ", lookup)
 	if r := db.Save(&lookup); r.Error != nil {
 		res.ErrCode = constants.ERR_CODE_51
 		res.ErrDesc = constants.ERR_CODE_51_MSG
@@ -154,6 +156,7 @@ func UpdateLookup(updatedlookup dbmodels.Lookup) models.NoContentResponse {
 	return res
 }
 
+// GenerateLookupCode ...
 func GenerateLookupCode(loogkupGroup string) string {
 	db := GetDbCon()
 	db.Debug().LogMode(true)
@@ -165,22 +168,21 @@ func GenerateLookupCode(loogkupGroup string) string {
 
 	// prefix := loogkupGroup[:2]
 	if err != nil {
-		// return "LK" + prefix + "000001"
-		return "LK000001"
+		return "L00001"
 	}
 	if len(lookup) > 0 {
 		// fmt.Printf("ini latest code nya : %s \n", brand[0].Code)
-		woprefix := strings.TrimPrefix(lookup[0].Code, "LK")
-		latestCode, err := strconv.Atoi(woprefix)
+		prefix := strings.TrimPrefix(lookup[0].Code, "L")
+		latestCode, err := strconv.Atoi(prefix)
 		if err != nil {
 			fmt.Printf("error")
-			return "LK000001"
+			return "L00001"
 		}
 		// fmt.Printf("ini latest code nya : %d \n", latestCode)
-		wpadding := fmt.Sprintf("%06s", strconv.Itoa(latestCode+1))
+		wpadding := fmt.Sprintf("%05s", strconv.Itoa(latestCode+1))
 		// fmt.Printf("ini pake padding : %s \n", "B"+wpadding)
-		return "LK" + wpadding
+		return "L" + wpadding
 	}
-	return "LK000001"
+	return "L00001"
 
 }
