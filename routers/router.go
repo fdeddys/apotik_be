@@ -57,8 +57,8 @@ func InitRouter() *gin.Engine {
 
 	api = r.Group("/customer")
 	api.POST("/page/:page/count/:count", CustomerController.FilterDataCustomer)
-	api.POST("/", CustomerController.SaveDataCustomer)
-	api.PUT("/", CustomerController.EditDataCustomer)
+	api.POST("", CustomerController.SaveDataCustomer)
+	// api.PUT("/", CustomerController.EditDataCustomer)
 	api.POST("/list", CustomerController.ListDataCustomerByName)
 	// api.POST("/check/supplier", MerchantController.CheckOrderMerchantSupplier)
 
@@ -68,11 +68,11 @@ func InitRouter() *gin.Engine {
 	api.PUT("/", SupplierController.EditDataSupplier)
 
 	BrandController := new(controllers.BrandController)
-	brand := r.Group("/brand")
+	brand := r.Group("/api/brand")
 	brand.POST("/page/:page/count/:count", BrandController.GetBrand)
 	brand.GET("/id/:id", BrandController.GetFilterBrand)
-	brand.POST("/", BrandController.SaveBrand)
-	brand.PUT("/", BrandController.UpdateBrand)
+	brand.POST("", BrandController.SaveBrand)
+	brand.PUT("", BrandController.UpdateBrand)
 	brand.GET("", BrandController.GetBrandLike)
 
 	ProductController := new(controllers.ProductController)
@@ -85,11 +85,11 @@ func InitRouter() *gin.Engine {
 	product.GET("", ProductController.GetProductLike)
 
 	ProductGroupController := new(controllers.ProductGroupController)
-	productGroup := r.Group("/productgroup")
+	productGroup := r.Group("/api/product-group")
 	productGroup.POST("/page/:page/count/:count", ProductGroupController.GetProductGroupPaging)
 	productGroup.GET("/id/:id", ProductGroupController.GetProductGroupDetails)
-	productGroup.POST("/", ProductGroupController.SaveProductGroup)
-	productGroup.PUT("/", ProductGroupController.UpdateProductGroup)
+	productGroup.POST("", ProductGroupController.SaveProductGroup)
+	productGroup.PUT("", ProductGroupController.UpdateProductGroup)
 
 	LookupController := new(controllers.LookupController)
 	lookup := r.Group("/api/lookup")

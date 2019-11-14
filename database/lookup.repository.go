@@ -96,7 +96,9 @@ func SaveLookup(lookup dbmodels.Lookup) models.NoContentResponse {
 	db := GetDbCon()
 	db.Debug().LogMode(true)
 
-	lookup.Code = GenerateLookupCode(lookup.LookupGroup)
+	if lookup.ID < 1 {
+		lookup.Code = GenerateLookupCode(lookup.LookupGroup)
+	}
 
 	fmt.Println("Lookup ====> ", lookup)
 	if r := db.Save(&lookup); r.Error != nil {

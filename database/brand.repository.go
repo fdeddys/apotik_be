@@ -1,12 +1,12 @@
 package database
 
 import (
-	"fmt"
-	"log"
 	constants "distribution-system-be/constants"
 	"distribution-system-be/models"
 	dbmodels "distribution-system-be/models/dbModels"
 	dto "distribution-system-be/models/dto"
+	"fmt"
+	"log"
 	"strconv"
 	"strings"
 	"sync"
@@ -63,7 +63,10 @@ func SaveBrand(brand dbmodels.Brand) models.NoContentResponse {
 	db := GetDbCon()
 	db.Debug().LogMode(true)
 
-	brand.Code = GenerateBrandCode()
+	if brand.ID < 1 {
+		brand.Code = GenerateBrandCode()
+	}
+
 	if r := db.Save(&brand); r.Error != nil {
 		res.ErrCode = "02"
 		res.ErrDesc = "Error save data to DB"
@@ -148,22 +151,22 @@ func GenerateBrandCode() string {
 	// err := db.Model(&dbmodels.Brand{}).Where("id = 200000").Order("id desc").First(&brand).Error
 
 	if err != nil {
-		return "BRN000001"
+		return "001"
 	}
 	if len(brand) > 0 {
 		// fmt.Printf("ini latest code nya : %s \n", brand[0].Code)
-		woprefix := strings.TrimPrefix(brand[0].Code, "BRN")
+		woprefix := strings.TrimPrefix(brand[0].Code, "")
 		latestCode, err := strconv.Atoi(woprefix)
 		if err != nil {
 			fmt.Printf("error")
-			return "BRN000001"
+			return "001"
 		}
 		// fmt.Printf("ini latest code nya : %d \n", latestCode)
-		wpadding := fmt.Sprintf("%06s", strconv.Itoa(latestCode+1))
+		wpadding := fmt.Sprintf("%03s", strconv.Itoa(latestCode+1))
 		// fmt.Printf("ini pake padding : %s \n", "B"+wpadding)
-		return "BRN" + wpadding
+		return wpadding
 	}
-	return "BRN000001"
+	return "001"
 
 }
 
