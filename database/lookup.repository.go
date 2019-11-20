@@ -90,6 +90,25 @@ func GetLookupFilter(id int) ([]dbmodels.Lookup, string, string, error) {
 	// }
 }
 
+// GetLookupByGroupName ...
+func GetLookupByGroupName(groupName string) ([]dbmodels.Lookup, string, string, error) {
+
+	fmt.Println("Loojkup repository ======>")
+
+	db := GetDbCon()
+	db.Debug().LogMode(true)
+
+	var lookup []dbmodels.Lookup
+	err := db.Model(&dbmodels.Lookup{}).Where("lookup_group = ?", strings.ToUpper(groupName)).Find(&lookup).Error
+
+	if err != nil {
+		return nil, constants.ERR_CODE_00, constants.ERR_CODE_51_MSG, err
+	}
+	// else {
+	return lookup, constants.ERR_CODE_00, constants.ERR_CODE_00_MSG, nil
+	// }
+}
+
 //SaveLookup ...
 func SaveLookup(lookup dbmodels.Lookup) models.NoContentResponse {
 	var res models.NoContentResponse

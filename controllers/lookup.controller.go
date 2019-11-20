@@ -1,20 +1,21 @@
 package controllers
 
 import (
-	"encoding/json"
-	"fmt"
-	"io/ioutil"
-	"net/http"
+	"distribution-system-be/constants"
 	"distribution-system-be/models"
 	dbmodels "distribution-system-be/models/dbModels"
 	dto "distribution-system-be/models/dto"
 	"distribution-system-be/services"
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
+	"net/http"
 	"strconv"
 	"strings"
+
 	"github.com/astaxie/beego/logs"
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
-	"distribution-system-be/constants"
 )
 
 //LookupController ...
@@ -107,6 +108,27 @@ func (h *LookupController) GetLookupFilter(c *gin.Context) {
 	return
 }
 
+// GetLookupGroupName ...
+func (h *LookupController) GetLookupGroupName(c *gin.Context) {
+	res := models.ContentResponse{}
+
+	fmt.Println("Lookup controller =>>>>>>>>>>>>>")
+	name := c.Param("name")
+	if name == "" {
+		logs.Info("error get param")
+		// res.Error = errID.Error()
+		c.JSON(http.StatusBadRequest, res)
+		c.Abort()
+		return
+	}
+
+	res = lookupService.GetLookupByGroupName(name)
+
+	c.JSON(http.StatusOK, res)
+	c.Abort()
+	return
+}
+
 // SaveLookup ...
 func (h *LookupController) SaveLookup(c *gin.Context) {
 
@@ -128,7 +150,6 @@ func (h *LookupController) SaveLookup(c *gin.Context) {
 	c.JSON(http.StatusOK, lookupService.SaveLookup(&req))
 	return
 }
-
 
 // GetDistinctLookup ...
 func (h *LookupController) GetDistinctLookup(c *gin.Context) {

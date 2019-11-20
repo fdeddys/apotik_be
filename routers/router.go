@@ -55,17 +55,17 @@ func InitRouter() *gin.Engine {
 	api.GET("/get_cur_user", AuthController.GetCurrPass)
 	api.POST("/change_pass", AuthController.ChangePass)
 
-	api = r.Group("/customer")
+	api = r.Group("/api/customer")
 	api.POST("/page/:page/count/:count", CustomerController.FilterDataCustomer)
 	api.POST("", CustomerController.SaveDataCustomer)
 	// api.PUT("/", CustomerController.EditDataCustomer)
 	api.POST("/list", CustomerController.ListDataCustomerByName)
 	// api.POST("/check/supplier", MerchantController.CheckOrderMerchantSupplier)
 
-	api = r.Group("/supplier")
+	api = r.Group("/api/supplier")
 	api.POST("/page/:page/count/:count", SupplierController.FilterDataSupplier)
-	api.POST("/", SupplierController.SaveDataSupplier)
-	api.PUT("/", SupplierController.EditDataSupplier)
+	api.POST("", SupplierController.SaveDataSupplier)
+	api.PUT("", SupplierController.EditDataSupplier)
 
 	BrandController := new(controllers.BrandController)
 	brand := r.Group("/api/brand")
@@ -76,11 +76,10 @@ func InitRouter() *gin.Engine {
 	brand.GET("", BrandController.GetBrandLike)
 
 	ProductController := new(controllers.ProductController)
-	product := r.Group("/product")
+	product := r.Group("/api/product")
 	product.POST("/page/:page/count/:count", ProductController.GetProductListPaging)
 	product.GET("/id/:id", ProductController.GetProductDetails)
-	product.POST("/", ProductController.SaveProduct)
-	product.PUT("/", ProductController.UpdateProduct)
+	product.POST("", ProductController.SaveProduct)
 	product.GET("/list", ProductController.ProductList)
 	product.GET("", ProductController.GetProductLike)
 
@@ -96,6 +95,7 @@ func InitRouter() *gin.Engine {
 	lookup.GET("", LookupController.GetLookupByGroup)
 	lookup.POST("/page/:page/count/:count", LookupController.GetLookupPaging)
 	lookup.GET("/id/:id", LookupController.GetLookupFilter)
+	lookup.GET("/name/:name", LookupController.GetLookupGroupName)
 	lookup.GET("/group", LookupController.GetDistinctLookup)
 	lookup.POST("", LookupController.SaveLookup)
 	// lookup.PUT("/", LookupController.UpdateLookup)

@@ -81,14 +81,14 @@ func AsyncQuerysSupplier(db *gorm.DB, offset int, limit int, supplier *[]dbmodel
 		searchName = param.Name + searchName
 	}
 
-	err := db.Order("id asc").Offset(offset).Limit(limit).Find(&supplier, "name ilike ?", searchName).Error
+	err := db.Preload("Bank").Order("id asc").Offset(offset).Limit(limit).Find(&supplier, "name ilike ?", searchName).Error
 	if err != nil {
 		resChan <- err
 	}
 	resChan <- nil
 }
 
-// Repository Save
+// SaveSupplier Save
 func SaveSupplier(supplier *dbmodels.Supplier) models.ResponseSupplier {
 	db := GetDbCon()
 	db.Debug().LogMode(true)

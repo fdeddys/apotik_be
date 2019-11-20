@@ -1,11 +1,12 @@
 package services
 
 import (
+	"distribution-system-be/constants"
 	repository "distribution-system-be/database"
 	"distribution-system-be/models"
-	dto "distribution-system-be/models/dto"
 	dbmodels "distribution-system-be/models/dbModels"
-	"distribution-system-be/constants"
+	dto "distribution-system-be/models/dto"
+	"fmt"
 )
 
 // LookupService ...
@@ -59,6 +60,28 @@ func (h LookupService) GetLookupFilter(id int) models.ContentResponse {
 	var res models.ContentResponse
 
 	data, errCode, errDesc, err := repository.GetLookupFilter(id)
+
+	if err != nil {
+		res.Contents = nil
+		res.ErrCode = constants.ERR_CODE_51
+		res.ErrDesc = constants.ERR_CODE_51_MSG
+		return res
+	}
+
+	res.Contents = data
+	res.ErrCode = errCode
+	res.ErrDesc = errDesc
+
+	return res
+}
+
+// GetLookupByGroupName ...
+func (h LookupService) GetLookupByGroupName(name string) models.ContentResponse {
+
+	fmt.Println("Loojkuyp service ======>")
+	var res models.ContentResponse
+
+	data, errCode, errDesc, err := repository.GetLookupByGroupName(name)
 
 	if err != nil {
 		res.Contents = nil

@@ -36,6 +36,37 @@ func (m CustomerService) GetDataCustomerPaging(param dto.FilterName, page int, l
 
 // SaveDataCustomer Data Customer
 func (m CustomerService) SaveDataCustomer(Customer *dbmodels.Customer) models.Response {
+
+	// if len(listCustomer) > 0 {
+	// 	codeCustomer = strings.TrimPrefix(listCustomer[0].Code, string(listCustomer[0].Code[0]))
+	// 	code, err := strconv.ParseInt(codeCustomer, 10, 64)
+	// 	if err != nil {
+	// 		var res models.Response
+	// 		res.ErrCode = "05"
+	// 		res.ErrCode = "Failed parse code Customer to integer"
+	// 	}
+	// 	code = code + 1
+	// 	codeCustomer = fmt.Sprintf("%06d", code)
+	// }else{
+	// 	code = 1;
+	// 	codeCustomer = fmt.Sprintf("%06d", code)
+	// }
+
+	if Customer.ID < 1 {
+		Customer.Code = generateCustomerCode()
+	}
+
+	Customer.LastUpdate = time.Now()
+	Customer.LastUpdateBy = dto.CurrUser
+
+	res := database.SaveCustomer(Customer)
+	fmt.Println("save : ", Customer)
+
+	return res
+}
+
+func generateCustomerCode() string {
+
 	var listCustomer dbmodels.Customer
 	var code int64
 	var codeCustomer string
@@ -58,33 +89,12 @@ func (m CustomerService) SaveDataCustomer(Customer *dbmodels.Customer) models.Re
 			code = 1
 		}
 	}
-	codeCustomer = "M" + fmt.Sprintf("%06d", code)
-	// if len(listCustomer) > 0 {
-	// 	codeCustomer = strings.TrimPrefix(listCustomer[0].Code, string(listCustomer[0].Code[0]))
-	// 	code, err := strconv.ParseInt(codeCustomer, 10, 64)
-	// 	if err != nil {
-	// 		var res models.Response
-	// 		res.ErrCode = "05"
-	// 		res.ErrCode = "Failed parse code Customer to integer"
-	// 	}
-	// 	code = code + 1
-	// 	codeCustomer = fmt.Sprintf("%06d", code)
-	// }else{
-	// 	code = 1;
-	// 	codeCustomer = fmt.Sprintf("%06d", code)
-	// }
+	codeCustomer = "C" + fmt.Sprintf("%07d", code)
 
-	Customer.Code = codeCustomer
-	Customer.LastUpdate = time.Now()
-	Customer.LastUpdateBy = dto.CurrUser
-
-	res := database.SaveCustomer(Customer)
-	fmt.Println("save : ", Customer)
-
-	return res
+	return codeCustomer
 }
 
-// Update Data Customer
+// UpdateDataCustomer Data Customer
 func (m CustomerService) UpdateDataCustomer(Customer *dbmodels.Customer) models.Response {
 	var data dbmodels.Customer
 	data.ID = Customer.ID

@@ -151,7 +151,7 @@ func GenerateBrandCode() string {
 	// err := db.Model(&dbmodels.Brand{}).Where("id = 200000").Order("id desc").First(&brand).Error
 
 	if err != nil {
-		return "001"
+		return "B001"
 	}
 	if len(brand) > 0 {
 		// fmt.Printf("ini latest code nya : %s \n", brand[0].Code)
@@ -159,14 +159,14 @@ func GenerateBrandCode() string {
 		latestCode, err := strconv.Atoi(woprefix)
 		if err != nil {
 			fmt.Printf("error")
-			return "001"
+			return "B001"
 		}
 		// fmt.Printf("ini latest code nya : %d \n", latestCode)
 		wpadding := fmt.Sprintf("%03s", strconv.Itoa(latestCode+1))
 		// fmt.Printf("ini pake padding : %s \n", "B"+wpadding)
 		return wpadding
 	}
-	return "001"
+	return "B001"
 
 }
 

@@ -14,32 +14,13 @@ import (
 type SupplierService struct {
 }
 
-// Save Data Supplier
+// SaveDataSupplier Data Supplier
 func (s SupplierService) SaveDataSupplier(suppliers *dbmodels.Supplier) models.ResponseSupplier {
-	var supplier dbmodels.Supplier
-	var code int64
-	var codeSupplier string
+	// var supplier dbmodels.Supplier
 
-	supplier, err := database.GetLastSupplier()
-
-	if err != nil {
-
-	} else {
-		if supplier != (dbmodels.Supplier{}) {
-			if supplier.Code == "" {
-				code = code + 1
-			} else {
-				codeSupplier = strings.TrimPrefix(supplier.Code, string(supplier.Code[0]))
-				code, err = strconv.ParseInt(codeSupplier, 10, 64)
-				code = code + 1
-			}
-		} else {
-			code = 1
-		}
-		codeSupplier = "S" + fmt.Sprintf("%06d", code)
+	if suppliers.ID < 1 {
+		suppliers.Code = getSupplierCode()
 	}
-
-	suppliers.Code = codeSupplier
 	suppliers.LastUpdate = time.Now()
 	suppliers.LastUpdateBy = dto.CurrUser
 
@@ -47,6 +28,38 @@ func (s SupplierService) SaveDataSupplier(suppliers *dbmodels.Supplier) models.R
 	fmt.Println("save : ", suppliers)
 
 	return res
+}
+
+func getSupplierCode() string {
+	db := database.GetDbCon()
+	db.Debug().LogMode(true)
+
+	prefix := "S"
+
+	// err := db.Order(order).First(&models)
+	var supplier []dbmodels.Supplier
+	err := db.Model(&dbmodels.Supplier{}).Order("id desc").First(&supplier).Error
+	// err := db.Model(&dbmodels.Brand{}).Where("id = 200000").Order("id desc").First(&brand).Error
+
+	if err != nil {
+		return prefix + "001"
+	}
+	if len(supplier) > 0 {
+		// fmt.Printf("ini latest code nya : %s \n", brand[0].Code)
+		woprefix := strings.TrimPrefix(supplier[0].Code, prefix)
+
+		latestCode, err := strconv.Atoi(woprefix)
+		if err != nil {
+			fmt.Printf(err.Error())
+			return prefix + "001"
+		}
+		// fmt.Printf("ini latest code nya : %d \n", latestCode)
+		wpadding := fmt.Sprintf("%v%03s", prefix, strconv.Itoa(latestCode+1))
+		// fmt.Printf("ini pake padding : %s \n", "B"+wpadding)
+		return wpadding
+	}
+	return prefix + "001"
+
 }
 
 // Update Data Supplier

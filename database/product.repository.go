@@ -159,7 +159,7 @@ func ProductQuerys(db *gorm.DB, offset int, limit int, product *[]dbmodels.Produ
 	// }
 
 	// err := db.Set("gorm:auto_preload", true).Order("name ASC").Offset(offset).Limit(limit).Find(&user, "name like ?", criteriaUserName).Error
-	err := db.Preload("Brand").Preload("ProductGroup").Preload("UomLookup", "lookup_group=?", "UOM").Order("name ASC").Offset(offset).Limit(limit).Find(&product, "name ~* ?", criteriaUserName).Error
+	err := db.Preload("Brand").Preload("ProductGroup").Preload("BigUom").Preload("SmallUom").Order("name ASC").Offset(offset).Limit(limit).Find(&product, "name ~* ?", criteriaUserName).Error
 	// .Preload("StockLookup", "lookup_group=?", "STOCK_STATUS")
 	if err != nil {
 		resChan <- err
