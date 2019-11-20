@@ -16,7 +16,7 @@ type Supplier struct {
 	PicPhone        string `json:"picPhone" gorm:"column:pic_phone"`
 	Tax             int    `json:"tax" gorm:"column:tax"`
 	BankID          int64  `json:"bankId" gorm:"column:bank_id"`
-	Bank            Lookup `json:"bank" gorm:"foreignkey:id;association_foreignkey:BankID"`
+	Bank            Lookup `json:"bank" gorm:"foreignkey:id;association_foreignkey:BankID;association_autoupdate:false;association_autocreate:false"`
 	BankAccountName string `json:"bankAccountName" gorm:"column:bank_acc_name"`
 	BankAccountNo   string `json:"bankAccountNo" gorm:"column:bank_acc_no"`
 

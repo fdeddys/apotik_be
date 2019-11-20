@@ -9,7 +9,7 @@ type SalesOrder struct {
 	OrderDate    time.Time `json:"orderDate" gorm:"column:order_date"`
 
 	CustomerID int64    `json:"customerId" gorm:"column:customer_id"`
-	Customer   Customer `json:"merchant" gorm:"foreignkey:code;association_foreignkey:CustomerID"`
+	Customer   Customer `json:"merchant" gorm:"foreignkey:code;association_foreignkey:CustomerID;association_autoupdate:false;association_autocreate:false"`
 
 	Note         string    `json:"note" gorm:"column:note"`
 	LastUpdateBy string    `json:"lastUpdateBy" gorm:"column:last_update_by"`

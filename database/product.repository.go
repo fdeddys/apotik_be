@@ -7,6 +7,7 @@ import (
 	dto "distribution-system-be/models/dto"
 	"fmt"
 	"log"
+	"reflect"
 
 	// "distribution-system-be/utils/http"
 	"strconv"
@@ -24,7 +25,7 @@ func GetProductDetails(id int) ([]dbmodels.Product, string, string, error) {
 	db.Debug().LogMode(true)
 
 	var product []dbmodels.Product
-	err := db.Model(&dbmodels.Product{}).Preload("ProductGroup").Preload("Brand").Preload("UomLookup", "lookup_group=?", "UOM").Where("id = ?", &id).First(&product).Error
+	err := db.Model(&dbmodels.Product{}).Preload("ProductGroup").Preload("Brand").Preload("BigUom").Where("id = ?", &id).First(&product).Error
 	// .Preload("StockLookup", "lookup_group=?", "STOCK_STATUS")
 
 	if err != nil {
@@ -119,8 +120,11 @@ func SaveProduct(product dbmodels.Product) models.ContentResponse {
 	db := GetDbCon()
 	db.Debug().LogMode(true)
 
-	prefix := product.Name[:3]
-	product.Code = GenerateProductCode(strings.ToUpper(prefix))
+	// prefix := product.Name[:3]
+	if product.ID < 1 {
+		product.Code = GenerateProductCode()
+	}
+	// product.Code = GenerateProductCode(strings.ToUpper(prefix))
 
 	if r := db.Save(&product); r.Error != nil {
 		res.ErrCode = "02"
@@ -155,11 +159,21 @@ func ProductQuerys(db *gorm.DB, offset int, limit int, product *[]dbmodels.Produ
 
 	// var criteriaUserName = "%"
 	// if strings.TrimSpace(param.Name) != "" {
-	criteriaUserName := param.Name //+ criteriaUserName
+	// criteriaUserName := param.Name + '%' //+ criteriaUserName
+	varInterface := reflect.ValueOf(param)
+	strQuery := varInterface.Field(0).Interface().(string)
+
+	criteriaName := strQuery
+	if criteriaName == "" {
+		criteriaName = "%"
+	} else {
+		criteriaName = "%" + strQuery + "%"
+	}
+
 	// }
 
 	// err := db.Set("gorm:auto_preload", true).Order("name ASC").Offset(offset).Limit(limit).Find(&user, "name like ?", criteriaUserName).Error
-	err := db.Preload("Brand").Preload("ProductGroup").Preload("BigUom").Preload("SmallUom").Order("name ASC").Offset(offset).Limit(limit).Find(&product, "name ~* ?", criteriaUserName).Error
+	err := db.Preload("Brand").Preload("ProductGroup").Preload("BigUom").Preload("SmallUom").Order("name ASC").Offset(offset).Limit(limit).Find(&product, "name ilike ?", criteriaName).Error
 	// .Preload("StockLookup", "lookup_group=?", "STOCK_STATUS")
 	if err != nil {
 		resChan <- err
@@ -172,7 +186,7 @@ func ProductList() []dbmodels.Product {
 	db.Debug().LogMode(true)
 
 	var product []dbmodels.Product
-	err := db.Preload("Brand").Preload("ProductGroup").Preload("UomLookup", "lookup_group=?", "UOM").Order("name ASC").Find(&product).Error
+	err := db.Preload("Brand").Preload("ProductGroup").Preload("BigUom").Order("name ASC").Find(&product).Error
 	// .Preload("StockLookup", "lookup_group=?", "STOCK_STATUS")
 
 	if err != nil {
@@ -181,44 +195,71 @@ func ProductList() []dbmodels.Product {
 	return product
 
 }
-
-// GenerateProductCode ...
-func GenerateProductCode(prefix string) string {
+func GenerateProductCode() string {
 	db := GetDbCon()
 	db.Debug().LogMode(true)
 
 	// err := db.Order(order).First(&models)
-
-	sprefix := prefix
-	if prefix == "" {
-		sprefix = "%"
-	} else {
-		sprefix = "%" + prefix + "%"
-	}
-
-	var product []dbmodels.Product
-	err := db.Model(&dbmodels.Product{}).Order("id desc").Where("code ILIKE ?", sprefix).First(&product).Error
+	var productGroup []dbmodels.ProductGroup
+	err := db.Model(&dbmodels.ProductGroup{}).Order("id desc").First(&productGroup).Error
 	// err := db.Model(&dbmodels.Brand{}).Where("id = 200000").Order("id desc").First(&brand).Error
 
 	if err != nil {
-		return prefix + "000001"
+		return "P000001"
 	}
-	if len(product) > 0 {
+	if len(productGroup) > 0 {
 		// fmt.Printf("ini latest code nya : %s \n", brand[0].Code)
-		woprefix := strings.TrimPrefix(product[0].Code, prefix)
+		woprefix := strings.TrimPrefix(productGroup[0].Code, "P")
 		latestCode, err := strconv.Atoi(woprefix)
 		if err != nil {
 			fmt.Printf("error")
-			return prefix + "000001"
+			return "P000001"
 		}
 		// fmt.Printf("ini latest code nya : %d \n", latestCode)
 		wpadding := fmt.Sprintf("%06s", strconv.Itoa(latestCode+1))
 		// fmt.Printf("ini pake padding : %s \n", "B"+wpadding)
-		return prefix + wpadding
+		return "G" + wpadding
 	}
-	return prefix + "000001"
-
+	return "P000001"
 }
+
+// // GenerateProductCode ...
+// func GenerateProductCode(prefix string) string {
+// 	db := GetDbCon()
+// 	db.Debug().LogMode(true)
+
+// 	// err := db.Order(order).First(&models)
+
+// 	sprefix := prefix
+// 	if prefix == "" {
+// 		sprefix = "%"
+// 	} else {
+// 		sprefix = "%" + prefix + "%"
+// 	}
+
+// 	var product []dbmodels.Product
+// 	err := db.Model(&dbmodels.Product{}).Order("id desc").Where("code ILIKE ?", sprefix).First(&product).Error
+// 	// err := db.Model(&dbmodels.Brand{}).Where("id = 200000").Order("id desc").First(&brand).Error
+
+// 	if err != nil {
+// 		return prefix + "000001"
+// 	}
+// 	if len(product) > 0 {
+// 		// fmt.Printf("ini latest code nya : %s \n", brand[0].Code)
+// 		woprefix := strings.TrimPrefix(product[0].Code, prefix)
+// 		latestCode, err := strconv.Atoi(woprefix)
+// 		if err != nil {
+// 			fmt.Printf("error")
+// 			return prefix + "000001"
+// 		}
+// 		// fmt.Printf("ini latest code nya : %d \n", latestCode)
+// 		wpadding := fmt.Sprintf("%06s", strconv.Itoa(latestCode+1))
+// 		// fmt.Printf("ini pake padding : %s \n", "B"+wpadding)
+// 		return prefix + wpadding
+// 	}
+// 	return prefix + "000001"
+
+// }
 
 //GetProductLike ...
 func GetProductLike(productterms string) ([]dbmodels.Product, string, string, error) {
