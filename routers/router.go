@@ -118,7 +118,7 @@ func InitRouter() *gin.Engine {
 	api.GET("/role/:roleId", AccMatrixController.GetMenuByRoleID)
 	api.POST("/role/:roleId", AccMatrixController.SaveRoleMenu)
 
-	api = r.Group("/order")
+	api = r.Group("/api/sales-order")
 	api.POST("/page/:page/count/:count", OrderController.FilterData)
 	api.POST("/get-detail/page/:page/count/:count", OrderDetailController.GetDetail)
 	api.POST("/invoice", OrderController.PrintInvoice)

@@ -12,34 +12,6 @@ import (
 	"github.com/jinzhu/gorm"
 )
 
-// FindOrderReadyToPay ...
-// Fungsi validasi Order ready to pay
-// isAutodebet -> pengecekan apakah pernah di lakukan audodebet
-//    jika belum pernah boleh autodebet cumen 1x
-//    jika sudah pernah boleh manual payment
-func FindOrderReadyToPay(orderNo string) (errCode string, errDesc string, orderID int64) {
-
-	var order dbmodels.SalesOrder
-	db := GetDbCon()
-	db.Debug().LogMode(true)
-
-	r := db.Where("order_no = ? and internal_status = ? ", orderNo, 2).First(&order)
-	if r.Error != nil {
-		errCode = constants.ERR_CODE_80
-		errDesc = "Order ID not found or internal status not PAYMENT or Payment already autodebet ! "
-		orderID = 0
-		fmt.Println("Error update ", errDesc)
-		return
-	}
-
-	return constants.ERR_CODE_00, constants.ERR_CODE_00_MSG, order.ID
-}
-
-// InsertStatusOrder  ...
-func InsertStatusOrder(orderID int8, status string) {
-	fmt.Println("insert status => ", orderID, status)
-}
-
 //SaveSalesOrderNo ...
 func SaveSalesOrderNo(order *dbmodels.SalesOrder) (errCode string, errDesc string) {
 
@@ -117,26 +89,9 @@ func GetOrderPage(param dto.FilterOrder, offset, limit, internalStatus int) ([]d
 	return orders, total, nil
 }
 
-func getParam(param dto.FilterOrder, internalStatus int) (merchantCode, salesNo, orderNumber string, byStatus bool) {
-	// phoneNumb := param.MerchantPhone
-	// var merchantCode string
+func getParam(param dto.FilterOrder, status int) (merchantCode, orderNumber string, byStatus bool) {
 
 	merchantCode = "%"
-	// if phoneNumb != "" {
-	// 	merchant := FindMerchantByPhone(phoneNumb)
-
-	// 	fmt.Println("hasil search merchant ", merchant)
-	// 	if merchant.ID != 0 {
-	// 		merchantCode = merchant.Code
-	// 	}
-	// }
-
-	salesNo = param.SalesNo
-	if salesNo == "" {
-		salesNo = "%"
-	} else {
-		salesNo = "%" + param.SalesNo + "%"
-	}
 
 	orderNumber = param.OrderNumber
 	if orderNumber == "" {
@@ -146,7 +101,7 @@ func getParam(param dto.FilterOrder, internalStatus int) (merchantCode, salesNo,
 	}
 
 	byStatus = true
-	if internalStatus == -1 {
+	if status == -1 {
 		byStatus = false
 	}
 
@@ -154,20 +109,17 @@ func getParam(param dto.FilterOrder, internalStatus int) (merchantCode, salesNo,
 }
 
 // AsyncQueryCountsOrders ...
-func AsyncQueryCountsOrders(db *gorm.DB, total *int, internalStatus int, orders *[]dbmodels.SalesOrder, param dto.FilterOrder, resChan chan error) {
+func AsyncQueryCountsOrders(db *gorm.DB, total *int, status int, orders *[]dbmodels.SalesOrder, param dto.FilterOrder, resChan chan error) {
 
-	merchantCode, salesNo, orderNumber, byStatus := getParam(param, internalStatus)
+	merchantCode, orderNumber, byStatus := getParam(param, status)
 
-	fmt.Println("ISI MERCHANT ", merchantCode, "sales no ", salesNo, "order no ", orderNumber, "internal status ", internalStatus, " fill status ", byStatus)
+	fmt.Println("ISI MERCHANT ", merchantCode, " orderNumber ", orderNumber, "  status ", status, " fill status ", byStatus)
 
 	var err error
 	if strings.TrimSpace(param.StartDate) != "" && strings.TrimSpace(param.EndDate) != "" {
-
-		// err = db.Model(&orders).Where("internal_status = ? AND  order_no ilike ? AND order_date between ? and ?", internalStatus, orderNumber, param.StartDate, param.EndDate).Count(&*total).Error
-		err = db.Model(&orders).Where(" ( (internal_status = ?) or ( not ?) ) AND  COALESCE(order_no, '') ilike ? AND order_date between ? and ? and COALESCE(salesman_no, '') ILIKE ? ", internalStatus, byStatus, orderNumber, param.StartDate, param.EndDate, salesNo).Count(&*total).Error
+		err = db.Model(&orders).Where(" ( (status = ?) or ( not ?) ) AND  COALESCE(sales_order_no, '') ilike ? AND order_date between ? and ?  ", status, byStatus, orderNumber, param.StartDate, param.EndDate).Count(&*total).Error
 	} else {
-		// err = db.Model(&orders).Where("internal_status = ? AND order_no ilike ?", internalStatus, orderNumber).Count(&*total).Error
-		err = db.Model(&orders).Where(" ( (internal_status = ?) or ( not ?) ) AND COALESCE(order_no,'') ilike ? and COALESCE(salesman_no, '') ILIKE ? ", internalStatus, byStatus, orderNumber, salesNo).Count(&*total).Error
+		err = db.Model(&orders).Where(" ( (status = ?) or ( not ?) ) AND COALESCE(sales_order_no,'') ilike ? ", status, byStatus, orderNumber).Count(&*total).Error
 	}
 
 	if err != nil {
@@ -177,50 +129,26 @@ func AsyncQueryCountsOrders(db *gorm.DB, total *int, internalStatus int, orders 
 }
 
 // AsyncQuerysOrders ...
-func AsyncQuerysOrders(db *gorm.DB, offset int, limit int, internalStatus int, orders *[]dbmodels.SalesOrder, param dto.FilterOrder, resChan chan error) {
+func AsyncQuerysOrders(db *gorm.DB, offset int, limit int, status int, orders *[]dbmodels.SalesOrder, param dto.FilterOrder, resChan chan error) {
 
 	var err error
 
-	merchantCode, salesNo, orderNumber, byStatus := getParam(param, internalStatus)
+	merchantCode, orderNumber, byStatus := getParam(param, status)
 
-	fmt.Println("ISI MERCHANT ", merchantCode, "sales no ", salesNo, "order no ", orderNumber, "internal status ", internalStatus, " fill status ", byStatus)
+	fmt.Println("ISI MERCHANT ", merchantCode, " order no ", orderNumber, "  status ", status, " fill status ", byStatus)
 
-	// salesNo := param.SalesNo
-	// if salesNo == "" {
-	// 	salesNo = "%"
-	// } else {
-	// 	salesNo = "%" + param.SalesNo + "%"
-	// }
-
-	// orderNumber := param.OrderNumber
-	// if orderNumber == "" {
-	// 	orderNumber = "%"
-	// } else {
-	// 	orderNumber = "%" + param.OrderNumber + "%"
-	// }
-	// fmt.Println("Isi sales no [", salesNo, "] ")
-	// var merchant dbmodels.Merchant
 	fmt.Println("isi dari filter [", param, "] ")
 	if strings.TrimSpace(param.StartDate) != "" && strings.TrimSpace(param.EndDate) != "" {
 		fmt.Println("isi dari filter [", param.StartDate, '-', param.EndDate, "] ")
-		// err = db.Order("name ASC").Offset(offset).Limit(limit).Find(&supplier, "name ilike ?", searchName).Error
-		// err = db.Preload("Merchant").Preload("Supplier").Order("order_date DESC").Offset(offset).Limit(limit).Find(&orders, " internal_status = ? AND order_no ilike ? AND order_date between ? and ? ", internalStatus, orderNumber, param.StartDate, param.EndDate).Error
-		// err = db.Preload("Merchant").Preload("Supplier").Order("order_date DESC").Offset(offset).Limit(limit).Find(&orders, " internal_status = ? AND COALESCE(order_no, '') ilike ? AND order_date between ? and ? and COALESCE(salesman_no, '') ILIKE ?  ", internalStatus, orderNumber, param.StartDate, param.EndDate, salesNo).Error
-		err = db.Preload("Merchant").Preload("Supplier").Order("order_date DESC").Offset(offset).Limit(limit).Find(&orders, " ( (internal_status = ?) or ( not ?) ) AND COALESCE(order_no, '') ilike ? AND order_date between ? and ? and COALESCE(salesman_no, '') ILIKE ?  ", internalStatus, byStatus, orderNumber, param.StartDate, param.EndDate, salesNo).Error
+		err = db.Preload("Customer").Preload("Salesman").Order("order_date DESC").Offset(offset).Limit(limit).Find(&orders, " ( ( status = ?) or ( not ?) ) AND COALESCE(sales_order_no, '') ilike ? AND order_date between ? and ?   ", status, byStatus, orderNumber, param.StartDate, param.EndDate).Error
 	} else {
-		// err = db.Order("name ASC").Offset(offset).Limit(limit).Find(&supplier, "name ilike ?", searchName).Error
 		fmt.Println("isi dari kosong ")
-
-		// err = db.Offset(offset).Limit(limit).Preload("Merchant").Preload("Supplier").Find(&orders, " internal_status = ? AND order_no ilike ?", internalStatus, orderNumber).Error
-		// err = db.Offset(offset).Limit(limit).Preload("Merchant").Preload("Supplier").Find(&orders, " internal_status = ? AND COALESCE(order_no,'') ilike ? and COALESCE(salesman_no, '') ILIKE ? ", internalStatus, orderNumber, salesNo).Error
-		err = db.Offset(offset).Limit(limit).Preload("Merchant").Preload("Supplier").Find(&orders, " ( (internal_status = ?) or ( not ?) ) AND COALESCE(order_no,'') ilike ? and COALESCE(salesman_no, '') ILIKE ? ", internalStatus, byStatus, orderNumber, salesNo).Error
+		err = db.Offset(offset).Limit(limit).Preload("Customer").Preload("Salesman").Find(&orders, " ( ( status = ?) or ( not ?) ) AND COALESCE(sales_order_no,'') ilike ?  ", status, byStatus, orderNumber).Error
 		if err != nil {
 			fmt.Println("error --> ", err)
 		}
-
 		fmt.Println("order--> ", orders)
 
-		// err = db.Order("order_date DESC").Offset(offset).Limit(limit).Find(&orders).Error
 	}
 
 	if err != nil {
