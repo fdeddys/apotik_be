@@ -31,6 +31,7 @@ type OrderSaveResult struct {
 // FilterOrderDetail ...
 type FilterOrderDetail struct {
 	OrderNo   string `json:"orderNo"`
+	OrderID   int64  `json:"orderId"`
 	StartDate string `json:"startDate"`
 	EndDate   string `json:"endDate"`
 }

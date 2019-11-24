@@ -85,6 +85,27 @@ var (
 	invInfo InvHdrInfo
 )
 
+// GetByOrderId ...
+func (s *OrderController) GetByOrderId(c *gin.Context) {
+
+	res := dbmodels.SalesOrder{}
+
+	orderID, errPage := strconv.Atoi(c.Param("id"))
+	if errPage != nil {
+		logs.Info("error", errPage)
+		c.JSON(http.StatusBadRequest, res)
+		c.Abort()
+		return
+	}
+
+	res = OrderService.GetDataOrderById(orderID)
+
+	c.JSON(http.StatusOK, res)
+	c.Abort()
+	return
+
+}
+
 // FilterData ...
 func (s *OrderController) FilterData(c *gin.Context) {
 	req := dto.FilterOrder{}

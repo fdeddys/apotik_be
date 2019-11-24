@@ -28,6 +28,7 @@ type Product struct {
 	QtyUom       int16     `json:"qtyUom" gorm:"column:qty_uom"`
 	QtyStock     float32   `json:"qtyStock" gorm:"column:qty_stock"`
 	Hpp          float64   `json:"hpp" gorm:"column:hpp"`
+	SellPrice    float64   `json:"sellPrice" gorm:"column:sell_price"`
 }
 
 // TableName ...

@@ -60,7 +60,7 @@ func (s *OrderDetailController) GetDetail(c *gin.Context) {
 		return
 	}
 
-	log.Println("is release ", req)
+	log.Println("order id => ", req.OrderID)
 
 	res = orderDetailService.GetDataOrderDetailPage(req, page, count)
 

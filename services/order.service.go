@@ -14,6 +14,16 @@ import (
 type OrderService struct {
 }
 
+// GetDataOrderById ...
+func (o OrderService) GetDataOrderById(orderID int) dbmodels.SalesOrder {
+
+	var res dbmodels.SalesOrder
+	// var err error
+	res, _ = database.GetSalesOrderByOrderId(orderID)
+
+	return res
+}
+
 // GetDataPage ...
 func (o OrderService) GetDataPage(param dto.FilterOrder, page int, limit int, internalStatus int) models.ResponsePagination {
 	var res models.ResponsePagination

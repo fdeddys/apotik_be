@@ -40,7 +40,19 @@ func GetOrderByOrderNo(orderNo string) (dbmodels.SalesOrder, error) {
 	db.Debug().LogMode(true)
 	order := dbmodels.SalesOrder{}
 
-	err := db.Preload("Supplier").Preload("Merchant").Where(" order_no = ?  ", orderNo).First(&order).Error
+	err := db.Preload("Supplier").Preload("Merchant").Where(" sales_order_no = ?  ", orderNo).First(&order).Error
+
+	return order, err
+
+}
+
+// GetSalesOrderByOrderId ...
+func GetSalesOrderByOrderId(orderID int) (dbmodels.SalesOrder, error) {
+	db := GetDbCon()
+	db.Debug().LogMode(true)
+	order := dbmodels.SalesOrder{}
+
+	err := db.Preload("Customer").Where(" id = ?  ", orderID).First(&order).Error
 
 	return order, err
 
