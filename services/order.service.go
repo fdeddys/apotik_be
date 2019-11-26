@@ -15,7 +15,7 @@ type OrderService struct {
 }
 
 // GetDataOrderById ...
-func (o OrderService) GetDataOrderById(orderID int) dbmodels.SalesOrder {
+func (o OrderService) GetDataOrderById(orderID int64) dbmodels.SalesOrder {
 
 	var res dbmodels.SalesOrder
 	// var err error

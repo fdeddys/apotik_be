@@ -1,8 +1,14 @@
 package services
 
-import "distribution-system-be/models"
-import "distribution-system-be/database"
-import dto "distribution-system-be/models/dto"
+import (
+	"distribution-system-be/constants"
+	"distribution-system-be/database"
+	"distribution-system-be/models"
+
+	dto "distribution-system-be/models/dto"
+
+	dbmodels "distribution-system-be/models/dbModels"
+)
 
 // OrderDetailService ...
 type OrderDetailService struct {
@@ -26,4 +32,28 @@ func (o OrderDetailService) GetDataOrderDetailPage(param dto.FilterOrderDetail, 
 	res.Count = limit
 
 	return res
+}
+
+// Save ...
+func (o OrderDetailService) Save(orderDetail *dbmodels.SalesOrderDetail) (errCode string, errDesc string) {
+
+	if _, err := database.GetSalesOrderByOrderId(orderDetail.SalesOrderID); err != nil {
+		return "99", err.Error()
+	}
+
+	if err, errDesc := database.SaveSalesOrderDetail(orderDetail); err != constants.ERR_CODE_00 {
+		return err, errDesc
+	}
+
+	return constants.ERR_CODE_00, constants.ERR_CODE_00_MSG
+}
+
+// DeleteOrderDetailById ...
+func (o OrderDetailService) DeleteOrderDetailByID(orderDetailId int64) (errCode string, errDesc string) {
+
+	if err, errDesc := database.DeleteSalesOrderDetailById(orderDetailId); err != constants.ERR_CODE_00 {
+		return err, errDesc
+	}
+
+	return constants.ERR_CODE_00, constants.ERR_CODE_00_MSG
 }

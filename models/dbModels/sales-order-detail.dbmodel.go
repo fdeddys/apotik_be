@@ -7,9 +7,9 @@ type SalesOrderDetail struct {
 	ID           int64 `json:"id" gorm:"column:id"`
 	SalesOrderID int64 `json:"salesOrderId" gorm:"column:sales_order_id"`
 
-	ProductID string  `json:"productId" gorm:"column:product_id"`
+	ProductID int64   `json:"productId" gorm:"column:product_id"`
 	Product   Product `json:"product" gorm:"foreignkey:id;association_foreignkey:ProductID;association_autoupdate:false;association_autocreate:false"`
-	Qty       int8    `json:"qty" gorm:"column:qty"`
+	Qty       int32   `json:"qty" gorm:"column:qty"`
 	Price     int32   `json:"price" gorm:"column:price"`
 	Disc      int16   `json:"disc" gorm:"column:disc"`
 
@@ -18,7 +18,6 @@ type SalesOrderDetail struct {
 
 	LastUpdateBy string    `json:"lastUpdateBy" gorm:"column:last_update_by"`
 	LastUpdate   time.Time `json:"lastUpdate" gorm:"column:last_update"`
-	Hpp          int32     `json:"hpp" gorm:"column:hpp"`
 }
 
 // TableName ...

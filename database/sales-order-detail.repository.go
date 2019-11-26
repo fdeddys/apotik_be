@@ -119,3 +119,42 @@ func AsyncQuerysOrderDetails(db *gorm.DB, offset int, limit int, orderDetails *[
 	}
 	resChan <- nil
 }
+
+//SaveSalesOrderDetail ...
+func SaveSalesOrderDetail(orderDetail *dbmodels.SalesOrderDetail) (errCode string, errDesc string) {
+
+	fmt.Println(" Update Sales Order Detail  ------------------------------------------ ")
+
+	db := GetDbCon()
+	db.Debug().LogMode(true)
+
+	// r := db.Model(&newOrder).Where("id = ?", order.ID).Update(dbmodels.SalesOrder{OrderNo: order.OrderNo, StatusCode: "001", WarehouseCode: order.WarehouseCode, InternalStatus: 1, OrderDate: order.OrderDate})
+	if r := db.Save(&orderDetail); r.Error != nil {
+		errCode = "99"
+		errDesc = r.Error.Error()
+	}
+
+	errCode = "00"
+	errDesc = fmt.Sprintf("%v", orderDetail.ID)
+	return
+
+}
+
+func DeleteSalesOrderDetailById(id int64) (errCode string, errDesc string) {
+
+	fmt.Println(" Delete Sales Order Detail  ------------------------------------------  %v ", id)
+
+	db := GetDbCon()
+	db.Debug().LogMode(true)
+
+	// r := db.Model(&newOrder).Where("id = ?", order.ID).Update(dbmodels.SalesOrder{OrderNo: order.OrderNo, StatusCode: "001", WarehouseCode: order.WarehouseCode, InternalStatus: 1, OrderDate: order.OrderDate})
+	if r := db.Where("id = ? ", id).Delete(dbmodels.SalesOrderDetail{}); r.Error != nil {
+		errCode = "99"
+		errDesc = r.Error.Error()
+	}
+
+	errCode = "00"
+	errDesc = fmt.Sprintf("%v", id)
+	return
+
+}

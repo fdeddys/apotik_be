@@ -47,7 +47,7 @@ func GetOrderByOrderNo(orderNo string) (dbmodels.SalesOrder, error) {
 }
 
 // GetSalesOrderByOrderId ...
-func GetSalesOrderByOrderId(orderID int) (dbmodels.SalesOrder, error) {
+func GetSalesOrderByOrderId(orderID int64) (dbmodels.SalesOrder, error) {
 	db := GetDbCon()
 	db.Debug().LogMode(true)
 	order := dbmodels.SalesOrder{}

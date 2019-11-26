@@ -90,7 +90,7 @@ func (s *OrderController) GetByOrderId(c *gin.Context) {
 
 	res := dbmodels.SalesOrder{}
 
-	orderID, errPage := strconv.Atoi(c.Param("id"))
+	orderID, errPage := strconv.ParseInt(c.Param("id"), 10, 64)
 	if errPage != nil {
 		logs.Info("error", errPage)
 		c.JSON(http.StatusBadRequest, res)

@@ -36,24 +36,6 @@ type FilterOrderDetail struct {
 	EndDate   string `json:"endDate"`
 }
 
-// OrderAutodebetRequest ...
-type OrderAutodebetRequest struct {
-	OrderNo        string `json:"orderNo"`
-	PaymentSuccess string `json:"paymentSuccess"`
-}
-
-// OrderAutodebetResult ...
-type OrderAutodebetResult struct {
-	ErrDesc string `json:"errDesc"`
-	ErrCode string `json:"errCode"`
-}
-
-// KafkaBody ...
-type KafkaBody struct {
-	Topic string     `json:"topic"`
-	Data  SalesOrder `json:"data"`
-}
-
 // SalesOrder ...
 type SalesOrder struct {
 	AccessToken     string           `json:"access_token"`
@@ -73,4 +55,17 @@ type SalerOrderItem struct {
 	Price       string `json:"price"`
 	Description string `json:"description"`
 	Uom         string `json:"unit_of_measurement_code"`
+}
+
+// OrderDetailSaveResult ...
+type OrderDetailSaveResult struct {
+	ErrDesc string `json:"errDesc"`
+	ErrCode string `json:"errCode"`
+	ID      int64  `json:"id"`
+}
+
+// OrderDetailResult ...
+type OrderDetailResult struct {
+	ErrDesc string `json:"errDesc"`
+	ErrCode string `json:"errCode"`
 }
