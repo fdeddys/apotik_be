@@ -157,8 +157,8 @@ func (s *OrderController) FilterData(c *gin.Context) {
 	return
 }
 
-// SaveSO ...
-func (s *OrderController) SaveSO(c *gin.Context) {
+// Save ...
+func (s *OrderController) Save(c *gin.Context) {
 
 	req := dbmodels.SalesOrder{}
 	body := c.Request.Body
@@ -174,9 +174,11 @@ func (s *OrderController) SaveSO(c *gin.Context) {
 		return
 	}
 
-	errCode, errMsg := OrderService.Save(&req)
+	errCode, errMsg, orderNo, orderID := OrderService.Save(&req)
 	res.ErrDesc = errMsg
 	res.ErrCode = errCode
+	res.OrderNo = orderNo
+	res.ID = orderID
 	// res.OrderNo = newNumb
 	c.JSON(http.StatusOK, res)
 

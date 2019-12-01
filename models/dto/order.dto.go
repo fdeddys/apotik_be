@@ -25,7 +25,8 @@ type FilterOrderResult struct {
 type OrderSaveResult struct {
 	ErrDesc string `json:"errDesc"`
 	ErrCode string `json:"errCode"`
-	OrderNo string `json:"orderNo"`
+	OrderNo string `json:"salesOrderNo"`
+	ID      int64  `json:"id"`
 }
 
 // FilterOrderDetail ...

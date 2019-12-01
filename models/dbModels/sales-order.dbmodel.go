@@ -21,9 +21,14 @@ type SalesOrder struct {
 	SalesmanID int64 `json:"salesmanId" gorm:"column:salesman_id"`
 	Salesman   User  `json:"salesman" gorm:"foreignkey:id;association_foreignkey:SalesmanID;association_autoupdate:false;association_autocreate:false"`
 
+	// status
+	// 10 = new order
+	// 20 = approve
+	// 30 = reject
+	// 40 = paid
 	Status int8 `json:"status" gorm:"column:status"`
 	Top    int8 `json:"top" gorm:"column:top"`
-	IsCash bool `json:"isCash" gorm:"column:is_cash"`
+	IsCash int8 `json:"isCash" gorm:"column:is_cash"`
 }
 
 // TableName ...

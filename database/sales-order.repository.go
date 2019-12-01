@@ -13,25 +13,26 @@ import (
 )
 
 //SaveSalesOrderNo ...
-func SaveSalesOrderNo(order *dbmodels.SalesOrder) (errCode string, errDesc string) {
+func SaveSalesOrderNo(order *dbmodels.SalesOrder) (errCode string, errDesc string, id int64) {
 
 	fmt.Println(" Update Sales Order numb ------------------------------------------ ")
-	var newOrder dbmodels.SalesOrder
 	db := GetDbCon()
 	db.Debug().LogMode(true)
 
 	// r := db.Model(&newOrder).Where("id = ?", order.ID).Update(dbmodels.SalesOrder{OrderNo: order.OrderNo, StatusCode: "001", WarehouseCode: order.WarehouseCode, InternalStatus: 1, OrderDate: order.OrderDate})
-	r := db.Model(&newOrder).Where("id = ?", order.ID).Update(dbmodels.SalesOrder{Status: 20, Note: order.Note})
+
+	r := db.Save(&order)
 	if r.Error != nil {
 		errCode = constants.ERR_CODE_80
 		errDesc = r.Error.Error()
+		id = 0
 		fmt.Println("Error update ", errDesc)
 		return
 	}
 
 	// fmt.Println("Order [database]=> order id", order.OrderNo)
 
-	return constants.ERR_CODE_00, constants.ERR_CODE_00_MSG
+	return constants.ERR_CODE_00, constants.ERR_CODE_00_MSG, order.ID
 }
 
 // GetOrderByOrderNo ...

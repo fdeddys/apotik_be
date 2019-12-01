@@ -6,16 +6,16 @@ import (
 )
 
 // AddSequence ...
-func AddSequence(month, year string) (errcd string, newNumb int8, errdesc string) {
+func AddSequence(month, year, header string) (errcd string, newNumb int8, errdesc string) {
 	db := GetDbCon()
 
 	var seq dbmodels.Sequence
 	var urut int8
 
-	db.Where("year = ? and month = ?", year, month).First(&seq)
+	db.Where("year = ? and month = ? and subj = ?", year, month, header).First(&seq)
 
 	if seq.ID == 0 {
-		errCode, errDesc := NewSequence(year, month)
+		errCode, errDesc := NewSequence(year, month, header)
 		return errCode, 1, errDesc
 	}
 	urut = seq.Seq + 1
@@ -27,12 +27,12 @@ func AddSequence(month, year string) (errcd string, newNumb int8, errdesc string
 }
 
 // NewSequence ...
-func NewSequence(year, month string) (errcode string, errdesc string) {
+func NewSequence(year, month, header string) (errcode string, errdesc string) {
 	db := GetDbCon()
 
 	var seq dbmodels.Sequence
 	seq.Month = month
-	seq.Subject = "SO"
+	seq.Subject = header
 	seq.Year = year
 	seq.Seq = 1
 	err := db.Save(&seq)

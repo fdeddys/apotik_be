@@ -45,38 +45,43 @@ func (o OrderService) GetDataPage(param dto.FilterOrder, page int, limit int, in
 }
 
 // Save ...
-func (o OrderService) Save(order *dbmodels.SalesOrder) (errCode string, errDesc string) {
+func (o OrderService) Save(order *dbmodels.SalesOrder) (errCode, errDesc, orderNo string, orderID int64) {
 
-	// newOrderNo, errCode, errMsg := generateNewSO()
-	// if errCode != constants.ERR_CODE_00 {
-	// 	return newOrderNo, errCode, errMsg
-	// }
-	// order.OrderNo = newOrderNo
-	// order.OrderDate = time.Now()
+	if order.ID == 0 {
+		newOrderNo, errCode, errMsg := generateNewOrderNo()
+		if errCode != constants.ERR_CODE_00 {
+			return errCode, errMsg, "", 0
+		}
+		order.SalesOrderNo = newOrderNo
+		order.Status = 10
+	}
+	order.LastUpdateBy = dto.CurrUser
+	order.LastUpdate = time.Now()
 
 	// fmt.Println("isi order ", order)
-	if err, errDesc := database.SaveSalesOrderNo(order); err != constants.ERR_CODE_00 {
-		return err, errDesc
+	err, errDesc, newID := database.SaveSalesOrderNo(order)
+	if err != constants.ERR_CODE_00 {
+		return err, errDesc, "", 0
 	}
-
-	return constants.ERR_CODE_00, constants.ERR_CODE_00_MSG
+	return constants.ERR_CODE_00, constants.ERR_CODE_00_MSG, order.SalesOrderNo, newID
 }
 
-func generateNewSO() (newSO string, errCode string, errMsg string) {
+func generateNewOrderNo() (newOrderNo string, errCode string, errMsg string) {
 
 	t := time.Now()
 	bln := t.Format("01")
 	thn := t.Format("06")
+	header := "SO"
 
-	err, number, errdesc := database.AddSequence(bln, thn)
+	err, number, errdesc := database.AddSequence(bln, thn, header)
 	if err != constants.ERR_CODE_00 {
 		return "", err, errdesc
 	}
 	newNumb := fmt.Sprintf("00000%v", number)
 	newNumb = newNumb[len(newNumb)-5 : len(newNumb)]
-	newSO = fmt.Sprintf("SO%v%v%v", thn, bln, newNumb)
+	newOrderNo = fmt.Sprintf("%v%v%v%v", header, thn, bln, newNumb)
 
-	return newSO, constants.ERR_CODE_00, constants.ERR_CODE_00_MSG
+	return newOrderNo, constants.ERR_CODE_00, constants.ERR_CODE_00_MSG
 
 }
 
