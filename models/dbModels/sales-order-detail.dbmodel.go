@@ -9,9 +9,9 @@ type SalesOrderDetail struct {
 
 	ProductID int64   `json:"productId" gorm:"column:product_id"`
 	Product   Product `json:"product" gorm:"foreignkey:id;association_foreignkey:ProductID;association_autoupdate:false;association_autocreate:false"`
-	Qty       int32   `json:"qty" gorm:"column:qty"`
-	Price     int32   `json:"price" gorm:"column:price"`
-	Disc      int16   `json:"disc" gorm:"column:disc"`
+	Qty       float32 `json:"qty" gorm:"column:qty"`
+	Price     float32 `json:"price" gorm:"column:price"`
+	Disc      float32 `json:"disc" gorm:"column:disc"`
 
 	UomID int64  `json:"uomId" gorm:"column:uom"`
 	UOM   Lookup `json:"uom" gorm:"foreignkey:id;association_foreignkey:UomID;association_autoupdate:false;association_autocreate:false"`

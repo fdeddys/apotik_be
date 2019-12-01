@@ -1,11 +1,11 @@
 package services
 
 import (
-	"fmt"
 	repository "distribution-system-be/database"
 	"distribution-system-be/models"
 	dbmodels "distribution-system-be/models/dbModels"
 	dto "distribution-system-be/models/dto"
+	"fmt"
 
 	// router "distribution-system-be/routers"
 	"time"
@@ -77,6 +77,7 @@ func (h UserService) AuthLogin(userDto *dto.LoginRequestDto) dto.LoginResponseDt
 	sign := jwt.New(jwt.GetSigningMethod("HS256"))
 	claims := sign.Claims.(jwt.MapClaims)
 	claims["user"] = user.UserName
+	claims["userId"] = fmt.Sprintf("%v", (user.ID))
 	// now := time.Now()
 	// claims["logTm"] = now
 	// claims["supplierCode"] = user.SupplierCode

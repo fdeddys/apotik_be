@@ -8,6 +8,7 @@ import (
 	"log"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/jinzhu/gorm"
 )
@@ -35,6 +36,105 @@ func SaveSalesOrderNo(order *dbmodels.SalesOrder) (errCode string, errDesc strin
 	return constants.ERR_CODE_00, constants.ERR_CODE_00_MSG, order.ID
 }
 
+//RejectSalesOrder ...
+func RejectSalesOrder(order *dbmodels.SalesOrder) (errCode string, errDesc string) {
+
+	fmt.Println(" Reject Sales Order numb ------------------------------------------ ")
+	db := GetDbCon()
+	db.Debug().LogMode(true)
+
+	// r := db.Model(&newOrder).Where("id = ?", order.ID).Update(dbmodels.SalesOrder{OrderNo: order.OrderNo, StatusCode: "001", WarehouseCode: order.WarehouseCode, InternalStatus: 1, OrderDate: order.OrderDate})
+
+	r := db.Model(&dbmodels.SalesOrder{}).Where("id =?", order.ID).Update(dbmodels.SalesOrder{Status: 30})
+	// r := db.Save(&order)
+	if r.Error != nil {
+		fmt.Println("err reject ", r.Error)
+		errCode = constants.ERR_CODE_80
+		errDesc = r.Error.Error()
+		fmt.Println("Error update ", errDesc)
+		return
+	}
+
+	return constants.ERR_CODE_00, constants.ERR_CODE_00_MSG
+}
+
+// SaveSalesOrderApprove ...
+func SaveSalesOrderApprove(order *dbmodels.SalesOrder) (errCode string, errDesc string) {
+
+	fmt.Println(" Approve Sales Order ------------------------------------------ ")
+	db := GetDbCon()
+	tx := db.Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
+	// update stock
+	// update history stock
+	// hitung ulang
+	var total float32
+	var grandTotal float32
+	total = 0
+	grandTotal = 0
+	salesOrderDetails := GetAllDataDetail(order.ID)
+	for idx, orderDetail := range salesOrderDetails {
+		fmt.Println("idx -> ", idx)
+
+		product, errCodeProd, errDescProd := FindProductByID(orderDetail.ProductID)
+		if errCodeProd != constants.ERR_CODE_00 {
+			tx.Rollback()
+			return errCodeProd, errDescProd
+		}
+		curQty := product.QtyStock
+		updateQty := curQty - orderDetail.Qty
+
+		fmt.Println("cur qty =", curQty, " update =", updateQty)
+		var historyStock dbmodels.HistoryStock
+		historyStock.Code = product.Code
+		historyStock.Description = "Sales Order"
+		historyStock.Hpp = product.Hpp
+		historyStock.Name = product.Name
+		historyStock.Price = orderDetail.Price
+		historyStock.ReffNo = order.SalesOrderNo
+		historyStock.TransDate = order.OrderDate
+		historyStock.Debet = 0
+		historyStock.Kredit = orderDetail.Qty
+		historyStock.Saldo = updateQty
+		historyStock.LastUpdate = time.Now()
+		historyStock.LastUpdateBy = dto.CurrUser
+
+		UpdateStockProductByID(orderDetail.ProductID, updateQty)
+		SaveHistory(historyStock)
+		total = total + (orderDetail.Price * orderDetail.Qty)
+	}
+
+	db.Debug().LogMode(true)
+	// r := db.Model(&newOrder).Where("id = ?", order.ID).Update(dbmodels.SalesOrder{OrderNo: order.OrderNo, StatusCode: "001", WarehouseCode: order.WarehouseCode, InternalStatus: 1, OrderDate: order.OrderDate})
+
+	if order.Tax != 0 {
+		grandTotal = total * 1.1
+	}
+	order.GrandTotal = grandTotal
+	order.Total = total
+	order.SalesmanID = dto.CurrUserId
+	order.LastUpdateBy = dto.CurrUser
+	order.LastUpdate = time.Now()
+	order.Status = 20
+	r := db.Save(&order)
+	if r.Error != nil {
+		errCode = constants.ERR_CODE_80
+		errDesc = r.Error.Error()
+		fmt.Println("Error update ", errDesc)
+		return
+	}
+
+	// fmt.Println("Order [database]=> order id", order.OrderNo)
+
+	tx.Commit()
+	return constants.ERR_CODE_00, constants.ERR_CODE_00_MSG
+}
+
 // GetOrderByOrderNo ...
 func GetOrderByOrderNo(orderNo string) (dbmodels.SalesOrder, error) {
 	db := GetDbCon()
@@ -53,7 +153,7 @@ func GetSalesOrderByOrderId(orderID int64) (dbmodels.SalesOrder, error) {
 	db.Debug().LogMode(true)
 	order := dbmodels.SalesOrder{}
 
-	err := db.Preload("Customer").Where(" id = ?  ", orderID).First(&order).Error
+	err := db.Preload("Customer").Preload("Salesman").Where(" id = ?  ", orderID).First(&order).Error
 
 	return order, err
 

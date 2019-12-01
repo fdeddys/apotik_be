@@ -2,6 +2,7 @@ package dto
 
 // CurrUser ...
 var CurrUser string
+var CurrUserId int64
 
 // FilterDto ...
 type FilterDto struct {

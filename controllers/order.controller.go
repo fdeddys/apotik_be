@@ -185,6 +185,58 @@ func (s *OrderController) Save(c *gin.Context) {
 	return
 }
 
+// Approve ...
+func (s *OrderController) Approve(c *gin.Context) {
+
+	req := dbmodels.SalesOrder{}
+	body := c.Request.Body
+	res := dto.OrderSaveResult{}
+	dataBodyReq, _ := ioutil.ReadAll(body)
+
+	if err := json.Unmarshal(dataBodyReq, &req); err != nil {
+		fmt.Println("Error, unmarshal body Request to Sales Order stuct ", dataBodyReq)
+		res.ErrDesc = constants.ERR_CODE_03_MSG
+		res.ErrCode = constants.ERR_CODE_03
+		c.JSON(http.StatusBadRequest, res)
+		c.Abort()
+		return
+	}
+
+	errCode, errMsg := OrderService.Approve(&req)
+	res.ErrDesc = errMsg
+	res.ErrCode = errCode
+	// res.OrderNo = newNumb
+	c.JSON(http.StatusOK, res)
+
+	return
+}
+
+// Approve ...
+func (s *OrderController) Reject(c *gin.Context) {
+
+	req := dbmodels.SalesOrder{}
+	body := c.Request.Body
+	res := dto.OrderSaveResult{}
+	dataBodyReq, _ := ioutil.ReadAll(body)
+
+	if err := json.Unmarshal(dataBodyReq, &req); err != nil {
+		fmt.Println("Error, unmarshal body Request to Sales Order stuct ", dataBodyReq)
+		res.ErrDesc = constants.ERR_CODE_03_MSG
+		res.ErrCode = constants.ERR_CODE_03
+		c.JSON(http.StatusBadRequest, res)
+		c.Abort()
+		return
+	}
+
+	errCode, errMsg := OrderService.Reject(&req)
+	res.ErrDesc = errMsg
+	res.ErrCode = errCode
+	// res.OrderNo = newNumb
+	c.JSON(http.StatusOK, res)
+
+	return
+}
+
 // PrintInvoice ...
 func (s *OrderController) PrintInvoice(c *gin.Context) {
 

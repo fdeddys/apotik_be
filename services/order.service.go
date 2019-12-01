@@ -54,6 +54,7 @@ func (o OrderService) Save(order *dbmodels.SalesOrder) (errCode, errDesc, orderN
 		}
 		order.SalesOrderNo = newOrderNo
 		order.Status = 10
+		order.SalesmanID = dto.CurrUserId
 	}
 	order.LastUpdateBy = dto.CurrUser
 	order.LastUpdate = time.Now()
@@ -64,6 +65,32 @@ func (o OrderService) Save(order *dbmodels.SalesOrder) (errCode, errDesc, orderN
 		return err, errDesc, "", 0
 	}
 	return constants.ERR_CODE_00, constants.ERR_CODE_00_MSG, order.SalesOrderNo, newID
+}
+
+// Approve ...
+func (o OrderService) Approve(order *dbmodels.SalesOrder) (errCode, errDesc string) {
+
+	// cek qty
+	// validateQty()
+	// fmt.Println("isi order ", order)
+	err, errDesc := database.SaveSalesOrderApprove(order)
+	if err != constants.ERR_CODE_00 {
+		return err, errDesc
+	}
+	return constants.ERR_CODE_00, constants.ERR_CODE_00_MSG
+}
+
+// Reject ...
+func (o OrderService) Reject(order *dbmodels.SalesOrder) (errCode, errDesc string) {
+
+	// cek qty
+	// validateQty()
+	// fmt.Println("isi order ", order)
+	err, errDesc := database.RejectSalesOrder(order)
+	if err != constants.ERR_CODE_00 {
+		return err, errDesc
+	}
+	return constants.ERR_CODE_00, constants.ERR_CODE_00_MSG
 }
 
 func generateNewOrderNo() (newOrderNo string, errCode string, errMsg string) {

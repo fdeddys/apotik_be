@@ -120,13 +120,15 @@ func InitRouter() *gin.Engine {
 
 	api = r.Group("/api/sales-order")
 	api.GET("/:id", OrderController.GetByOrderId)
-	api.POST("/page/:page/count/:count", OrderController.FilterData)
-	api.POST("", OrderController.Save)
+	api.POST("/page/:page/count/:count", cekToken, OrderController.FilterData)
+	api.POST("", cekToken, OrderController.Save)
+	api.POST("/approve", cekToken, OrderController.Approve)
+	api.POST("/reject", cekToken, OrderController.Reject)
 	api.POST("/invoice", OrderController.PrintInvoice)
 
 	api = r.Group("/api/sales-order-detail")
 	api.POST("/page/:page/count/:count", OrderDetailController.GetDetail)
-	api.POST("", OrderDetailController.Save)
+	api.POST("", cekToken, OrderDetailController.Save)
 	api.DELETE("/:id", OrderDetailController.DeleteById)
 
 	// Dashboard
@@ -194,10 +196,13 @@ func cekToken(c *gin.Context) {
 
 		tokenCreated := (claims["tokenCreated"])
 		dto.CurrUser = (claims["user"]).(string)
+		currUserId := (claims["userId"]).(string)
+		dto.CurrUserId, _ = strconv.ParseInt(currUserId, 10, 64)
 
 		fmt.Println("now : ", timeNowInInt)
 		fmt.Println("token created time : ", tokenCreated)
 		fmt.Println("user by token : ", dto.CurrUser)
+		fmt.Println("user by token ID : ", dto.CurrUserId)
 
 		tokenCreatedInString := tokenCreated.(string)
 		tokenCreatedInInt, errTokenExpired := strconv.ParseInt(tokenCreatedInString, 10, 64)

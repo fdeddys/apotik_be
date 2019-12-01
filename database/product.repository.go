@@ -274,3 +274,39 @@ func GetProductLike(productterms string) ([]dbmodels.Product, string, string, er
 	}
 	return product, constants.ERR_CODE_00, constants.ERR_CODE_00_MSG, nil
 }
+
+// FindProductByID ...
+func FindProductByID(prodID int64) (dbmodels.Product, string, string) {
+	db := GetDbCon()
+	db.Debug().LogMode(true)
+
+	var product dbmodels.Product
+	db.Where("id = ?", prodID).First(&product)
+	// fmt.Println("isi err prod ", err)
+	// if err != nil {
+	// 	return product, constants.ERR_CODE_51, err.Error.Error()
+	// }
+	return product, constants.ERR_CODE_00, constants.ERR_CODE_00_MSG
+}
+
+// UpdateStockProductByID ...
+func UpdateStockProductByID(prodID int64, qty float32) (dbmodels.Product, string, string) {
+
+	fmt.Println("Update stock", prodID, "qty ", qty)
+
+	db := GetDbCon()
+	db.Debug().LogMode(true)
+
+	var product dbmodels.Product
+	db.Model(&dbmodels.Product{}).Where("id=?", prodID).First(&product)
+
+	product.QtyStock = qty
+	db.Save(&product)
+	// err := db.Model(&product).Where("id = ? ", prodID).Update("qty_stock = ?", qty)
+	// fmt.Println("err prod => ", err.Error)
+	// if err != nil {
+	// 	fmt.Println("err prod ", err.Error)
+	// 	return product, constants.ERR_CODE_51, constants.ERR_CODE_51_MSG
+	// }
+	return product, constants.ERR_CODE_00, constants.ERR_CODE_00_MSG
+}

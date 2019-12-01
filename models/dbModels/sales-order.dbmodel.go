@@ -14,9 +14,9 @@ type SalesOrder struct {
 	Note         string    `json:"note" gorm:"column:note"`
 	LastUpdateBy string    `json:"lastUpdateBy" gorm:"column:last_update_by"`
 	LastUpdate   time.Time `json:"lastUpdate" gorm:"column:last_update"`
-	Tax          int64     `json:"tax" gorm:"column:tax"`
-	Total        int64     `json:"total" gorm:"column:total"`
-	GrandTotal   int32     `json:"grandTotal" gorm:"column:grand_total"`
+	Tax          float32   `json:"tax" gorm:"column:tax"`
+	Total        float32   `json:"total" gorm:"column:total"`
+	GrandTotal   float32   `json:"grandTotal" gorm:"column:grand_total"`
 
 	SalesmanID int64 `json:"salesmanId" gorm:"column:salesman_id"`
 	Salesman   User  `json:"salesman" gorm:"foreignkey:id;association_foreignkey:SalesmanID;association_autoupdate:false;association_autocreate:false"`

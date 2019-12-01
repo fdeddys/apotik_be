@@ -27,8 +27,8 @@ type Product struct {
 	LastUpdate   time.Time `json:"lastUpdate"  gorm:"column:last_update"`
 	QtyUom       int16     `json:"qtyUom" gorm:"column:qty_uom"`
 	QtyStock     float32   `json:"qtyStock" gorm:"column:qty_stock"`
-	Hpp          float64   `json:"hpp" gorm:"column:hpp"`
-	SellPrice    float64   `json:"sellPrice" gorm:"column:sell_price"`
+	Hpp          float32   `json:"hpp" gorm:"column:hpp"`
+	SellPrice    float32   `json:"sellPrice" gorm:"column:sell_price"`
 }
 
 // TableName ...

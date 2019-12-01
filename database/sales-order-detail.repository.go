@@ -84,7 +84,7 @@ func GetAllDataDetail(orderID int64) []dbmodels.SalesOrderDetail {
 
 	var orderDetails []dbmodels.SalesOrderDetail
 
-	db.Preload("Product").Preload("Lookup", "lookup_group = ?", "UOM").Find(&orderDetails, " order_id = ? and qty_receive > 0 ", orderID)
+	db.Preload("Product").Preload("UOM").Find(&orderDetails, " sales_order_id = ? and qty > 0 ", orderID)
 
 	return orderDetails
 }
