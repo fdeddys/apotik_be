@@ -26,6 +26,7 @@ type OrderSaveResult struct {
 	ErrDesc string `json:"errDesc"`
 	ErrCode string `json:"errCode"`
 	OrderNo string `json:"salesOrderNo"`
+	Status  int8   `json:"status"`
 	ID      int64  `json:"id"`
 }
 

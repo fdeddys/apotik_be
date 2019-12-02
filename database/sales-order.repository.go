@@ -14,7 +14,7 @@ import (
 )
 
 //SaveSalesOrderNo ...
-func SaveSalesOrderNo(order *dbmodels.SalesOrder) (errCode string, errDesc string, id int64) {
+func SaveSalesOrderNo(order *dbmodels.SalesOrder) (errCode string, errDesc string, id int64, status int8) {
 
 	fmt.Println(" Update Sales Order numb ------------------------------------------ ")
 	db := GetDbCon()
@@ -27,13 +27,14 @@ func SaveSalesOrderNo(order *dbmodels.SalesOrder) (errCode string, errDesc strin
 		errCode = constants.ERR_CODE_80
 		errDesc = r.Error.Error()
 		id = 0
+		status = 0
 		fmt.Println("Error update ", errDesc)
 		return
 	}
 
 	// fmt.Println("Order [database]=> order id", order.OrderNo)
 
-	return constants.ERR_CODE_00, constants.ERR_CODE_00_MSG, order.ID
+	return constants.ERR_CODE_00, constants.ERR_CODE_00_MSG, order.ID, order.Status
 }
 
 //RejectSalesOrder ...

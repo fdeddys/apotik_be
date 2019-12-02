@@ -281,7 +281,7 @@ func FindProductByID(prodID int64) (dbmodels.Product, string, string) {
 	db.Debug().LogMode(true)
 
 	var product dbmodels.Product
-	db.Where("id = ?", prodID).First(&product)
+	db.Where("id = ? and status = 1 ", prodID).First(&product)
 	// fmt.Println("isi err prod ", err)
 	// if err != nil {
 	// 	return product, constants.ERR_CODE_51, err.Error.Error()

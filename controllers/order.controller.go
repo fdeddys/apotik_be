@@ -174,11 +174,12 @@ func (s *OrderController) Save(c *gin.Context) {
 		return
 	}
 
-	errCode, errMsg, orderNo, orderID := OrderService.Save(&req)
+	errCode, errMsg, orderNo, orderID, status := OrderService.Save(&req)
 	res.ErrDesc = errMsg
 	res.ErrCode = errCode
 	res.OrderNo = orderNo
 	res.ID = orderID
+	res.Status = status
 	// res.OrderNo = newNumb
 	c.JSON(http.StatusOK, res)
 
@@ -240,23 +241,17 @@ func (s *OrderController) Reject(c *gin.Context) {
 // PrintInvoice ...
 func (s *OrderController) PrintInvoice(c *gin.Context) {
 
-	req := dbmodels.SalesOrder{}
-	body := c.Request.Body
-	res := dto.OrderSaveResult{}
-	dataBodyReq, _ := ioutil.ReadAll(body)
-
-	if err := json.Unmarshal(dataBodyReq, &req); err != nil {
-		fmt.Println("Error, unmarshal body Request to Sales Order stuct ", dataBodyReq)
-		res.ErrDesc = constants.ERR_CODE_03_MSG
-		res.ErrCode = constants.ERR_CODE_03
-		c.JSON(http.StatusBadRequest, res)
+	orderID, errPage := strconv.ParseInt(c.Param("id"), 10, 64)
+	if errPage != nil {
+		logs.Info("error", errPage)
+		c.JSON(http.StatusBadRequest, "id not supplied")
 		c.Abort()
 		return
 	}
 
 	// fmt.Println("-------->", req)
 
-	generateRep(req)
+	generateRep(orderID)
 
 	header := c.Writer.Header()
 	// header["Content-type"] = []string{"application/octet-stream"}
@@ -270,7 +265,7 @@ func (s *OrderController) PrintInvoice(c *gin.Context) {
 	return
 }
 
-func generateRep(order dbmodels.SalesOrder) {
+func generateRep(orderId int64) {
 
 	spaceLen = beego.AppConfig.DefaultFloat("report.space-len", 15)
 	pageMargin = beego.AppConfig.DefaultFloat("report.page-margin", 12)
@@ -311,8 +306,8 @@ func generateRep(order dbmodels.SalesOrder) {
 	number = 1
 
 	// get Data mockup utk display ke grid
-	fmt.Println("data order send to fillData Details : ", order)
-	dataDetails := fillDataDetail(order.SalesOrderNo)
+	fmt.Println("data order send to fillData Details : ", orderId)
+	dataDetails := fillDataDetail(orderId)
 
 	fmt.Println("hasil fill")
 	for i, ordDetail := range dataDetails {
@@ -339,9 +334,9 @@ func generateRep(order dbmodels.SalesOrder) {
 
 }
 
-func fillDataDetail(orderNo string) []DataDetail {
+func fillDataDetail(orderID int64) []DataDetail {
 
-	order, err := database.GetOrderByOrderNo(orderNo)
+	order, err := database.GetSalesOrderByOrderId(orderID)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -454,7 +449,7 @@ func showLogo(pdf *gopdf.GoPdf) {
 	posX := 20.0
 	posY := spaceLen
 
-	pdf.Image("imgs/logo.png", posX, posY, &gopdf.Rect{W: imgSize + 68, H: imgSize})
+	pdf.Image("imgs/logo3.png", posX, posY, &gopdf.Rect{W: imgSize + 68, H: imgSize})
 }
 
 func setDetail(pdf *gopdf.GoPdf, data []DataDetail) {
