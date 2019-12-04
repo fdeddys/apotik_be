@@ -21,6 +21,7 @@ import (
 	"github.com/astaxie/beego/logs"
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
+	"github.com/leekchan/accounting"
 	"github.com/signintech/gopdf"
 )
 
@@ -498,6 +499,59 @@ func setDetail(pdf *gopdf.GoPdf, data []DataDetail) {
 
 func setSummary(pdf *gopdf.GoPdf) {
 
+	rectangle := gopdf.Rect{}
+	rectangle.UnitsToPoints(gopdf.Unit_PT)
+
+	ac := accounting.Accounting{Symbol: "", Precision: 0, Thousand: ".", Decimal: ","}
+	setFont(pdf, 10)
+
+	space(pdf)
+	// pdf.SetY(spaceLen * 42)
+
+	pdf.SetX(spaceSummaryInfo)
+	// pdf.Text("Subtotal")
+	pdf.CellWithOption(&rectangle, "Subtotal ", gopdf.CellOption{Align: gopdf.Left, Border: 0, Float: gopdf.Left})
+	pdf.SetX(spaceTitikSumamry)
+	// pdf.Text(":")
+	pdf.CellWithOption(&rectangle, ": ", gopdf.CellOption{Align: gopdf.Center, Border: 0, Float: gopdf.Center})
+	// pdf.SetX(spaceValueSummary)
+	// pdf.Text(fmt.Sprintf("%v", subTotal))
+	// pdf.Text(ac.FormatMoney(subTotal))
+	fmt.Println("isi space summ ", spaceValueSummary)
+	pdf.SetX(spaceValueSummary + 100)
+	pdf.CellWithOption(&rectangle, ac.FormatMoney(subTotal), gopdf.CellOption{Align: gopdf.Right, Border: 0, Float: gopdf.Top})
+
+	space(pdf)
+	pdf.SetX(spaceSummaryInfo)
+	// pdf.Text("Tax ")
+	pdf.CellWithOption(&rectangle, "Tax", gopdf.CellOption{Align: gopdf.Left, Border: 0, Float: gopdf.Left})
+	pdf.SetX(spaceTitikSumamry)
+	// pdf.Text(":")
+	pdf.CellWithOption(&rectangle, ": ", gopdf.CellOption{Align: gopdf.Center, Border: 0, Float: gopdf.Center})
+	// pdf.SetX(spaceValueSummary)
+	// pdf.Text(fmt.Sprintf("%v", tax))
+	// pdf.Text(ac.FormatMoney(tax))
+	pdf.SetX(spaceValueSummary + 100)
+	pdf.CellWithOption(&rectangle, ac.FormatMoney(tax), gopdf.CellOption{Align: gopdf.Right, Border: 0, Float: gopdf.Top})
+
+	space(pdf)
+	pdf.SetX(spaceSummaryInfo)
+	// pdf.Text("GrandTotal ")
+	pdf.CellWithOption(&rectangle, "GrandTotal", gopdf.CellOption{Align: gopdf.Left, Border: 0, Float: gopdf.Left})
+
+	pdf.SetX(spaceTitikSumamry)
+	// pdf.Text(":")
+	pdf.CellWithOption(&rectangle, ": ", gopdf.CellOption{Align: gopdf.Center, Border: 0, Float: gopdf.Center})
+	// pdf.SetX(spaceValueSummary)
+	// // pdf.Text(fmt.Sprintf("%v", grandTotal))
+	// pdf.Text(ac.FormatMoney(grandTotal))
+	pdf.SetX(spaceValueSummary + 100)
+	pdf.CellWithOption(&rectangle, ac.FormatMoney(grandTotal), gopdf.CellOption{Align: gopdf.Right, Border: 0, Float: gopdf.Top})
+
+}
+
+func setSummaryX(pdf *gopdf.GoPdf) {
+
 	setFont(pdf, 10)
 
 	space(pdf)
@@ -556,6 +610,31 @@ func showHeaderTable(pdf *gopdf.GoPdf) {
 }
 
 func showData(pdf *gopdf.GoPdf, no, item, unit string, qty, price, total int64) {
+
+	ac := accounting.Accounting{Symbol: "", Precision: 0, Thousand: ".", Decimal: ","}
+	setFont(pdf, 10)
+	pdf.SetX(tblCol1)
+	pdf.Text(no)
+
+	pdf.SetX(tblCol2)
+	pdf.Text(item)
+
+	pdf.SetX(tblCol3)
+	pdf.Text(fmt.Sprintf("%v", qty))
+
+	pdf.SetX(tblCol4)
+	pdf.Text(unit)
+
+	pdf.SetX(tblCol5)
+	// pdf.Text(fmt.Sprintf("%v", price))
+	pdf.Text(ac.FormatMoney(price))
+
+	pdf.SetX(tblCol6)
+	// pdf.Text(fmt.Sprintf("%v", total))
+	pdf.Text(ac.FormatMoney(total))
+}
+
+func showDataX(pdf *gopdf.GoPdf, no, item, unit string, qty, price, total int64) {
 
 	setFont(pdf, 10)
 	pdf.SetX(tblCol1)
