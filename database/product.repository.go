@@ -310,3 +310,21 @@ func UpdateStockProductByID(prodID int64, qty float32) (dbmodels.Product, string
 	// }
 	return product, constants.ERR_CODE_00, constants.ERR_CODE_00_MSG
 }
+
+// UpdateStockAndHppProductByID ...
+func UpdateStockAndHppProductByID(prodID int64, qty float32, newHpp float32) (dbmodels.Product, string, string) {
+
+	fmt.Println("Update stock", prodID, "qty ", qty)
+
+	db := GetDbCon()
+	db.Debug().LogMode(true)
+
+	var product dbmodels.Product
+	db.Model(&dbmodels.Product{}).Where("id=?", prodID).First(&product)
+
+	product.QtyStock = qty
+	product.Hpp = newHpp
+	db.Save(&product)
+
+	return product, constants.ERR_CODE_00, constants.ERR_CODE_00_MSG
+}

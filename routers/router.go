@@ -43,6 +43,8 @@ func InitRouter() *gin.Engine {
 	OrderController := new(controllers.OrderController)
 	OrderDetailController := new(controllers.OrderDetailController)
 	DashboardController := new(controllers.DashboardController)
+	ReceiveController := new(controllers.ReceiveController)
+	ReceiveDetailController := new(controllers.ReceiveDetailController)
 
 	api := r.Group("/api/user")
 	api.POST("/filter/page/:page/count/:count", UserController.GetUser)
@@ -130,6 +132,13 @@ func InitRouter() *gin.Engine {
 	api.POST("/page/:page/count/:count", OrderDetailController.GetDetail)
 	api.POST("", cekToken, OrderDetailController.Save)
 	api.DELETE("/:id", OrderDetailController.DeleteById)
+
+	api = r.Group("/api/receive")
+	api.POST("/page/:page/count/:count", cekToken, ReceiveController.FilterData)
+	api.GET("/:id", cekToken, ReceiveController.GetByReceiveId)
+
+	api = r.Group("/api/receive-detail")
+	api.POST("/page/:page/count/:count", ReceiveDetailController.GetDetail)
 
 	// Dashboard
 	dashboard := r.Group("/dashboard")
