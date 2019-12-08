@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"distribution-system-be/constants"
 	"distribution-system-be/models"
 	dbmodels "distribution-system-be/models/dbModels"
 	"distribution-system-be/models/dto"
@@ -26,7 +27,7 @@ type ReceiveController struct {
 var receiveService = new(services.ReceiveService)
 
 // FilterData ...
-func (s *ReceiveController) FilterData(c *gin.Context) {
+func (r *ReceiveController) FilterData(c *gin.Context) {
 	req := dto.FilterReceive{}
 	res := models.ResponsePagination{}
 
@@ -76,8 +77,8 @@ func (s *ReceiveController) FilterData(c *gin.Context) {
 	return
 }
 
-// GetByOrderId ...
-func (s *ReceiveController) GetByReceiveId(c *gin.Context) {
+// GetByReceiveId ...
+func (r *ReceiveController) GetByReceiveId(c *gin.Context) {
 
 	res := dbmodels.Receive{}
 
@@ -95,4 +96,59 @@ func (s *ReceiveController) GetByReceiveId(c *gin.Context) {
 	c.Abort()
 	return
 
+}
+
+// Save ...
+func (r *ReceiveController) Save(c *gin.Context) {
+
+	req := dbmodels.Receive{}
+	body := c.Request.Body
+	res := dto.ReceiveSaveResult{}
+	dataBodyReq, _ := ioutil.ReadAll(body)
+
+	if err := json.Unmarshal(dataBodyReq, &req); err != nil {
+		fmt.Println("Error, unmarshal body Request to Receive stuct ", dataBodyReq)
+		res.ErrDesc = constants.ERR_CODE_03_MSG
+		res.ErrCode = constants.ERR_CODE_03
+		c.JSON(http.StatusBadRequest, res)
+		c.Abort()
+		return
+	}
+
+	errCode, errMsg, receiveNo, receiveID, status := receiveService.Save(&req)
+	res.ErrDesc = errMsg
+	res.ErrCode = errCode
+	res.ReceiveNo = receiveNo
+	res.ID = receiveID
+	res.Status = status
+	// res.OrderNo = newNumb
+	c.JSON(http.StatusOK, res)
+
+	return
+}
+
+// Approve ...
+func (r *ReceiveController) Approve(c *gin.Context) {
+
+	req := dbmodels.Receive{}
+	body := c.Request.Body
+	res := dto.OrderSaveResult{}
+	dataBodyReq, _ := ioutil.ReadAll(body)
+
+	if err := json.Unmarshal(dataBodyReq, &req); err != nil {
+		fmt.Println("Error, unmarshal body Request to Receive stuct ", dataBodyReq)
+		res.ErrDesc = constants.ERR_CODE_03_MSG
+		res.ErrCode = constants.ERR_CODE_03
+		c.JSON(http.StatusBadRequest, res)
+		c.Abort()
+		return
+	}
+
+	errCode, errMsg := receiveService.ApproveReceive(&req)
+	res.ErrDesc = errMsg
+	res.ErrCode = errCode
+	// res.OrderNo = newNumb
+	c.JSON(http.StatusOK, res)
+
+	return
 }

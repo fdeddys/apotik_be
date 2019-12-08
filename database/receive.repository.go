@@ -224,8 +224,8 @@ func getParamReceive(param dto.FilterReceive, status int) (receiveNumber string,
 	return
 }
 
-// GetReceiveByOrderId ...
-func GetReceiveByOrderID(receiveID int64) (dbmodels.Receive, error) {
+// GetReceiveByReceiveID ...
+func GetReceiveByReceiveID(receiveID int64) (dbmodels.Receive, error) {
 	db := GetDbCon()
 	db.Debug().LogMode(true)
 	receive := dbmodels.Receive{}
@@ -234,4 +234,23 @@ func GetReceiveByOrderID(receiveID int64) (dbmodels.Receive, error) {
 
 	return receive, err
 
+}
+
+//RejectReceive ...
+func RejectReceive(receive *dbmodels.Receive) (errCode string, errDesc string) {
+
+	fmt.Println(" Reject Receive numb ------------------------------------------ ")
+	db := GetDbCon()
+	db.Debug().LogMode(true)
+
+	r := db.Model(&dbmodels.Receive{}).Where("id =?", receive.ID).Update(dbmodels.Receive{Status: 30})
+	if r.Error != nil {
+		fmt.Println("err reject ", r.Error)
+		errCode = constants.ERR_CODE_80
+		errDesc = r.Error.Error()
+		fmt.Println("Error update ", errDesc)
+		return
+	}
+
+	return constants.ERR_CODE_00, constants.ERR_CODE_00_MSG
 }

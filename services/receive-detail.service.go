@@ -35,7 +35,7 @@ func (r ReceiveDetailService) GetDataReceiveDetailPage(param dto.FilterReceiveDe
 // SaveReceiveDetail ...
 func (r ReceiveDetailService) SaveReceiveDetail(receiveDetail *dbmodels.ReceiveDetail) (errCode string, errDesc string) {
 
-	if _, err := database.GetReceiveByOrderID(receiveDetail.ReceiveID); err != nil {
+	if _, err := database.GetReceiveByReceiveID(receiveDetail.ReceiveID); err != nil {
 		return "99", err.Error()
 	}
 

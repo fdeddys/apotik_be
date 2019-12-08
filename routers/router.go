@@ -131,14 +131,19 @@ func InitRouter() *gin.Engine {
 	api = r.Group("/api/sales-order-detail")
 	api.POST("/page/:page/count/:count", OrderDetailController.GetDetail)
 	api.POST("", cekToken, OrderDetailController.Save)
-	api.DELETE("/:id", OrderDetailController.DeleteById)
+	api.DELETE("/:id", cekToken, OrderDetailController.DeleteById)
 
 	api = r.Group("/api/receive")
 	api.POST("/page/:page/count/:count", cekToken, ReceiveController.FilterData)
 	api.GET("/:id", cekToken, ReceiveController.GetByReceiveId)
+	api.POST("", cekToken, ReceiveController.Save)
+	api.POST("/approve", cekToken, ReceiveController.Approve)
+
 
 	api = r.Group("/api/receive-detail")
 	api.POST("/page/:page/count/:count", ReceiveDetailController.GetDetail)
+	api.POST("", cekToken, ReceiveDetailController.Save)
+	api.DELETE("/:id", cekToken, ReceiveDetailController.DeleteByID)
 
 	// Dashboard
 	dashboard := r.Group("/dashboard")
