@@ -96,3 +96,41 @@ func AsyncQuerysReceiveDetails(db *gorm.DB, offset int, limit int, receiveDetail
 	}
 	resChan <- nil
 }
+
+//SaveReceiveDetail ...
+func SaveReceiveDetail(receiveDetail *dbmodels.ReceiveDetail) (errCode string, errDesc string) {
+
+	fmt.Println(" Update Receive Detail  ------------------------------------------ ")
+
+	db := GetDbCon()
+	db.Debug().LogMode(true)
+
+	if r := db.Save(&receiveDetail); r.Error != nil {
+		errCode = "99"
+		errDesc = r.Error.Error()
+	}
+
+	errCode = "00"
+	errDesc = fmt.Sprintf("%v", receiveDetail.ID)
+	return
+
+}
+
+// DeleteReceiveDetailById ...
+func DeleteReceiveDetailById(id int64) (errCode string, errDesc string) {
+
+	fmt.Println(" Delete Receive Detail  ------------------------------------------  %v ", id)
+
+	db := GetDbCon()
+	db.Debug().LogMode(true)
+
+	if r := db.Where("id = ? ", id).Delete(dbmodels.ReceiveDetail{}); r.Error != nil {
+		errCode = "99"
+		errDesc = r.Error.Error()
+	}
+
+	errCode = "00"
+	errDesc = fmt.Sprintf("%v", id)
+	return
+
+}

@@ -1,8 +1,10 @@
 package services
 
 import (
+	"distribution-system-be/constants"
 	"distribution-system-be/database"
 	"distribution-system-be/models"
+	dbmodels "distribution-system-be/models/dbModels"
 	"distribution-system-be/models/dto"
 )
 
@@ -28,4 +30,28 @@ func (r ReceiveDetailService) GetDataReceiveDetailPage(param dto.FilterReceiveDe
 	res.Count = limit
 
 	return res
+}
+
+// SaveReceiveDetail ...
+func (r ReceiveDetailService) SaveReceiveDetail(receiveDetail *dbmodels.ReceiveDetail) (errCode string, errDesc string) {
+
+	if _, err := database.GetReceiveByOrderID(receiveDetail.ReceiveID); err != nil {
+		return "99", err.Error()
+	}
+
+	if err, errDesc := database.SaveReceiveDetail(receiveDetail); err != constants.ERR_CODE_00 {
+		return err, errDesc
+	}
+
+	return constants.ERR_CODE_00, constants.ERR_CODE_00_MSG
+}
+
+// DeleteReceiveDetailByID ...
+func (r ReceiveDetailService) DeleteReceiveDetailByID(receiveDetailID int64) (errCode string, errDesc string) {
+
+	if err, errDesc := database.DeleteReceiveDetailById(receiveDetailID); err != constants.ERR_CODE_00 {
+		return err, errDesc
+	}
+
+	return constants.ERR_CODE_00, constants.ERR_CODE_00_MSG
 }
