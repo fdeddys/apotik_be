@@ -138,6 +138,7 @@ func InitRouter() *gin.Engine {
 	api.GET("/:id", cekToken, ReceiveController.GetByReceiveId)
 	api.POST("", cekToken, ReceiveController.Save)
 	api.POST("/approve", cekToken, ReceiveController.Approve)
+	api.POST("/print/:id", cekToken, ReceiveController.PrintPreview)
 
 
 	api = r.Group("/api/receive-detail")

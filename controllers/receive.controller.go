@@ -5,7 +5,10 @@ import (
 	"distribution-system-be/models"
 	dbmodels "distribution-system-be/models/dbModels"
 	"distribution-system-be/models/dto"
+	"distribution-system-be/report"
 	"distribution-system-be/services"
+	"io"
+	"os"
 
 	"encoding/json"
 	"fmt"
@@ -150,5 +153,30 @@ func (r *ReceiveController) Approve(c *gin.Context) {
 	// res.OrderNo = newNumb
 	c.JSON(http.StatusOK, res)
 
+	return
+}
+
+// PrintPreview ...
+func (r *ReceiveController) PrintPreview(c *gin.Context) {
+
+	receiveID, errPage := strconv.ParseInt(c.Param("id"), 10, 64)
+	if errPage != nil {
+		logs.Info("error", errPage)
+		c.JSON(http.StatusBadRequest, "id not supplied")
+		c.Abort()
+		return
+	}
+
+	// fmt.Println("-------->", req)
+
+	report.GenerateReceiveReport(receiveID)
+
+	header := c.Writer.Header()
+	header["Content-type"] = []string{"application/x-pdf"}
+	header["Content-Disposition"] = []string{"attachment; filename= tes.pdf"}
+
+	file, _ := os.Open("receive.pdf")
+
+	io.Copy(c.Writer, file)
 	return
 }
