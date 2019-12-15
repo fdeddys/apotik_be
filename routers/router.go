@@ -46,6 +46,9 @@ func InitRouter() *gin.Engine {
 	ReceiveController := new(controllers.ReceiveController)
 	ReceiveDetailController := new(controllers.ReceiveDetailController)
 
+	AdjustmentController := new(controllers.AdjustmentController)
+	AdjustmentDetailController := new(controllers.AdjustmentDetailController)
+
 	api := r.Group("/api/user")
 	api.POST("/filter/page/:page/count/:count", UserController.GetUser)
 	api.POST("/", UserController.SaveDataUser)
@@ -133,6 +136,7 @@ func InitRouter() *gin.Engine {
 	api.POST("", cekToken, OrderDetailController.Save)
 	api.DELETE("/:id", cekToken, OrderDetailController.DeleteById)
 
+	// RECEIVING
 	api = r.Group("/api/receive")
 	api.POST("/page/:page/count/:count", cekToken, ReceiveController.FilterData)
 	api.GET("/:id", cekToken, ReceiveController.GetByReceiveId)
@@ -140,11 +144,23 @@ func InitRouter() *gin.Engine {
 	api.POST("/approve", cekToken, ReceiveController.Approve)
 	api.POST("/print/:id", cekToken, ReceiveController.PrintPreview)
 
-
 	api = r.Group("/api/receive-detail")
 	api.POST("/page/:page/count/:count", ReceiveDetailController.GetDetail)
 	api.POST("", cekToken, ReceiveDetailController.Save)
 	api.DELETE("/:id", cekToken, ReceiveDetailController.DeleteByID)
+
+	// ADJUSTMENT
+	api = r.Group("/api/adjustment")
+	api.POST("/page/:page/count/:count", cekToken, AdjustmentController.FilterData)
+	api.GET("/:id", cekToken, AdjustmentController.GetByAdjustmentId)
+	api.POST("", cekToken, AdjustmentController.Save)
+	api.POST("/approve", cekToken, AdjustmentController.Approve)
+	api.POST("/print/:id", cekToken, AdjustmentController.PrintPreview)
+
+	api = r.Group("/api/adjustment-detail")
+	api.POST("/page/:page/count/:count", AdjustmentDetailController.GetDetail)
+	api.POST("", cekToken, AdjustmentDetailController.Save)
+	api.DELETE("/:id", cekToken, AdjustmentDetailController.DeleteByID)
 
 	// Dashboard
 	dashboard := r.Group("/dashboard")
