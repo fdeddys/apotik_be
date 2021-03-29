@@ -2,7 +2,7 @@ package database
 
 import (
 	"distribution-system-be/models"
-	"distribution-system-be/models/dbModels"
+	dbmodels "distribution-system-be/models/dbModels"
 	dto "distribution-system-be/models/dto"
 	"fmt"
 	"log"
@@ -94,45 +94,19 @@ func SaveCustomer(Customer *dbmodels.Customer) models.Response {
 	db.Debug().LogMode(true)
 
 	var res models.Response
+	res.ErrCode = constants.ERR_CODE_00
+	res.ErrDesc = constants.ERR_CODE_00_MSG
 
 	if Customer.ID < 1 {
 		Customer.Code = GenerateCustomerCode()
 	}
-	if r := db.Save(&Customer); r.Error != nil {
-		res.ErrCode = "02"
-		res.ErrDesc = "Failed save data to DB"
+	r := db.Save(&Customer)
+	if r.Error != nil {
+		res.ErrCode = constants.ERR_CODE_30
+		res.ErrDesc = constants.ERR_CODE_30_MSG + " " + r.Error.Error()
 	}
-
-	res.ErrCode = constants.ERR_CODE_00
-	res.ErrDesc = constants.ERR_CODE_00_MSG
 
 	return res
-}
-
-// GenerateCustomerCode ...
-func GenerateCustomerCode() string {
-	db := GetDbCon()
-	db.Debug().LogMode(true)
-
-	var customer []dbmodels.Customer
-	err := db.Model(&dbmodels.Customer{}).Order("id desc").First(&customer).Error
-
-	if err != nil {
-		return "C0000001"
-	}
-	if len(customer) > 0 {
-		// fmt.Printf("ini latest code nya : %s \n", brand[0].Code)
-		prefix := strings.TrimPrefix(customer[0].Code, "C")
-		latestCode, err := strconv.Atoi(prefix)
-		if err != nil {
-			fmt.Printf("error")
-			return "C0000001"
-		}
-		wpadding := fmt.Sprintf("%06s", strconv.Itoa(latestCode+1))
-		return "C" + wpadding
-	}
-	return "C0000001"
-
 }
 
 // UpdateCustomer Update
@@ -141,14 +115,13 @@ func UpdateCustomer(Customer *dbmodels.Customer) models.Response {
 	db.Debug().LogMode(true)
 
 	var res models.Response
-
-	if r := db.Save(&Customer); r.Error != nil {
-		res.ErrCode = "02"
-		res.ErrDesc = "Failed save data to DB"
-	}
-
 	res.ErrCode = constants.ERR_CODE_00
 	res.ErrDesc = constants.ERR_CODE_00_MSG
+
+	if r := db.Save(&Customer); r.Error != nil {
+		res.ErrCode = constants.ERR_CODE_30
+		res.ErrDesc = constants.ERR_CODE_30_MSG + " " + r.Error.Error()
+	}
 
 	return res
 }
@@ -243,4 +216,30 @@ func FindCustomerByPhone(phoneNumb string) dbmodels.Customer {
 		return Customer
 	}
 	return dbmodels.Customer{}
+}
+
+// GenerateCustomerCode ...
+func GenerateCustomerCode() string {
+	db := GetDbCon()
+	db.Debug().LogMode(true)
+
+	var customer []dbmodels.Customer
+	err := db.Model(&dbmodels.Customer{}).Order("id desc").First(&customer).Error
+
+	if err != nil {
+		return "C0000001"
+	}
+	if len(customer) > 0 {
+		// fmt.Printf("ini latest code nya : %s \n", brand[0].Code)
+		prefix := strings.TrimPrefix(customer[0].Code, "C")
+		latestCode, err := strconv.Atoi(prefix)
+		if err != nil {
+			fmt.Printf("error")
+			return "C0000001"
+		}
+		wpadding := fmt.Sprintf("%06s", strconv.Itoa(latestCode+1))
+		return "C" + wpadding
+	}
+	return "C0000001"
+
 }
