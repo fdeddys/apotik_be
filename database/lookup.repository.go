@@ -21,9 +21,9 @@ func GetLookupByGroup(lookupstr string) ([]dbmodels.Lookup, string, string, erro
 	err := db.Model(&dbmodels.Lookup{}).Where("lookup_group ~* ?", &lookupstr).Find(&lookup).Error
 
 	if err != nil {
-		return nil, "02", "Error query data to DB", err
+		return nil, constants.ERR_CODE_30, constants.ERR_CODE_30_MSG + " " + err.Error(), err
 	}
-	return lookup, "00", "success", nil
+	return lookup, constants.ERR_CODE_00, constants.ERR_CODE_00_MSG, nil
 }
 
 // GetPagingLookup ...
@@ -83,7 +83,7 @@ func GetLookupFilter(id int) ([]dbmodels.Lookup, string, string, error) {
 	err := db.Model(&dbmodels.Lookup{}).Where("id = ?", &id).First(&lookup).Error
 
 	if err != nil {
-		return nil, constants.ERR_CODE_00, constants.ERR_CODE_51_MSG, err
+		return nil, constants.ERR_CODE_51, constants.ERR_CODE_51_MSG, err
 	}
 	// else {
 	return lookup, constants.ERR_CODE_00, constants.ERR_CODE_00_MSG, nil
@@ -109,7 +109,7 @@ func GetLookupByGroupName(groupName string) ([]dbmodels.Lookup, string, string, 
 	err = db.Model(&dbmodels.Lookup{}).Where("lookup_group = ?", lookupGroup.ID).Find(&lookup).Error
 
 	if err != nil {
-		return nil, constants.ERR_CODE_00, constants.ERR_CODE_51_MSG, err
+		return nil, constants.ERR_CODE_51, constants.ERR_CODE_51_MSG, err
 	}
 	// else {
 	return lookup, constants.ERR_CODE_00, constants.ERR_CODE_00_MSG, nil
@@ -119,6 +119,9 @@ func GetLookupByGroupName(groupName string) ([]dbmodels.Lookup, string, string, 
 //SaveLookup ...
 func SaveLookup(lookup dbmodels.Lookup) models.NoContentResponse {
 	var res models.NoContentResponse
+	res.ErrCode = constants.ERR_CODE_00
+	res.ErrDesc = constants.ERR_CODE_00_MSG
+
 	db := GetDbCon()
 	db.Debug().LogMode(true)
 
@@ -131,9 +134,6 @@ func SaveLookup(lookup dbmodels.Lookup) models.NoContentResponse {
 		res.ErrCode = constants.ERR_CODE_51
 		res.ErrDesc = constants.ERR_CODE_51_MSG
 	}
-
-	res.ErrCode = constants.ERR_CODE_00
-	res.ErrDesc = constants.ERR_CODE_00_MSG
 	return res
 }
 
@@ -148,7 +148,7 @@ func GetDistinctLookup() ([]dbmodels.Lookup, string, string, error) {
 	// err := db.Model(&dbmodels.Lookup{}).Where("id = ?", &id).First(&lookup).Error
 
 	if err != nil {
-		return nil, "02", "Error query data to DB", err
+		return nil, constants.ERR_CODE_30, constants.ERR_CODE_30_MSG + " " + err.Error(), err
 	}
 	// else {
 	return lookup, constants.ERR_CODE_00, constants.ERR_CODE_00_MSG, nil
@@ -157,6 +157,9 @@ func GetDistinctLookup() ([]dbmodels.Lookup, string, string, error) {
 // UpdateLookup ...
 func UpdateLookup(updatedlookup dbmodels.Lookup) models.NoContentResponse {
 	var res models.NoContentResponse
+	res.ErrCode = constants.ERR_CODE_00
+	res.ErrDesc = constants.ERR_CODE_00_MSG
+
 	db := GetDbCon()
 	db.Debug().LogMode(true)
 
@@ -165,6 +168,7 @@ func UpdateLookup(updatedlookup dbmodels.Lookup) models.NoContentResponse {
 	if err != nil {
 		res.ErrCode = constants.ERR_CODE_51
 		res.ErrDesc = constants.ERR_CODE_51_MSG
+		return res
 	}
 
 	lookup.Name = updatedlookup.Name
@@ -177,9 +181,6 @@ func UpdateLookup(updatedlookup dbmodels.Lookup) models.NoContentResponse {
 		res.ErrCode = constants.ERR_CODE_51
 		res.ErrDesc = constants.ERR_CODE_51_MSG
 	}
-
-	res.ErrCode = constants.ERR_CODE_00
-	res.ErrDesc = constants.ERR_CODE_00_MSG
 
 	return res
 }

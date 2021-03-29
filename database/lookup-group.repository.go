@@ -1,6 +1,7 @@
 package database
 
 import (
+	"distribution-system-be/constants"
 	dbmodels "distribution-system-be/models/dbModels"
 )
 
@@ -13,7 +14,7 @@ func GetLookupGroup() ([]dbmodels.LookupGroup, string, string, error) {
 	err := db.Model(&dbmodels.Lookup{}).Find(&lookupGroup).Error
 
 	if err != nil {
-		return nil, "02", "Error query data to DB", err
+		return nil, constants.ERR_CODE_30, constants.ERR_CODE_30_MSG + " " + err.Error(), err
 	}
 	return lookupGroup, "00", "success", nil
 }

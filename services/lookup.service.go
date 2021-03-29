@@ -18,18 +18,15 @@ func (h LookupService) GetLookupByGroup(lookupstr string) models.ContentResponse
 	var res models.ContentResponse
 
 	data, errCode, errDesc, err := repository.GetLookupByGroup(lookupstr)
+	res.Contents = data
+	res.ErrCode = errCode
+	res.ErrDesc = errDesc
 
 	if err != nil {
 		res.Contents = nil
 		res.ErrCode = constants.ERR_CODE_51
 		res.ErrDesc = constants.ERR_CODE_51_MSG
-		return res
 	}
-
-	res.Contents = data
-	res.ErrCode = errCode
-	res.ErrDesc = errDesc
-
 	return res
 }
 
@@ -60,49 +57,41 @@ func (h LookupService) GetLookupFilter(id int) models.ContentResponse {
 	var res models.ContentResponse
 
 	data, errCode, errDesc, err := repository.GetLookupFilter(id)
+	res.Contents = data
+	res.ErrCode = errCode
+	res.ErrDesc = errDesc
 
 	if err != nil {
 		res.Contents = nil
 		res.ErrCode = constants.ERR_CODE_51
 		res.ErrDesc = constants.ERR_CODE_51_MSG
-		return res
 	}
-
-	res.Contents = data
-	res.ErrCode = errCode
-	res.ErrDesc = errDesc
-
 	return res
 }
 
 // GetLookupByGroupName ...
 func (h LookupService) GetLookupByGroupName(name string) models.ContentResponse {
 
-	fmt.Println("Loojkuyp service ======>")
+	fmt.Println("Lookup service ======>")
 	var res models.ContentResponse
 
 	data, errCode, errDesc, err := repository.GetLookupByGroupName(name)
+	res.Contents = data
+	res.ErrCode = errCode
+	res.ErrDesc = errDesc
 
 	if err != nil {
 		res.Contents = nil
 		res.ErrCode = constants.ERR_CODE_51
 		res.ErrDesc = constants.ERR_CODE_51_MSG
-		return res
 	}
-
-	res.Contents = data
-	res.ErrCode = errCode
-	res.ErrDesc = errDesc
-
 	return res
 }
 
 // SaveLookup ...
 func (h LookupService) SaveLookup(lookup *dbmodels.Lookup) models.NoContentResponse {
 	// var res models.ResponseSave
-	res := repository.SaveLookup(*lookup)
-
-	return res
+	return repository.SaveLookup(*lookup)
 }
 
 // GetDistinctLookup ...
@@ -111,24 +100,19 @@ func (h LookupService) GetDistinctLookup() models.ContentResponse {
 	var res models.ContentResponse
 
 	data, errCode, errDesc, err := repository.GetDistinctLookup()
+	res.Contents = data
+	res.ErrCode = errCode
+	res.ErrDesc = errDesc
 
 	if err != nil {
 		res.Contents = nil
 		res.ErrCode = constants.ERR_CODE_51
 		res.ErrDesc = constants.ERR_CODE_51_MSG
-		return res
 	}
-
-	res.Contents = data
-	res.ErrCode = errCode
-	res.ErrDesc = errDesc
-
 	return res
 }
 
 // UpdateLookup ...
 func (h LookupService) UpdateLookup(lookup *dbmodels.Lookup) models.NoContentResponse {
-	res := repository.UpdateLookup(*lookup)
-
-	return res
+	return repository.UpdateLookup(*lookup)
 }
