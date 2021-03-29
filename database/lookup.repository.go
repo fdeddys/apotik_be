@@ -98,8 +98,15 @@ func GetLookupByGroupName(groupName string) ([]dbmodels.Lookup, string, string, 
 	db := GetDbCon()
 	db.Debug().LogMode(true)
 
+	fmt.Println("groupName => ", groupName)
+	var lookupGroup dbmodels.LookupGroup
+	err := db.Model(&dbmodels.LookupGroup{}).Where("name iLike ?", strings.ToUpper(groupName)).Find(&lookupGroup).Error
+	if err != nil {
+		return nil, constants.ERR_CODE_00, constants.ERR_CODE_51_MSG, err
+	}
+
 	var lookup []dbmodels.Lookup
-	err := db.Model(&dbmodels.Lookup{}).Where("lookup_group = ?", strings.ToUpper(groupName)).Find(&lookup).Error
+	err = db.Model(&dbmodels.Lookup{}).Where("lookup_group = ?", lookupGroup.ID).Find(&lookup).Error
 
 	if err != nil {
 		return nil, constants.ERR_CODE_00, constants.ERR_CODE_51_MSG, err
