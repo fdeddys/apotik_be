@@ -1,6 +1,7 @@
 package database
 
 import (
+	"distribution-system-be/constants"
 	"distribution-system-be/models"
 	dbmodels "distribution-system-be/models/dbModels"
 	dto "distribution-system-be/models/dto"
@@ -9,6 +10,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 )
 
 // GetProductGroupDetails ...
@@ -20,10 +22,10 @@ func GetProductGroupDetails(id int) ([]dbmodels.ProductGroup, string, string, er
 	err := db.Model(&dbmodels.ProductGroup{}).Where("id = ?", &id).First(&productGroup).Error
 
 	if err != nil {
-		return nil, "02", "Error query data to DB", err
+		return nil, constants.ERR_CODE_30, constants.ERR_CODE_30_MSG, err
 	}
 	// else {
-	return productGroup, "00", "success", nil
+	return productGroup, constants.ERR_CODE_00, constants.ERR_CODE_00_MSG, nil
 	// }
 }
 
@@ -73,30 +75,31 @@ func GetProductGroupPaging(param dto.FilterProductGroup, offset int, limit int) 
 // UpdateProductGroup ...
 func UpdateProductGroup(updatedProductGroup dbmodels.ProductGroup) models.NoContentResponse {
 	var res models.NoContentResponse
+	res.ErrCode = constants.ERR_CODE_00
+	res.ErrDesc = constants.ERR_CODE_00_MSG
+
 	db := GetDbCon()
 	db.Debug().LogMode(true)
 
 	var productGroup dbmodels.ProductGroup
 	err := db.Model(&dbmodels.Brand{}).Where("id=?", &updatedProductGroup.ID).First(&productGroup).Error
 	if err != nil {
-		res.ErrCode = "02"
-		res.ErrDesc = "Error select data to DB"
+		res.ErrCode = constants.ERR_CODE_30
+		res.ErrDesc = constants.ERR_CODE_30_MSG + " " + err.Error()
+		return res
 	}
 
 	productGroup.Name = updatedProductGroup.Name
 	productGroup.Status = updatedProductGroup.Status
-	productGroup.LastUpdateBy = updatedProductGroup.LastUpdateBy
-	productGroup.LastUpdate = updatedProductGroup.LastUpdate
+	productGroup.LastUpdateBy = dto.CurrUser
+	productGroup.LastUpdate = time.Now()
 	productGroup.Code = updatedProductGroup.Code
 
 	err2 := db.Save(&productGroup)
 	if err2 != nil {
-		res.ErrCode = "02"
-		res.ErrDesc = "Error update data to DB"
+		res.ErrCode = constants.ERR_CODE_30
+		res.ErrDesc = constants.ERR_CODE_30_MSG + " " + err2.Error.Error()
 	}
-
-	res.ErrCode = "00"
-	res.ErrDesc = "Success"
 
 	return res
 }
@@ -104,20 +107,22 @@ func UpdateProductGroup(updatedProductGroup dbmodels.ProductGroup) models.NoCont
 //SaveProductGroup ...
 func SaveProductGroup(productGroup dbmodels.ProductGroup) models.NoContentResponse {
 	var res models.NoContentResponse
+	res.ErrCode = constants.ERR_CODE_00
+	res.ErrDesc = constants.ERR_CODE_00_MSG
+
 	db := GetDbCon()
 	db.Debug().LogMode(true)
-
 	if productGroup.ID < 1 {
 		productGroup.Code = GenerateProductGroupCode()
 	}
 
-	if r := db.Save(&productGroup); r.Error != nil {
-		res.ErrCode = "02"
-		res.ErrDesc = "Error save data to DB"
+	productGroup.LastUpdateBy = dto.CurrUser
+	productGroup.LastUpdate = time.Now()
+	r := db.Save(&productGroup)
+	if r.Error != nil {
+		res.ErrCode = constants.ERR_CODE_30
+		res.ErrDesc = constants.ERR_CODE_30_MSG + " " + r.Error.Error()
 	}
-
-	res.ErrCode = "00"
-	res.ErrDesc = "Success"
 	return res
 }
 
