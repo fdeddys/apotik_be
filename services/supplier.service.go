@@ -85,7 +85,7 @@ func (s SupplierService) UpdateDataSupplier(supplier *dbmodels.Supplier) models.
 }
 
 // Get Data Supplier Paging
-func (s SupplierService) GetDataSupplierPaging(param dto.FilterName, page int, limit int) models.ResponsePagination {
+func (s SupplierService) GetDataSupplierPaging(param dto.FilterPaging, page int, limit int) models.ResponsePagination {
 	var res models.ResponsePagination
 
 	offset := (page - 1) * limit
