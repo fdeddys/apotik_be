@@ -59,7 +59,7 @@ func (s *SupplierController) SaveDataSupplier(c *gin.Context) {
 }
 
 func (s *SupplierController) FilterDataSupplier(c *gin.Context) {
-	req := dto.FilterName{}
+	req := dto.FilterPaging{}
 	res := models.ResponsePagination{}
 
 	page, errPage := strconv.Atoi(c.Param("page"))
