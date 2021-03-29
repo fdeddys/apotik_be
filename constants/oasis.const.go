@@ -14,6 +14,15 @@ const (
 	ERR_CODE_03_MSG = "Error, unmarshall body Request"
 )
 
+
+// ERR code Global
+const (
+	ERR_CODE_30     = "30"
+	ERR_CODE_30_MSG = "Failed save data to DB"
+
+)
+
+
 const (
 	ERR_CODE_50     = "50"
 	ERR_CODE_50_MSG = "Invalid username / password"
