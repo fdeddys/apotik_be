@@ -15,7 +15,7 @@ import (
 )
 
 // Get Data Supplier
-func GetSupplierPaging(param dto.FilterName, offset int, limit int) ([]dbmodels.Supplier, int, error) {
+func GetSupplierPaging(param dto.FilterPaging, offset int, limit int) ([]dbmodels.Supplier, int, error) {
 	db := GetDbCon()
 	db.Debug().LogMode(true)
 
@@ -59,13 +59,18 @@ func GetSupplierPaging(param dto.FilterName, offset int, limit int) ([]dbmodels.
 }
 
 // AsyncQueryCountsSupplier ...
-func AsyncQueryCountsSupplier(db *gorm.DB, total *int, param dto.FilterName, resChan chan error) {
+func AsyncQueryCountsSupplier(db *gorm.DB, total *int, param dto.FilterPaging, resChan chan error) {
 	var searchName = "%"
 	if strings.TrimSpace(param.Name) != "" {
-		searchName = param.Name + searchName
+		searchName += param.Name + "%"
 	}
 
-	err := db.Model(&dbmodels.Supplier{}).Where("name ilike ?", searchName).Count(&*total).Error
+	var searchCode = "%"
+	if strings.TrimSpace(param.Code) != "" {
+		searchCode += param.Code + "%"
+	}
+
+	err := db.Model(&dbmodels.Supplier{}).Where("name ilike ? AND code ilike ?", searchName,searchCode).Count(&*total).Error
 
 	if err != nil {
 		resChan <- err
@@ -74,14 +79,18 @@ func AsyncQueryCountsSupplier(db *gorm.DB, total *int, param dto.FilterName, res
 }
 
 // AsyncQuerysSupplier ...
-func AsyncQuerysSupplier(db *gorm.DB, offset int, limit int, supplier *[]dbmodels.Supplier, param dto.FilterName, resChan chan error) {
-
+func AsyncQuerysSupplier(db *gorm.DB, offset int, limit int, supplier *[]dbmodels.Supplier, param dto.FilterPaging, resChan chan error) {
 	var searchName = "%"
 	if strings.TrimSpace(param.Name) != "" {
-		searchName = param.Name + searchName
+		searchName += param.Name + "%"
 	}
 
-	err := db.Preload("Bank").Order("id asc").Offset(offset).Limit(limit).Find(&supplier, "name ilike ?", searchName).Error
+	var searchCode = "%"
+	if strings.TrimSpace(param.Code) != "" {
+		searchCode += param.Code + "%"
+	}
+
+	err := db.Preload("Bank").Order("id asc").Offset(offset).Limit(limit).Find(&supplier, "name ilike ? AND code ilike ?", searchName,searchCode).Error
 	if err != nil {
 		resChan <- err
 	}

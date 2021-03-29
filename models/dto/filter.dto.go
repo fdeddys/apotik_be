@@ -53,6 +53,12 @@ type LoginResponseDto struct {
 	Token   string `json:"token"`
 }
 
+// FilterPaging ...
+type FilterPaging struct {
+	Name string `json:"name"`
+	Code string `json:"code"`
+}
+
 // FilterMerchant ...
 type FilterName struct {
 	Name string `json:"name"`
