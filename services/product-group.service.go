@@ -5,7 +5,6 @@ import (
 	"distribution-system-be/models"
 	dbmodels "distribution-system-be/models/dbModels"
 	dto "distribution-system-be/models/dto"
-	"time"
 )
 
 // ProductGroupService ...
@@ -55,8 +54,8 @@ func (h ProductGroupService) GetProductGroupDetails(id int) models.ContentRespon
 
 // SaveProductGroup ...
 func (h ProductGroupService) SaveProductGroup(productGroup *dbmodels.ProductGroup) models.NoContentResponse {
-	productGroup.LastUpdate = time.Now()
-	productGroup.LastUpdateBy = dto.CurrUser
+	// productGroup.LastUpdate = time.Now()
+	// productGroup.LastUpdateBy = dto.CurrUser
 
 	// var res models.ResponseSave
 	res := repository.SaveProductGroup(*productGroup)
@@ -66,8 +65,8 @@ func (h ProductGroupService) SaveProductGroup(productGroup *dbmodels.ProductGrou
 
 // UpdateProductGroup ...
 func (h ProductGroupService) UpdateProductGroup(productGroup *dbmodels.ProductGroup) models.NoContentResponse {
-	productGroup.LastUpdate = time.Now()
-	productGroup.LastUpdateBy = dto.CurrUser
+	// productGroup.LastUpdate = time.Now()
+	// productGroup.LastUpdateBy = dto.CurrUser
 
 	res := repository.UpdateProductGroup(*productGroup)
 
