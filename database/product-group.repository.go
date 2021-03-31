@@ -30,7 +30,7 @@ func GetProductGroupDetails(id int) ([]dbmodels.ProductGroup, string, string, er
 }
 
 // GetProductGroupPaging ...
-func GetProductGroupPaging(param dto.FilterProductGroup, offset int, limit int) ([]dbmodels.ProductGroup, int, error) {
+func GetProductGroupPaging(param dto.FilterPaging, offset int, limit int) ([]dbmodels.ProductGroup, int, error) {
 	db := GetDbCon()
 	db.Debug().LogMode(true)
 
