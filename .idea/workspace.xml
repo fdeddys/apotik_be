@@ -2,10 +2,14 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="b19587a6-fd83-417f-b7e2-4834ae30f1f4" name="Default Changelist" comment="">
+<<<<<<< Updated upstream
       <change afterPath="$PROJECT_DIR$/distribution-system-be" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/database/pagination.repository.go" beforeDir="false" afterPath="$PROJECT_DIR$/database/pagination.repository.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/database/product-group.repository.go" beforeDir="false" afterPath="$PROJECT_DIR$/database/product-group.repository.go" afterDir="false" />
+=======
+      <change beforePath="$PROJECT_DIR$/distribution-system-be" beforeDir="false" afterPath="$PROJECT_DIR$/distribution-system-be" afterDir="false" />
+>>>>>>> Stashed changes
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -50,7 +54,10 @@
         </entry>
       </map>
     </option>
+<<<<<<< Updated upstream
     <option name="oldMeFiltersMigrated" value="true" />
+=======
+>>>>>>> Stashed changes
   </component>
   <component name="VgoProject">
     <integration-enabled>true</integration-enabled>
