@@ -6,7 +6,7 @@ type Sequence struct {
 	Subject string `gorm:"column:subj"`
 	Year    string `gorm:"column:year"`
 	Month   string `gorm:"column:month" `
-	Seq     int8   `gorm:"column:seq"`
+	Seq     int8   `gorm:"column:last_seq"`
 }
 
 // TableName ...

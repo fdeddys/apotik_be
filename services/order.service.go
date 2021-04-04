@@ -94,7 +94,7 @@ func validateQty(orderID int64) (isValid bool, errCode, errDesc string) {
 			return false, errCodeProd, fmt.Sprintf("[%v] Product not found or inactive !", orderDetail.ProductID)
 		}
 		curQty := product.QtyStock
-		orderQty := orderDetail.Qty
+		orderQty := orderDetail.QtyOrder
 
 		if orderQty > curQty {
 			return false, "99", fmt.Sprintf("[%v] qty order = %v more than qty stock = %v!", product.Name, orderQty, curQty)

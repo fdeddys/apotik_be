@@ -1,6 +1,7 @@
 package database
 
 import (
+	"distribution-system-be/constants"
 	dbmodels "distribution-system-be/models/dbModels"
 	dto "distribution-system-be/models/dto"
 	"fmt"
@@ -128,14 +129,13 @@ func SaveSalesOrderDetail(orderDetail *dbmodels.SalesOrderDetail) (errCode strin
 	db := GetDbCon()
 	db.Debug().LogMode(true)
 
+	errCode = constants.ERR_CODE_00
+	errDesc = fmt.Sprintf("%v", orderDetail.ID)
 	// r := db.Model(&newOrder).Where("id = ?", order.ID).Update(dbmodels.SalesOrder{OrderNo: order.OrderNo, StatusCode: "001", WarehouseCode: order.WarehouseCode, InternalStatus: 1, OrderDate: order.OrderDate})
 	if r := db.Save(&orderDetail); r.Error != nil {
-		errCode = "99"
-		errDesc = r.Error.Error()
+		errCode = constants.ERR_CODE_30
+		errDesc = constants.ERR_CODE_30_MSG + " " + r.Error.Error()
 	}
-
-	errCode = "00"
-	errDesc = fmt.Sprintf("%v", orderDetail.ID)
 	return
 
 }
@@ -147,14 +147,14 @@ func DeleteSalesOrderDetailById(id int64) (errCode string, errDesc string) {
 	db := GetDbCon()
 	db.Debug().LogMode(true)
 
+	errCode = constants.ERR_CODE_00
+	errDesc = fmt.Sprintf("%v", id)
+
 	// r := db.Model(&newOrder).Where("id = ?", order.ID).Update(dbmodels.SalesOrder{OrderNo: order.OrderNo, StatusCode: "001", WarehouseCode: order.WarehouseCode, InternalStatus: 1, OrderDate: order.OrderDate})
 	if r := db.Where("id = ? ", id).Delete(dbmodels.SalesOrderDetail{}); r.Error != nil {
-		errCode = "99"
-		errDesc = r.Error.Error()
+		errCode = constants.ERR_CODE_30
+		errDesc = constants.ERR_CODE_30_MSG + " " + r.Error.Error()
 	}
-
-	errCode = "00"
-	errDesc = fmt.Sprintf("%v", id)
 	return
 
 }

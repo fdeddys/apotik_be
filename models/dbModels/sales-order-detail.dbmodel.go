@@ -7,11 +7,15 @@ type SalesOrderDetail struct {
 	ID           int64 `json:"id" gorm:"column:id"`
 	SalesOrderID int64 `json:"salesOrderId" gorm:"column:sales_order_id"`
 
-	ProductID int64   `json:"productId" gorm:"column:product_id"`
-	Product   Product `json:"product" gorm:"foreignkey:id;association_foreignkey:ProductID;association_autoupdate:false;association_autocreate:false"`
-	Qty       float32 `json:"qty" gorm:"column:qty"`
-	Price     float32 `json:"price" gorm:"column:price"`
-	Disc      float32 `json:"disc" gorm:"column:disc"`
+	ProductID  int64   `json:"productId" gorm:"column:product_id"`
+	Product    Product `json:"product" gorm:"foreignkey:id;association_foreignkey:ProductID;association_autoupdate:false;association_autocreate:false"`
+	QtyOrder   float32 `json:"qtyOrder" gorm:"column:qty_order"`
+	QtyPicking float32 `json:"qtyPicking" gorm:"column:qty_picking"`
+	QtyReceive float32 `json:"qtyReceive" gorm:"column:qty_receive"`
+
+	Price float32 `json:"price" gorm:"column:price"`
+	Disc1 float32 `json:"disc1" gorm:"column:disc1"`
+	Disc2 float32 `json:"disc2" gorm:"column:disc2"`
 
 	UomID int64  `json:"uomId" gorm:"column:uom"`
 	UOM   Lookup `json:"uom" gorm:"foreignkey:id;association_foreignkey:UomID;association_autoupdate:false;association_autocreate:false"`
