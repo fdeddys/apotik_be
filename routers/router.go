@@ -49,6 +49,9 @@ func InitRouter() *gin.Engine {
 	AdjustmentController := new(controllers.AdjustmentController)
 	AdjustmentDetailController := new(controllers.AdjustmentDetailController)
 
+	WarehouseController := new(controllers.WarehouseController)
+	SalesmanController := new(controllers.SalesmanController)
+
 	api := r.Group("/api/user")
 	api.POST("/filter/page/:page/count/:count", UserController.GetUser)
 	api.POST("/", UserController.SaveDataUser)
@@ -161,6 +164,12 @@ func InitRouter() *gin.Engine {
 	api.POST("/page/:page/count/:count", AdjustmentDetailController.GetDetail)
 	api.POST("", cekToken, AdjustmentDetailController.Save)
 	api.DELETE("/:id", cekToken, AdjustmentDetailController.DeleteByID)
+
+	api = r.Group("/api/warehouse")
+	api.GET("", WarehouseController.GetWarehouse)
+
+	api = r.Group("/api/salesman")
+	api.GET("", SalesmanController.GetSalesman)
 
 	// Dashboard
 	dashboard := r.Group("/dashboard")

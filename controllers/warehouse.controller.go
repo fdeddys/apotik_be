@@ -8,7 +8,7 @@ import (
 	"github.com/jinzhu/gorm"
 )
 
-// BrandController ...
+// WarehouseController ...
 type WarehouseController struct {
 	DB *gorm.DB
 }
@@ -16,7 +16,7 @@ type WarehouseController struct {
 // WarehouseService ...
 var WarehouseService = new(services.WarehouseService)
 
-// GetBrand ...
+// GetWarehouse ...
 func (h *WarehouseController) GetWarehouse(c *gin.Context) {
 
 	res := WarehouseService.GetAllWarehouse()
