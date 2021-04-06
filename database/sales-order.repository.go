@@ -88,7 +88,7 @@ func SaveSalesOrderApprove(order *dbmodels.SalesOrder) (errCode string, errDesc 
 			return errCodeProd, errDescProd
 		}
 		curQty := product.QtyStock
-		updateQty := curQty - orderDetail.Qty
+		updateQty := curQty - orderDetail.QtyOrder
 
 		fmt.Println("cur qty =", curQty, " update =", updateQty)
 		var historyStock dbmodels.HistoryStock
@@ -100,14 +100,14 @@ func SaveSalesOrderApprove(order *dbmodels.SalesOrder) (errCode string, errDesc 
 		historyStock.ReffNo = order.SalesOrderNo
 		historyStock.TransDate = order.OrderDate
 		historyStock.Debet = 0
-		historyStock.Kredit = orderDetail.Qty
+		historyStock.Kredit = orderDetail.QtyOrder
 		historyStock.Saldo = updateQty
 		historyStock.LastUpdate = time.Now()
 		historyStock.LastUpdateBy = dto.CurrUser
 
 		UpdateStockProductByID(orderDetail.ProductID, updateQty)
 		SaveHistory(historyStock)
-		total = total + (orderDetail.Price * orderDetail.Qty)
+		total = total + (orderDetail.Price * orderDetail.QtyOrder)
 	}
 
 	db.Debug().LogMode(true)

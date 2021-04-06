@@ -94,7 +94,7 @@ func validateQty(orderID int64) (isValid bool, errCode, errDesc string) {
 			return false, errCodeProd, fmt.Sprintf("[%v] Product not found or inactive !", orderDetail.ProductID)
 		}
 		curQty := product.QtyStock
-		orderQty := orderDetail.Qty
+		orderQty := orderDetail.QtyOrder
 
 		if orderQty > curQty {
 			return false, "99", fmt.Sprintf("[%v] qty order = %v more than qty stock = %v!", product.Name, orderQty, curQty)
@@ -128,7 +128,12 @@ func generateNewOrderNo() (newOrderNo string, errCode string, errMsg string) {
 		return "", err, errdesc
 	}
 	newNumb := fmt.Sprintf("00000%v", number)
-	newNumb = newNumb[len(newNumb)-5 : len(newNumb)]
+	fmt.Println("new numb bef : ", newNumb)
+	runes := []rune(newNumb)
+	newNumb = string(runes[len(newNumb)-5 : len(newNumb)])
+	fmt.Println("new numb after : ", newNumb)
+
+	// newNumb = newNumb[len(newNumb)-5 : len(newNumb)]
 	newOrderNo = fmt.Sprintf("%v%v%v%v", header, thn, bln, newNumb)
 
 	return newOrderNo, constants.ERR_CODE_00, constants.ERR_CODE_00_MSG

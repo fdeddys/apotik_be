@@ -160,11 +160,11 @@ func fillDataDetail(orderID int64) []DataDetail {
 	grandTotal = 0
 	for i, ordDetail := range orderDetails {
 		data.Item = ordDetail.Product.Name
-		data.Quantity = int64(ordDetail.Qty)
+		data.Quantity = int64(ordDetail.QtyOrder)
 		data.Unit = ordDetail.UOM.Name
 		data.Price = int64(ordDetail.Price)
 		total := data.Price * data.Quantity
-		data.Total = int64(ordDetail.Price) * int64(ordDetail.Qty)
+		data.Total = int64(ordDetail.Price) * int64(ordDetail.QtyOrder)
 		subTotal += total
 		res[i+1] = data
 		fmt.Println("total sub total", subTotal)
