@@ -82,19 +82,22 @@ func SaveSalesOrderApprove(order *dbmodels.SalesOrder) (errCode string, errDesc 
 	for idx, orderDetail := range salesOrderDetails {
 		fmt.Println("idx -> ", idx)
 
-		product, errCodeProd, errDescProd := FindProductByID(orderDetail.ProductID)
-		if errCodeProd != constants.ERR_CODE_00 {
-			tx.Rollback()
-			return errCodeProd, errDescProd
-		}
-		curQty := product.QtyStock
+		product, _, _ := FindProductByID(orderDetail.ProductID)
+		// if errCodeProd != constants.ERR_CODE_00 {
+		// 	tx.Rollback()
+		// 	return errCodeProd, errDescProd
+		// }
+		// curQty := product.QtyStock
+		checkStock, _, _ := GetStockByProductAndWarehouse(product.ID, order.WarehouseID)
+		curQty := checkStock.Qty
+
 		updateQty := curQty - orderDetail.QtyOrder
 
 		fmt.Println("cur qty =", curQty, " update =", updateQty)
 		var historyStock dbmodels.HistoryStock
 		historyStock.Code = product.Code
 		historyStock.Description = "Sales Order"
-		historyStock.Hpp = product.Hpp
+		historyStock.Hpp = checkStock.Hpp
 		historyStock.Name = product.Name
 		historyStock.Price = orderDetail.Price
 		historyStock.ReffNo = order.SalesOrderNo
@@ -105,9 +108,9 @@ func SaveSalesOrderApprove(order *dbmodels.SalesOrder) (errCode string, errDesc 
 		historyStock.LastUpdate = time.Now()
 		historyStock.LastUpdateBy = dto.CurrUser
 
-		UpdateStockProductByID(orderDetail.ProductID, updateQty)
+		UpdateStockProductByID(orderDetail.ProductID, updateQty, order.WarehouseID)
 		SaveHistory(historyStock)
-		total = total + (orderDetail.Price * orderDetail.QtyOrder)
+		total = total + (orderDetail.Price * float32(orderDetail.QtyOrder))
 	}
 
 	db.Debug().LogMode(true)
@@ -257,7 +260,7 @@ func AsyncQuerysOrders(db *gorm.DB, offset int, limit int, status int, orders *[
 		err = db.Preload("Customer").Preload("Salesman").Order("order_date DESC").Offset(offset).Limit(limit).Find(&orders, " ( ( status = ?) or ( not ?) ) AND COALESCE(sales_order_no, '') ilike ? AND order_date between ? and ?   ", status, byStatus, orderNumber, param.StartDate, param.EndDate).Error
 	} else {
 		fmt.Println("isi dari kosong ")
-		err = db.Offset(offset).Limit(limit).Preload("Customer").Preload("Salesman").Find(&orders, " ( ( status = ?) or ( not ?) ) AND COALESCE(sales_order_no,'') ilike ?  ", status, byStatus, orderNumber).Error
+		err = db.Offset(offset).Limit(limit).Preload("Customer").Preload("Salesman").Order("order_date DESC").Find(&orders, " ( ( status = ?) or ( not ?) ) AND COALESCE(sales_order_no,'') ilike ?  ", status, byStatus, orderNumber).Error
 		if err != nil {
 			fmt.Println("error --> ", err)
 		}

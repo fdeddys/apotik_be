@@ -2,7 +2,7 @@ package controllers
 
 import (
 	"distribution-system-be/models"
-	"distribution-system-be/models/dbModels"
+	dbmodels "distribution-system-be/models/dbModels"
 	"distribution-system-be/models/dto"
 	"distribution-system-be/report"
 	"distribution-system-be/services"
@@ -183,8 +183,8 @@ func (s *OrderController) Reject(c *gin.Context) {
 	return
 }
 
-// PrintInvoice ...
-func (s *OrderController) PrintInvoice(c *gin.Context) {
+// PrintSO ...
+func (s *OrderController) PrintSO(c *gin.Context) {
 
 	orderID, errPage := strconv.ParseInt(c.Param("id"), 10, 64)
 	if errPage != nil {
@@ -196,7 +196,7 @@ func (s *OrderController) PrintInvoice(c *gin.Context) {
 
 	// fmt.Println("-------->", req)
 
-	report.GenerateSalesOrderReport(orderID)
+	report.GenerateSalesOrderReport(orderID, "so")
 
 	header := c.Writer.Header()
 	// header["Content-type"] = []string{"application/octet-stream"}

@@ -62,10 +62,17 @@ var (
 	// grandTotal int64
 
 	invInfo InvHdrInfo
+	title   string
 )
 
-func GenerateSalesOrderReport(orderId int64) {
+func GenerateSalesOrderReport(orderId int64, reportType string) {
 
+	switch reportType {
+	case "so":
+		title = "Sales Order"
+	case "invoice":
+		title = "Invoice"
+	}
 	spaceLen = beego.AppConfig.DefaultFloat("report.space-len", 15)
 	pageMargin = beego.AppConfig.DefaultFloat("report.page-margin", 12)
 
@@ -200,7 +207,7 @@ func showInvNo(pdf *gopdf.GoPdf) {
 	pdf.SetY(30)
 	pdf.SetX(450)
 	setFontBold(pdf, 10)
-	pdf.Text("SALES INVOICE")
+	pdf.Text(title)
 
 	space(pdf)
 	setFont(pdf, 12)

@@ -71,7 +71,7 @@ func (o OrderService) Save(order *dbmodels.SalesOrder) (errCode, errDesc, orderN
 func (o OrderService) Approve(order *dbmodels.SalesOrder) (errCode, errDesc string) {
 
 	// cek qty
-	valid, errCode, errDesc := validateQty(order.ID)
+	valid, errCode, errDesc := validateQty(order.ID, order.WarehouseID)
 	if !valid {
 		return errCode, errDesc
 	}
@@ -83,7 +83,9 @@ func (o OrderService) Approve(order *dbmodels.SalesOrder) (errCode, errDesc stri
 	return constants.ERR_CODE_00, constants.ERR_CODE_00_MSG
 }
 
-func validateQty(orderID int64) (isValid bool, errCode, errDesc string) {
+func validateQty(orderID, warehouseID int64) (isValid bool, errCode, errDesc string) {
+
+	pesan := ""
 
 	salesOrderDetails := database.GetAllDataDetail(orderID)
 	for idx, orderDetail := range salesOrderDetails {
@@ -91,16 +93,27 @@ func validateQty(orderID int64) (isValid bool, errCode, errDesc string) {
 
 		product, errCodeProd, _ := database.FindProductByID(orderDetail.ProductID)
 		if errCodeProd != constants.ERR_CODE_00 {
-			return false, errCodeProd, fmt.Sprintf("[%v] Product not found or inactive !", orderDetail.ProductID)
+			pesan += fmt.Sprintf(" [%v] Product not found or inactive !", orderDetail.ProductID)
+			break
 		}
-		curQty := product.QtyStock
+
+		checkStock, errcode, errDesc := database.GetStockByProductAndWarehouse(product.ID, warehouseID)
+		if errcode != constants.ERR_CODE_00 {
+			pesan += fmt.Sprintf(" [%v] %v", product.Name, errDesc)
+			break
+		}
+		curQty := checkStock.Qty
 		orderQty := orderDetail.QtyOrder
 
 		if orderQty > curQty {
-			return false, "99", fmt.Sprintf("[%v] qty order = %v more than qty stock = %v!", product.Name, orderQty, curQty)
+			pesan += fmt.Sprintf(" [%v] qty order = %v more than qty stock = %v!", product.Name, orderQty, curQty)
+			break
 		}
 	}
-	return true, "", ""
+	if pesan == "" {
+		return true, "", ""
+	}
+	return false, constants.ERR_CODE_80, pesan
 }
 
 // Reject ...

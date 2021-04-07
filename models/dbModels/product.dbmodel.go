@@ -26,9 +26,9 @@ type Product struct {
 	LastUpdateBy string    `json:"lastUpdateBy" gorm:"column:last_update_by"`
 	LastUpdate   time.Time `json:"lastUpdate"  gorm:"column:last_update"`
 	QtyUom       int16     `json:"qtyUom" gorm:"column:qty_uom"`
-	QtyStock     float32   `json:"qtyStock" gorm:"column:qty_stock"`
-	Hpp          float32   `json:"hpp" gorm:"column:hpp"`
-	SellPrice    float32   `json:"sellPrice" gorm:"column:sell_price"`
+	// QtyStock     float32   `json:"qtyStock" gorm:"column:qty_stock"`
+	// Hpp          float32   `json:"hpp" gorm:"column:hpp"`
+	SellPrice float32 `json:"sellPrice" gorm:"column:sell_price"`
 }
 
 // TableName ...

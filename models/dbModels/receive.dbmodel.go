@@ -11,6 +11,12 @@ type Receive struct {
 	SupplierID int64    `json:"supplierId" gorm:"column:supplier_id"`
 	Supplier   Supplier `json:"supplier" gorm:"foreignkey:id;association_foreignkey:SupplierID;association_autoupdate:false;association_autocreate:false"`
 
+	WarehouseID int64     `json:"warehouseId" gorm:"column:warehouse_id"`
+	Warehouse   Warehouse `json:"warehouse" gorm:"foreignkey:id;association_foreignkey:WarehouseID;association_autoupdate:false;association_autocreate:false"`
+
+	InvoiceNo string `json:"invoiceNo" gorm:"column:invoice_no"`
+	PoNo      string `json:"poNo" gorm:"column:po_no"`
+
 	Note       string  `json:"note" gorm:"column:note"`
 	Tax        float32 `json:"tax" gorm:"column:tax"`
 	Total      float32 `json:"total" gorm:"column:total"`

@@ -132,11 +132,12 @@ func InitRouter() *gin.Engine {
 	api.POST("", cekToken, OrderController.Save)
 	api.POST("/approve", cekToken, OrderController.Approve)
 	api.POST("/reject", cekToken, OrderController.Reject)
-	api.POST("/invoice/:id", OrderController.PrintInvoice)
+	api.POST("/print/so/:id", OrderController.PrintSO)
 
 	api = r.Group("/api/sales-order-detail")
 	api.POST("/page/:page/count/:count", OrderDetailController.GetDetail)
 	api.POST("", cekToken, OrderDetailController.Save)
+	// api.POST("/updateItemRecv", cekToken, OrderDetailController.UpdateQty)
 	api.DELETE("/:id", cekToken, OrderDetailController.DeleteById)
 
 	// RECEIVING

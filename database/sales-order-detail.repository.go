@@ -4,6 +4,7 @@ import (
 	"distribution-system-be/constants"
 	dbmodels "distribution-system-be/models/dbModels"
 	dto "distribution-system-be/models/dto"
+	"distribution-system-be/utils/util"
 	"fmt"
 	"log"
 	"sync"
@@ -85,7 +86,7 @@ func GetAllDataDetail(orderID int64) []dbmodels.SalesOrderDetail {
 
 	var orderDetails []dbmodels.SalesOrderDetail
 
-	db.Preload("Product").Preload("UOM").Find(&orderDetails, " sales_order_id = ? and qty > 0 ", orderID)
+	db.Preload("Product").Preload("UOM").Find(&orderDetails, " sales_order_id = ? and qty_order > 0 ", orderID)
 
 	return orderDetails
 }
@@ -131,6 +132,12 @@ func SaveSalesOrderDetail(orderDetail *dbmodels.SalesOrderDetail) (errCode strin
 
 	errCode = constants.ERR_CODE_00
 	errDesc = fmt.Sprintf("%v", orderDetail.ID)
+
+	orderDetail.Hpp = getHpp(orderDetail.SalesOrderID, orderDetail.ProductID)
+	orderDetail.QtyReceive = orderDetail.QtyOrder
+	orderDetail.QtyPicking = orderDetail.QtyOrder
+	orderDetail.LastUpdateBy = dto.CurrUser
+	orderDetail.LastUpdate = util.GetCurrDate()
 	// r := db.Model(&newOrder).Where("id = ?", order.ID).Update(dbmodels.SalesOrder{OrderNo: order.OrderNo, StatusCode: "001", WarehouseCode: order.WarehouseCode, InternalStatus: 1, OrderDate: order.OrderDate})
 	if r := db.Save(&orderDetail); r.Error != nil {
 		errCode = constants.ERR_CODE_30
@@ -138,6 +145,21 @@ func SaveSalesOrderDetail(orderDetail *dbmodels.SalesOrderDetail) (errCode strin
 	}
 	return
 
+}
+
+func getHpp(orderID, productID int64) float32 {
+
+	db := GetDbCon()
+	db.Debug().LogMode(true)
+
+	order, _ := GetSalesOrderByOrderId(orderID)
+	stock, errCode, _ := GetStockByProductAndWarehouse(productID, order.WarehouseID)
+
+	if errCode == constants.ERR_CODE_00 {
+		return stock.Hpp
+	}
+
+	return 0
 }
 
 func DeleteSalesOrderDetailById(id int64) (errCode string, errDesc string) {

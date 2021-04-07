@@ -9,9 +9,9 @@ type HistoryStock struct {
 	ID           int64     `json:"id" gorm:"column:id"`
 	Code         string    `json:"code" gorm:"column:code"`
 	Name         string    `json:"name" gorm:"column:name"`
-	Debet        float32   `json:"debet" gorm:"column:debet"`
-	Kredit       float32   `json:"kredit" gorm:"column:kredit"`
-	Saldo        float32   `json:"saldo" gorm:"column:saldo"`
+	Debet        int64     `json:"debet" gorm:"column:debet"`
+	Kredit       int64     `json:"kredit" gorm:"column:kredit"`
+	Saldo        int64     `json:"saldo" gorm:"column:saldo"`
 	TransDate    time.Time `json:"transDate" gorm:"column:trans_date"`
 	Description  string    `json:"description" gorm:"column:description"`
 	LastUpdateBy string    `json:"lastUpdateBy" gorm:"column:last_update_by"`

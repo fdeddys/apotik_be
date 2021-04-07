@@ -9,7 +9,7 @@ type AdjustmentDetail struct {
 
 	ProductID int64   `json:"productId" gorm:"column:product_id"`
 	Product   Product `json:"product" gorm:"foreignkey:id;association_foreignkey:ProductID;association_autoupdate:false;association_autocreate:false"`
-	Qty       float32 `json:"qty" gorm:"column:qty"`
+	Qty       int64   `json:"qty" gorm:"column:qty"`
 	Hpp       float32 `json:"hpp" gorm:"column:hpp"`
 
 	UomID int64  `json:"uomId" gorm:"column:uom"`

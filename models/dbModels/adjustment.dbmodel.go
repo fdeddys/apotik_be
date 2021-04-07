@@ -15,7 +15,14 @@ type Adjustment struct {
 	// 0 = new Rec
 	// 10 = approve
 	// 20 = reject
-	Status       int8      `json:"status" gorm:"column:status"`
+	Status int8 `json:"status" gorm:"column:status"`
+
+	ReasonID int64  `json:"reasonId" gorm:"column:reason_id"`
+	Reason   Lookup `json:"reason" gorm:"foreignkey:id;association_foreignkey:ReasonID;association_autoupdate:false;association_autocreate:false"`
+
+	WarehouseID int64     `json:"warehouseId" gorm:"column:warehouse_id"`
+	Warehouse   Warehouse `json:"warehouse" gorm:"foreignkey:id;association_foreignkey:WarehouseID;association_autoupdate:false;association_autocreate:false"`
+
 	LastUpdateBy string    `json:"lastUpdateBy" gorm:"column:last_update_by"`
 	LastUpdate   time.Time `json:"lastUpdate" gorm:"column:last_update"`
 }

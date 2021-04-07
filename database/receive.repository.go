@@ -60,14 +60,17 @@ func SaveReceiveApprove(receive *dbmodels.Receive) (errCode string, errDesc stri
 			tx.Rollback()
 			return errCodeProd, errDescProd
 		}
-		curQty := product.QtyStock
+
+		checkStock, _, _ := GetStockByProductAndWarehouse(product.ID, receive.WarehouseID)
+		// curQty := checkStock.Qty
+		curQty := checkStock.Qty
 		updateQty := curQty + receiveDetail.Qty
-		newHpp := reCalculateHpp(product.Hpp, product.QtyStock, receiveDetail.Price, receiveDetail.Qty)
+		newHpp := reCalculateHpp(checkStock.Hpp, checkStock.Qty, receiveDetail.Price, receiveDetail.Qty)
 
 		var historyStock dbmodels.HistoryStock
 		historyStock.Code = product.Code
 		historyStock.Description = "Receive"
-		historyStock.Hpp = product.Hpp
+		historyStock.Hpp = checkStock.Hpp
 		historyStock.Name = product.Name
 		historyStock.Price = receiveDetail.Price
 		historyStock.ReffNo = receive.ReceiveNo
@@ -78,9 +81,9 @@ func SaveReceiveApprove(receive *dbmodels.Receive) (errCode string, errDesc stri
 		historyStock.LastUpdate = time.Now()
 		historyStock.LastUpdateBy = dto.CurrUser
 
-		UpdateStockAndHppProductByID(receiveDetail.ProductID, updateQty, newHpp)
+		UpdateStockAndHppProductByID(receiveDetail.ProductID, receive.WarehouseID, updateQty, newHpp)
 		SaveHistory(historyStock)
-		total = total + (receiveDetail.Price * receiveDetail.Qty)
+		total = total + (receiveDetail.Price * float32(receiveDetail.Qty))
 	}
 
 	db.Debug().LogMode(true)
@@ -108,11 +111,11 @@ func SaveReceiveApprove(receive *dbmodels.Receive) (errCode string, errDesc stri
 	return constants.ERR_CODE_00, constants.ERR_CODE_00_MSG
 }
 
-func reCalculateHpp(hpp1, qty1, price2, qty2 float32) float32 {
+func reCalculateHpp(hpp1 float32, qty1 int64, price2 float32, qty2 int64) float32 {
 
-	totalRp := (hpp1 * qty1) + (price2 * qty2)
+	totalRp := (hpp1 * float32(qty1)) + (price2 * float32(qty2))
 	totalQty := qty1 + qty2
-	return (totalRp / totalQty)
+	return (totalRp / float32(totalQty))
 }
 
 // GetReceivePage ...

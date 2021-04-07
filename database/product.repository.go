@@ -290,41 +290,47 @@ func FindProductByID(prodID int64) (dbmodels.Product, string, string) {
 }
 
 // UpdateStockProductByID ...
-func UpdateStockProductByID(prodID int64, qty float32) (dbmodels.Product, string, string) {
+func UpdateStockProductByID(prodID, qty, warehouseID int64) (string, string) {
 
 	fmt.Println("Update stock", prodID, "qty ", qty)
 
 	db := GetDbCon()
 	db.Debug().LogMode(true)
 
-	var product dbmodels.Product
-	db.Model(&dbmodels.Product{}).Where("id=?", prodID).First(&product)
+	var stock dbmodels.Stock
+	db.Where("product_id=? and warehouse_id", prodID, warehouseID).First(&stock)
 
-	product.QtyStock = qty
-	db.Save(&product)
+	stock.Qty = qty
+	err := db.Save(&stock).Error
+
+	if err != nil {
+		return constants.ERR_CODE_80, err.Error()
+	}
 	// err := db.Model(&product).Where("id = ? ", prodID).Update("qty_stock = ?", qty)
 	// fmt.Println("err prod => ", err.Error)
 	// if err != nil {
 	// 	fmt.Println("err prod ", err.Error)
 	// 	return product, constants.ERR_CODE_51, constants.ERR_CODE_51_MSG
 	// }
-	return product, constants.ERR_CODE_00, constants.ERR_CODE_00_MSG
+	return constants.ERR_CODE_00, constants.ERR_CODE_00_MSG
 }
 
 // UpdateStockAndHppProductByID ...
-func UpdateStockAndHppProductByID(prodID int64, qty float32, newHpp float32) (dbmodels.Product, string, string) {
+func UpdateStockAndHppProductByID(prodID, warehouseID int64, qty int64, newHpp float32) (dbmodels.Stock, string, string) {
 
 	fmt.Println("Update stock", prodID, "qty ", qty)
 
 	db := GetDbCon()
 	db.Debug().LogMode(true)
 
-	var product dbmodels.Product
-	db.Model(&dbmodels.Product{}).Where("id=?", prodID).First(&product)
+	// var product dbmodels.Product
+	// db.Model(&dbmodels.Product{}).Where("id=?", prodID).First(&product)
+	var stock dbmodels.Stock
+	db.Where("product_id=? and warehouse_id", prodID, warehouseID).First(&stock)
 
-	product.QtyStock = qty
-	product.Hpp = newHpp
-	db.Save(&product)
+	stock.Qty = qty
+	stock.Hpp = newHpp
+	db.Save(&stock)
 
-	return product, constants.ERR_CODE_00, constants.ERR_CODE_00_MSG
+	return stock, constants.ERR_CODE_00, constants.ERR_CODE_00_MSG
 }

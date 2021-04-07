@@ -58,9 +58,12 @@ func SaveAdjustmentApprove(adjustment *dbmodels.Adjustment) (errCode string, err
 			tx.Rollback()
 			return errCodeProd, errDescProd
 		}
-		curQty := product.QtyStock
-		curHpp := product.Hpp
-		updateQty := float32(0)
+
+		checkStock, _, _ := GetStockByProductAndWarehouse(product.ID, adjustment.WarehouseID)
+
+		curQty := checkStock.Qty
+		curHpp := checkStock.Hpp
+		updateQty := int64(0)
 
 		var historyStock dbmodels.HistoryStock
 		if adjustmentDetail.Qty > 0 {
@@ -84,9 +87,9 @@ func SaveAdjustmentApprove(adjustment *dbmodels.Adjustment) (errCode string, err
 		historyStock.LastUpdate = time.Now()
 		historyStock.LastUpdateBy = dto.CurrUser
 
-		UpdateStockAndHppProductByID(adjustmentDetail.ProductID, updateQty, curHpp)
+		UpdateStockAndHppProductByID(adjustmentDetail.ProductID, adjustment.WarehouseID, updateQty, curHpp)
 		SaveHistory(historyStock)
-		total = total + (curHpp * adjustmentDetail.Qty)
+		total = total + (curHpp * float32(adjustmentDetail.Qty))
 	}
 
 	db.Debug().LogMode(true)
