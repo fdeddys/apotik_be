@@ -1,2 +1,5 @@
 invoice.pdf
 /.project
+
+*.pdf
+*.sh

@@ -8,6 +8,7 @@ type FilterOrder struct {
 	OrderNumber    string `json:"orderNumber"`
 	SalesNo        string `json:"salesNo"`
 	MerchantPhone  string `json:"merchantPhone"`
+	OrderID        int64  `json:"orderId"`
 }
 
 // FilterOrderResult ...
@@ -32,10 +33,12 @@ type OrderSaveResult struct {
 
 // FilterOrderDetail ...
 type FilterOrderDetail struct {
-	OrderNo   string `json:"orderNo"`
-	OrderID   int64  `json:"orderId"`
-	StartDate string `json:"startDate"`
-	EndDate   string `json:"endDate"`
+	OrderNo       string `json:"orderNo"`
+	OrderID       int64  `json:"orderId"`
+	StartDate     string `json:"startDate"`
+	EndDate       string `json:"endDate"`
+	OrderDetailId int64  `json:"orderDetailId"`
+	QtyReceive    int64  `json:"qtyReceive"`
 }
 
 // SalesOrder ...

@@ -62,7 +62,7 @@ func SaveAdjustmentApprove(adjustment *dbmodels.Adjustment) (errCode string, err
 		checkStock, _, _ := GetStockByProductAndWarehouse(product.ID, adjustment.WarehouseID)
 
 		curQty := checkStock.Qty
-		curHpp := checkStock.Hpp
+		curHpp := product.Hpp
 		updateQty := int64(0)
 
 		var historyStock dbmodels.HistoryStock

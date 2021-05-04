@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"distribution-system-be/constants"
 	"distribution-system-be/models"
 	dbmodels "distribution-system-be/models/dbModels"
 	"distribution-system-be/models/dto"
@@ -15,25 +16,23 @@ import (
 	"os"
 	"strconv"
 
-	"distribution-system-be/constants"
-
 	"github.com/astaxie/beego/logs"
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
 )
 
-// OrderController ...
-type OrderController struct {
+// RetusnSalesOrderController ...
+type RetusnSalesOrderController struct {
 	DB *gorm.DB
 }
 
-// OrderService ...
-var OrderService = new(services.OrderService)
+// ReturnSalesOrderService ...
+var ReturnSalesOrderService = new(services.ReturnSalesOrderService)
 
 // GetByOrderId ...
-func (s *OrderController) GetByOrderId(c *gin.Context) {
+func (s *RetusnSalesOrderController) GetByReturnSalesOrderId(c *gin.Context) {
 
-	res := dbmodels.SalesOrder{}
+	res := dbmodels.ReturnSalesOrder{}
 
 	orderID, errPage := strconv.ParseInt(c.Param("id"), 10, 64)
 	if errPage != nil {
@@ -43,7 +42,7 @@ func (s *OrderController) GetByOrderId(c *gin.Context) {
 		return
 	}
 
-	res = OrderService.GetDataOrderById(orderID)
+	res = ReturnSalesOrderService.GetDataOrderReturnById(orderID)
 
 	c.JSON(http.StatusOK, res)
 	c.Abort()
@@ -52,8 +51,8 @@ func (s *OrderController) GetByOrderId(c *gin.Context) {
 }
 
 // FilterData ...
-func (s *OrderController) FilterData(c *gin.Context) {
-	req := dto.FilterOrder{}
+func (s *RetusnSalesOrderController) FilterData(c *gin.Context) {
+	req := dto.FilterOrderReturnDetail{}
 	res := models.ResponsePagination{}
 
 	page, errPage := strconv.Atoi(c.Param("page"))
@@ -89,13 +88,8 @@ func (s *OrderController) FilterData(c *gin.Context) {
 
 	temp, _ := json.Marshal(req)
 	log.Println("searchName-->", string(temp))
-	log.Println("is release ", req.InternalStatus)
 
-	intStatus := -1
-	if intVal, errconv := strconv.Atoi(req.InternalStatus); errconv == nil {
-		intStatus = intVal
-	}
-	res = OrderService.GetDataPage(req, page, count, intStatus)
+	res = ReturnSalesOrderService.GetDataSalesOrderReturnPage(req, page, count)
 
 	c.JSON(http.StatusOK, res)
 
@@ -103,11 +97,11 @@ func (s *OrderController) FilterData(c *gin.Context) {
 }
 
 // Save ...
-func (s *OrderController) Save(c *gin.Context) {
+func (s *RetusnSalesOrderController) Save(c *gin.Context) {
 
-	req := dbmodels.SalesOrder{}
+	req := dbmodels.ReturnSalesOrder{}
 	body := c.Request.Body
-	res := dto.OrderSaveResult{}
+	res := dto.ReturnOrderSaveResult{}
 	dataBodyReq, _ := ioutil.ReadAll(body)
 
 	if err := json.Unmarshal(dataBodyReq, &req); err != nil {
@@ -119,11 +113,11 @@ func (s *OrderController) Save(c *gin.Context) {
 		return
 	}
 
-	errCode, errMsg, orderNo, orderID, status := OrderService.Save(&req)
+	errCode, errMsg, orderNo, returnOrderID, status := ReturnSalesOrderService.Save(&req)
 	res.ErrDesc = errMsg
 	res.ErrCode = errCode
-	res.OrderNo = orderNo
-	res.ID = orderID
+	res.ReturnNo = orderNo
+	res.ID = returnOrderID
 	res.Status = status
 	// res.OrderNo = newNumb
 	c.JSON(http.StatusOK, res)
@@ -132,11 +126,11 @@ func (s *OrderController) Save(c *gin.Context) {
 }
 
 // Approve ...
-func (s *OrderController) Approve(c *gin.Context) {
+func (s *RetusnSalesOrderController) Approve(c *gin.Context) {
 
-	req := dbmodels.SalesOrder{}
+	req := dbmodels.ReturnSalesOrder{}
 	body := c.Request.Body
-	res := dto.OrderSaveResult{}
+	res := dto.ReturnOrderSaveResult{}
 	dataBodyReq, _ := ioutil.ReadAll(body)
 
 	if err := json.Unmarshal(dataBodyReq, &req); err != nil {
@@ -148,21 +142,20 @@ func (s *OrderController) Approve(c *gin.Context) {
 		return
 	}
 
-	errCode, errMsg := OrderService.Approve(&req)
+	errCode, errMsg := ReturnSalesOrderService.Approve(req.ID)
 	res.ErrDesc = errMsg
 	res.ErrCode = errCode
-	// res.OrderNo = newNumb
 	c.JSON(http.StatusOK, res)
 
 	return
 }
 
 // Approve ...
-func (s *OrderController) Reject(c *gin.Context) {
+func (s *RetusnSalesOrderController) Reject(c *gin.Context) {
 
-	req := dbmodels.SalesOrder{}
+	req := dbmodels.ReturnSalesOrder{}
 	body := c.Request.Body
-	res := dto.OrderSaveResult{}
+	res := dto.ReturnOrderSaveResult{}
 	dataBodyReq, _ := ioutil.ReadAll(body)
 
 	if err := json.Unmarshal(dataBodyReq, &req); err != nil {
@@ -174,19 +167,18 @@ func (s *OrderController) Reject(c *gin.Context) {
 		return
 	}
 
-	errCode, errMsg := OrderService.Reject(&req)
+	errCode, errMsg := ReturnSalesOrderService.Reject(&req)
 	res.ErrDesc = errMsg
 	res.ErrCode = errCode
-	// res.OrderNo = newNumb
 	c.JSON(http.StatusOK, res)
 
 	return
 }
 
 // PrintSO ...
-func (s *OrderController) PrintSO(c *gin.Context) {
+func (s *RetusnSalesOrderController) PrintReturnSO(c *gin.Context) {
 
-	orderID, errPage := strconv.ParseInt(c.Param("id"), 10, 64)
+	returnSoID, errPage := strconv.ParseInt(c.Param("id"), 10, 64)
 	if errPage != nil {
 		logs.Info("error", errPage)
 		c.JSON(http.StatusBadRequest, "id not supplied")
@@ -196,70 +188,14 @@ func (s *OrderController) PrintSO(c *gin.Context) {
 
 	// fmt.Println("-------->", req)
 
-	report.GenerateSalesOrderReport(orderID, "so")
+	report.GenerateReturnSalesOrderReport(returnSoID)
 
 	header := c.Writer.Header()
-	// header["Content-type"] = []string{"application/octet-stream"}
 	header["Content-type"] = []string{"application/x-pdf"}
-	header["Content-Disposition"] = []string{"attachment; filename= tes.pdf"}
+	header["Content-Disposition"] = []string{"attachment; filename=tes.pdf"}
 
-	// file, _ := os.Open("/Users/deddysyuhendra/go/src/tes-print/invoice.pdf")
-	file, _ := os.Open("invoice.pdf")
+	file, _ := os.Open("return-so.pdf")
 
 	io.Copy(c.Writer, file)
-	return
-}
-
-// PrintSO ...
-func (s *OrderController) PrintInvoice(c *gin.Context) {
-
-	orderID, errPage := strconv.ParseInt(c.Param("id"), 10, 64)
-	if errPage != nil {
-		logs.Info("error", errPage)
-		c.JSON(http.StatusBadRequest, "id not supplied")
-		c.Abort()
-		return
-	}
-
-	// fmt.Println("-------->", req)
-
-	report.GenerateSalesOrderReport(orderID, "invoice")
-
-	header := c.Writer.Header()
-	// header["Content-type"] = []string{"application/octet-stream"}
-	header["Content-type"] = []string{"application/x-pdf"}
-	header["Content-Disposition"] = []string{"attachment; filename= tes.pdf"}
-
-	// file, _ := os.Open("/Users/deddysyuhendra/go/src/tes-print/invoice.pdf")
-	file, _ := os.Open("invoice.pdf")
-
-	io.Copy(c.Writer, file)
-	return
-}
-
-// CreateInvoice ...
-func (s *OrderController) CreateInvoice(c *gin.Context) {
-
-	req := dto.FilterOrder{}
-
-	body := c.Request.Body
-	res := dto.OrderSaveResult{}
-	dataBodyReq, _ := ioutil.ReadAll(body)
-
-	if err := json.Unmarshal(dataBodyReq, &req); err != nil {
-		fmt.Println("Error, unmarshal body Request to Sales Invoice Filter stuct ", dataBodyReq)
-		res.ErrDesc = constants.ERR_CODE_03_MSG
-		res.ErrCode = constants.ERR_CODE_03
-		c.JSON(http.StatusBadRequest, res)
-		c.Abort()
-		return
-	}
-
-	errCode, errMsg := OrderService.CreateInvoice(req.OrderID)
-	res.ErrDesc = errMsg
-	res.ErrCode = errCode
-	// res.OrderNo = newNumb
-	c.JSON(http.StatusOK, res)
-
 	return
 }

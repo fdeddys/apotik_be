@@ -14,14 +14,11 @@ const (
 	ERR_CODE_03_MSG = "Error, unmarshall body Request"
 )
 
-
 // ERR code Global
 const (
 	ERR_CODE_30     = "30"
 	ERR_CODE_30_MSG = "Failed save data to DB"
-
 )
-
 
 const (
 	ERR_CODE_50     = "50"
@@ -73,17 +70,12 @@ const (
 	ERR_CODE_90_MSG = "Failed get from Body Request"
 )
 
-const (
-	SO_INIT_SO           = "INIT SALES ORDER"
-	SO_RELEASE_SO        = "RELEASE SO"
-	SO_READY_TO_PAYMENT  = "READY TO PAYMENT"
-	SO_AUTODEBET_SUCCESS = "AUTODEBET SUCCESS"
-	SO_AUTODEBET_FAILED  = "AUTODEBET FAILED"
-	SO_MANUAL_PAY        = "MANUAL PAYMENT SUCCESS"
-	SO_COMPLETE          = "ORDER COMPLETE"
-	SO_REJECTED          = "ORDER REJECTED BY OPS"
-)
-
+// STATUS Sales Order
+// 10 = new order
+// 20 = approve
+// 30 = reject
+// 40 = INVOICE
+// 50 = PAID
 
 const (
 	ERR_CODE_40     = "40"

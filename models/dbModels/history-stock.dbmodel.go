@@ -19,6 +19,8 @@ type HistoryStock struct {
 	ReffNo       string    `json:"reffNo" gorm:"column:reff_no"`
 	Price        float32   `json:"price" gorm:"column:price"`
 	Hpp          float32   `json:"hpp" gorm:"column:hpp"`
+	Disc1        float32   `json:"disc1" gorm:"column:disc1"`
+	Total        float32   `json:"total" gorm:"column:total"`
 }
 
 // TableName ...

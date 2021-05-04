@@ -106,7 +106,7 @@ func AsyncQuerysOrderDetails(db *gorm.DB, offset int, limit int, orderDetails *[
 	// err = db.Order("name ASC").Offset(offset).Limit(limit).Find(&supplier, "name ilike ?", searchName).Error
 	// fmt.Println("isi dari kosong ")
 
-	err = db.Offset(offset).Limit(limit).Preload("Product").Preload("UOM").Find(&orderDetails, " sales_order_id = ? ", orderID).Error
+	err = db.Offset(offset).Limit(limit).Preload("Product").Preload("UOM").Order("id asc").Find(&orderDetails, " sales_order_id = ? ", orderID).Error
 	if err != nil {
 		fmt.Println("error --> ", err)
 	}
@@ -152,11 +152,13 @@ func getHpp(orderID, productID int64) float32 {
 	db := GetDbCon()
 	db.Debug().LogMode(true)
 
-	order, _ := GetSalesOrderByOrderId(orderID)
-	stock, errCode, _ := GetStockByProductAndWarehouse(productID, order.WarehouseID)
+	// order, _ := GetSalesOrderByOrderId(orderID)
+	// stock, errCode, _ := GetStockByProductAndWarehouse(productID, order.WarehouseID)
+
+	product, errCode, _ := FindProductByID(productID)
 
 	if errCode == constants.ERR_CODE_00 {
-		return stock.Hpp
+		return product.Hpp
 	}
 
 	return 0
@@ -164,7 +166,7 @@ func getHpp(orderID, productID int64) float32 {
 
 func DeleteSalesOrderDetailById(id int64) (errCode string, errDesc string) {
 
-	fmt.Println(" Delete Sales Order Detail  ------------------------------------------  %v ", id)
+	fmt.Println(" Delete Sales Order Detail  ------------------------------------------  ", id)
 
 	db := GetDbCon()
 	db.Debug().LogMode(true)
@@ -174,6 +176,31 @@ func DeleteSalesOrderDetailById(id int64) (errCode string, errDesc string) {
 
 	// r := db.Model(&newOrder).Where("id = ?", order.ID).Update(dbmodels.SalesOrder{OrderNo: order.OrderNo, StatusCode: "001", WarehouseCode: order.WarehouseCode, InternalStatus: 1, OrderDate: order.OrderDate})
 	if r := db.Where("id = ? ", id).Delete(dbmodels.SalesOrderDetail{}); r.Error != nil {
+		errCode = constants.ERR_CODE_30
+		errDesc = constants.ERR_CODE_30_MSG + " " + r.Error.Error()
+	}
+	return
+
+}
+
+//UpdateQtyReceiveSalesOrderDetail ...
+func UpdateQtyReceiveSalesOrderDetail(orderDetailId int64, qtyReceive int64) (errCode string, errDesc string) {
+
+	fmt.Println(" Update Qty receive Sales Order Detail  -- ")
+
+	db := GetDbCon()
+	db.Debug().LogMode(true)
+
+	errCode = constants.ERR_CODE_00
+	errDesc = fmt.Sprintf("id = %v, qty = %v", orderDetailId, qtyReceive)
+
+	if r := db.Model(&dbmodels.SalesOrderDetail{}).
+		Where("id = ?", orderDetailId).
+		Update(dbmodels.SalesOrderDetail{
+			QtyReceive:   qtyReceive,
+			LastUpdateBy: dto.CurrUser,
+			LastUpdate:   util.GetCurrDate(),
+		}); r.Error != nil {
 		errCode = constants.ERR_CODE_30
 		errDesc = constants.ERR_CODE_30_MSG + " " + r.Error.Error()
 	}

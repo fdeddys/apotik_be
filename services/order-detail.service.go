@@ -57,3 +57,13 @@ func (o OrderDetailService) DeleteOrderDetailByID(orderDetailId int64) (errCode 
 
 	return constants.ERR_CODE_00, constants.ERR_CODE_00_MSG
 }
+
+// UpdateQtyReceive ...
+func (o OrderDetailService) UpdateQtyReceive(orderDetailId, qtyReceive int64) (errCode string, errDesc string) {
+
+	if err, errDesc := database.UpdateQtyReceiveSalesOrderDetail(orderDetailId, qtyReceive); err != constants.ERR_CODE_00 {
+		return err, errDesc
+	}
+
+	return constants.ERR_CODE_00, constants.ERR_CODE_00_MSG
+}

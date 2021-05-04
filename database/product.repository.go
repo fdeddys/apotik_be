@@ -327,10 +327,13 @@ func UpdateStockAndHppProductByID(prodID, warehouseID int64, qty int64, newHpp f
 	// db.Model(&dbmodels.Product{}).Where("id=?", prodID).First(&product)
 	var stock dbmodels.Stock
 	db.Where("product_id=? and warehouse_id", prodID, warehouseID).First(&stock)
-
 	stock.Qty = qty
-	stock.Hpp = newHpp
 	db.Save(&stock)
+
+	var product dbmodels.Product
+	db.Where("product_id=? ", prodID).First(&product)
+	product.Hpp = newHpp
+	db.Save(&product)
 
 	return stock, constants.ERR_CODE_00, constants.ERR_CODE_00_MSG
 }

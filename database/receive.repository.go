@@ -65,12 +65,12 @@ func SaveReceiveApprove(receive *dbmodels.Receive) (errCode string, errDesc stri
 		// curQty := checkStock.Qty
 		curQty := checkStock.Qty
 		updateQty := curQty + receiveDetail.Qty
-		newHpp := reCalculateHpp(checkStock.Hpp, checkStock.Qty, receiveDetail.Price, receiveDetail.Qty)
+		newHpp := reCalculateHpp(product.Hpp, checkStock.Qty, receiveDetail.Price, receiveDetail.Qty)
 
 		var historyStock dbmodels.HistoryStock
 		historyStock.Code = product.Code
 		historyStock.Description = "Receive"
-		historyStock.Hpp = checkStock.Hpp
+		historyStock.Hpp = product.Hpp
 		historyStock.Name = product.Name
 		historyStock.Price = receiveDetail.Price
 		historyStock.ReffNo = receive.ReceiveNo
@@ -80,17 +80,23 @@ func SaveReceiveApprove(receive *dbmodels.Receive) (errCode string, errDesc stri
 		historyStock.Saldo = updateQty
 		historyStock.LastUpdate = time.Now()
 		historyStock.LastUpdateBy = dto.CurrUser
+		historyStock.Disc1 = receiveDetail.Disc1
+
+		total = total + (receiveDetail.Price * float32(receiveDetail.Qty) * ((100 - receiveDetail.Disc1) / 100))
+		historyStock.Total = total
+		fmt.Println("total -> ", total)
 
 		UpdateStockAndHppProductByID(receiveDetail.ProductID, receive.WarehouseID, updateQty, newHpp)
 		SaveHistory(historyStock)
-		total = total + (receiveDetail.Price * float32(receiveDetail.Qty))
+
 	}
 
 	db.Debug().LogMode(true)
 	// r := db.Model(&newOrder).Where("id = ?", order.ID).Update(dbmodels.SalesOrder{OrderNo: order.OrderNo, StatusCode: "001", WarehouseCode: order.WarehouseCode, InternalStatus: 1, OrderDate: order.OrderDate})
 
+	grandTotal = total
 	if receive.Tax != 0 {
-		grandTotal = total * 1.1
+		grandTotal *= 1.1
 	}
 	receive.GrandTotal = grandTotal
 	receive.Total = total

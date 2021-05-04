@@ -76,3 +76,9 @@ type FilterSupplierGroup struct {
 type FilterFollowUpOrder struct {
 	OrderNumber string `json:"order_no"`
 }
+
+// NoContentResponse ...
+type NoContentResponse struct {
+	ErrCode string `json:"errCode"`
+	ErrDesc string `json:"errDesc"`
+}

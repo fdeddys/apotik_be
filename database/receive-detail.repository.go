@@ -119,7 +119,7 @@ func SaveReceiveDetail(receiveDetail *dbmodels.ReceiveDetail) (errCode string, e
 // DeleteReceiveDetailById ...
 func DeleteReceiveDetailById(id int64) (errCode string, errDesc string) {
 
-	fmt.Println(" Delete Receive Detail  ------------------------------------------  %v ", id)
+	fmt.Println(" Delete Receive Detail  ---- ", id)
 
 	db := GetDbCon()
 	db.Debug().LogMode(true)

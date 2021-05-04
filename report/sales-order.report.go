@@ -2,7 +2,6 @@ package report
 
 import (
 	"distribution-system-be/database"
-	dbmodels "distribution-system-be/models/dbModels"
 	"fmt"
 	"log"
 
@@ -55,6 +54,7 @@ var (
 	dataDetails []DataDetail
 	// totalRec    int
 	invoiceNumb string
+	invoiceNo   string
 
 	// count by system
 	// subTotal   int64
@@ -150,12 +150,18 @@ func fillDataDetail(orderID int64) []DataDetail {
 
 	// invoiceNumb = "IVyymm999999"
 	invoiceNumb = order.SalesOrderNo
+	invoiceNo = order.InvoiceNo
 
 	orderDetails := database.GetAllDataDetail(order.ID)
 
 	fmt.Println("orderDetails : ", orderDetails)
 
-	go fillDataCustomer(order)
+	go fillDataCustomer(
+		order.Customer.Code,
+		order.Customer.Name,
+		order.OrderDate.Format("02-01-2006"),
+		order.SalesOrderNo,
+	)
 	// tdk blh kosong
 	// per halaman max 25 item detail
 	totalRec = len(orderDetails)
@@ -185,11 +191,18 @@ func fillDataDetail(orderID int64) []DataDetail {
 	return res
 }
 
-func fillDataCustomer(order dbmodels.SalesOrder) {
-	invInfo.CustCode = order.Customer.Code
-	invInfo.CustName = order.Customer.Name
-	invInfo.TransAt = order.OrderDate.Format("02-01-2006")
-	invInfo.SourceDoc = order.SalesOrderNo
+// func fillDataCustomer(order dbmodels.SalesOrder) {
+// 	invInfo.CustCode = order.Customer.Code
+// 	invInfo.CustName = order.Customer.Name
+// 	invInfo.TransAt = order.OrderDate.Format("02-01-2006")
+// 	invInfo.SourceDoc = order.SalesOrderNo
+// }
+
+func fillDataCustomer(custCode, custName, transDate, orderNo string) {
+	invInfo.CustCode = custCode
+	invInfo.CustName = custName
+	invInfo.TransAt = transDate
+	invInfo.SourceDoc = orderNo
 }
 
 func setHeader(pdf *gopdf.GoPdf) {
@@ -213,15 +226,21 @@ func showInvNo(pdf *gopdf.GoPdf) {
 	setFont(pdf, 12)
 	pdf.SetX(450)
 	pdf.Text(invoiceNumb)
+
+	space(pdf)
+	setFont(pdf, 12)
+	pdf.SetX(450)
+	pdf.Text(invoiceNo)
+
 }
 
 func showCompany(pdf *gopdf.GoPdf) {
 
-	line1 := beego.AppConfig.DefaultString("report.line1", "PT. Reksa Transaksi Sukses Makmur")
-	line2 := beego.AppConfig.DefaultString("report.line2", "Plaza Mutiara Lt 21 Suite 2105")
-	line3 := beego.AppConfig.DefaultString("report.line3", "Jl. DR. Ide Anak Agung Gde Agung")
+	line1 := beego.AppConfig.DefaultString("report.line1", "PT. ABC")
+	line2 := beego.AppConfig.DefaultString("report.line2", "ABC")
+	line3 := beego.AppConfig.DefaultString("report.line3", "Jl. adadedddd")
 	line4 := beego.AppConfig.DefaultString("report.line4", "Kav")
-	line5 := beego.AppConfig.DefaultString("report.line5", "Setiabudi")
+	line5 := beego.AppConfig.DefaultString("report.line5", "Jekate")
 	line6 := beego.AppConfig.DefaultString("report.line6", "Postal code")
 
 	pdf.Br(15)

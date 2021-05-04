@@ -45,6 +45,8 @@ func InitRouter() *gin.Engine {
 	DashboardController := new(controllers.DashboardController)
 	ReceiveController := new(controllers.ReceiveController)
 	ReceiveDetailController := new(controllers.ReceiveDetailController)
+	RetusnSalesOrderController := new(controllers.RetusnSalesOrderController)
+	ReturnSalesOrderDetailController := new(controllers.ReturnSalesOrderDetailController)
 
 	AdjustmentController := new(controllers.AdjustmentController)
 	AdjustmentDetailController := new(controllers.AdjustmentDetailController)
@@ -131,14 +133,31 @@ func InitRouter() *gin.Engine {
 	api.POST("/page/:page/count/:count", cekToken, OrderController.FilterData)
 	api.POST("", cekToken, OrderController.Save)
 	api.POST("/approve", cekToken, OrderController.Approve)
+	api.POST("/create-invoice", cekToken, OrderController.CreateInvoice)
 	api.POST("/reject", cekToken, OrderController.Reject)
 	api.POST("/print/so/:id", OrderController.PrintSO)
+	api.POST("/print/invoice/:id", OrderController.PrintInvoice)
 
 	api = r.Group("/api/sales-order-detail")
 	api.POST("/page/:page/count/:count", OrderDetailController.GetDetail)
 	api.POST("", cekToken, OrderDetailController.Save)
-	// api.POST("/updateItemRecv", cekToken, OrderDetailController.UpdateQty)
+	api.POST("/updateItemRecv", cekToken, OrderDetailController.UpdateQtyReceive)
 	api.DELETE("/:id", cekToken, OrderDetailController.DeleteById)
+
+	// RETURN SALES-ORDER
+	api = r.Group("/api/return-sales-order")
+	api.GET("/:id", cekToken, RetusnSalesOrderController.GetByReturnSalesOrderId)
+	api.POST("/page/:page/count/:count", cekToken, RetusnSalesOrderController.FilterData)
+	api.POST("", cekToken, RetusnSalesOrderController.Save)
+	api.POST("/approve", cekToken, RetusnSalesOrderController.Approve)
+	api.POST("/reject", cekToken, RetusnSalesOrderController.Reject)
+	api.POST("/print/:id", cekToken, RetusnSalesOrderController.PrintReturnSO)
+
+	api = r.Group("/api/return-sales-order-detail")
+	api.POST("/page/:page/count/:count", ReturnSalesOrderDetailController.GetDetail)
+	api.POST("", cekToken, ReturnSalesOrderDetailController.Save)
+	api.POST("/updateQty", cekToken, ReturnSalesOrderDetailController.UpdateQty)
+	api.DELETE("/:id", cekToken, ReturnSalesOrderDetailController.DeleteById)
 
 	// RECEIVING
 	api = r.Group("/api/receive")

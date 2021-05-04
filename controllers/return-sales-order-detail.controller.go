@@ -18,17 +18,17 @@ import (
 	"github.com/jinzhu/gorm"
 )
 
-// OrderDetailController ...
-type OrderDetailController struct {
+// ReturnSalesOrderDetailController ...
+type ReturnSalesOrderDetailController struct {
 	DB *gorm.DB
 }
 
-var orderDetailService = new(services.OrderDetailService)
+var returnSalesOrderDetailService = new(services.ReturnOrderDetailService)
 
 // GetDetail ...
-func (s *OrderDetailController) GetDetail(c *gin.Context) {
+func (s *ReturnSalesOrderDetailController) GetDetail(c *gin.Context) {
 
-	req := dto.FilterOrderDetail{}
+	req := dto.FilterOrderReturnDetail{}
 	res := models.ResponsePagination{}
 
 	page, errPage := strconv.Atoi(c.Param("page"))
@@ -62,9 +62,9 @@ func (s *OrderDetailController) GetDetail(c *gin.Context) {
 		return
 	}
 
-	log.Println("order id => ", req.OrderID)
+	log.Println("order id => ", req.OrderReturnID)
 
-	res = orderDetailService.GetDataOrderDetailPage(req, page, count)
+	res = returnSalesOrderDetailService.GetReturnOrderDetailPage(req, page, count)
 
 	c.JSON(http.StatusOK, res)
 
@@ -72,9 +72,9 @@ func (s *OrderDetailController) GetDetail(c *gin.Context) {
 }
 
 // Save ...
-func (s *OrderDetailController) Save(c *gin.Context) {
+func (s *ReturnSalesOrderDetailController) Save(c *gin.Context) {
 
-	req := dbmodels.SalesOrderDetail{}
+	req := dbmodels.ReturnSalesOrderDetail{}
 	body := c.Request.Body
 	res := dto.OrderDetailSaveResult{}
 	dataBodyReq, _ := ioutil.ReadAll(body)
@@ -88,7 +88,7 @@ func (s *OrderDetailController) Save(c *gin.Context) {
 		return
 	}
 
-	errCode, errMsg := orderDetailService.Save(&req)
+	errCode, errMsg := returnSalesOrderDetailService.Save(&req)
 	res.ErrDesc = errMsg
 	res.ErrCode = errCode
 	// res.OrderNo = newNumb
@@ -98,9 +98,9 @@ func (s *OrderDetailController) Save(c *gin.Context) {
 }
 
 // DeleteById ...
-func (s *OrderDetailController) DeleteById(c *gin.Context) {
+func (s *ReturnSalesOrderDetailController) DeleteById(c *gin.Context) {
 
-	res := dto.OrderDetailResult{}
+	res := dto.NoContentResponse{}
 
 	orderDetailId, errOrderId := strconv.ParseInt(c.Param("id"), 10, 64)
 	if errOrderId != nil {
@@ -110,10 +110,7 @@ func (s *OrderDetailController) DeleteById(c *gin.Context) {
 		c.Abort()
 		return
 	}
-
-	log.Println("order id => ", orderDetailId)
-
-	res.ErrCode, res.ErrDesc = orderDetailService.DeleteOrderDetailByID(orderDetailId)
+	res.ErrCode, res.ErrDesc = returnSalesOrderDetailService.DeleteReturnOrderDetailById(orderDetailId)
 
 	c.JSON(http.StatusOK, res)
 
@@ -121,10 +118,10 @@ func (s *OrderDetailController) DeleteById(c *gin.Context) {
 }
 
 // UpdateQtyReceive ...
-func (s *OrderDetailController) UpdateQtyReceive(c *gin.Context) {
+func (s *ReturnSalesOrderDetailController) UpdateQty(c *gin.Context) {
 
 	res := dto.OrderDetailResult{}
-	req := dto.FilterOrderDetail{}
+	req := dto.FilterOrderReturnDetail{}
 	body := c.Request.Body
 	dataBodyReq, _ := ioutil.ReadAll(body)
 
@@ -137,7 +134,7 @@ func (s *OrderDetailController) UpdateQtyReceive(c *gin.Context) {
 		return
 	}
 
-	res.ErrCode, res.ErrDesc = orderDetailService.UpdateQtyReceive(req.OrderDetailId, req.QtyReceive)
+	res.ErrCode, res.ErrDesc = returnSalesOrderDetailService.UpdateQtReturn(req.OrderReturnDetailId, req.QtyReturn)
 
 	c.JSON(http.StatusOK, res)
 

@@ -82,34 +82,34 @@ func SaveSalesOrderApprove(order *dbmodels.SalesOrder) (errCode string, errDesc 
 	for idx, orderDetail := range salesOrderDetails {
 		fmt.Println("idx -> ", idx)
 
-		product, _, _ := FindProductByID(orderDetail.ProductID)
+		// product, _, _ := FindProductByID(orderDetail.ProductID)
 		// if errCodeProd != constants.ERR_CODE_00 {
 		// 	tx.Rollback()
 		// 	return errCodeProd, errDescProd
 		// }
 		// curQty := product.QtyStock
-		checkStock, _, _ := GetStockByProductAndWarehouse(product.ID, order.WarehouseID)
-		curQty := checkStock.Qty
+		// checkStock, _, _ := GetStockByProductAndWarehouse(product.ID, order.WarehouseID)
+		// curQty := checkStock.Qty
 
-		updateQty := curQty - orderDetail.QtyOrder
+		// updateQty := curQty - orderDetail.QtyOrder
 
-		fmt.Println("cur qty =", curQty, " update =", updateQty)
-		var historyStock dbmodels.HistoryStock
-		historyStock.Code = product.Code
-		historyStock.Description = "Sales Order"
-		historyStock.Hpp = checkStock.Hpp
-		historyStock.Name = product.Name
-		historyStock.Price = orderDetail.Price
-		historyStock.ReffNo = order.SalesOrderNo
-		historyStock.TransDate = order.OrderDate
-		historyStock.Debet = 0
-		historyStock.Kredit = orderDetail.QtyOrder
-		historyStock.Saldo = updateQty
-		historyStock.LastUpdate = time.Now()
-		historyStock.LastUpdateBy = dto.CurrUser
+		// fmt.Println("cur qty =", curQty, " update =", updateQty)
+		// var historyStock dbmodels.HistoryStock
+		// historyStock.Code = product.Code
+		// historyStock.Description = "Sales Order"
+		// historyStock.Hpp = checkStock.Hpp
+		// historyStock.Name = product.Name
+		// historyStock.Price = orderDetail.Price
+		// historyStock.ReffNo = order.SalesOrderNo
+		// historyStock.TransDate = order.OrderDate
+		// historyStock.Debet = 0
+		// historyStock.Kredit = orderDetail.QtyOrder
+		// historyStock.Saldo = updateQty
+		// historyStock.LastUpdate = time.Now()
+		// historyStock.LastUpdateBy = dto.CurrUser
 
-		UpdateStockProductByID(orderDetail.ProductID, updateQty, order.WarehouseID)
-		SaveHistory(historyStock)
+		// UpdateStockProductByID(orderDetail.ProductID, updateQty, order.WarehouseID)
+		// SaveHistory(historyStock)
 		total = total + (orderDetail.Price * float32(orderDetail.QtyOrder))
 	}
 

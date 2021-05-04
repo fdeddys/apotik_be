@@ -50,11 +50,11 @@ func GetPagingLookup(param dto.FilterLookup, offset int, limit int) ([]dbmodels.
 	errQuery := make(chan error)
 	errCount := make(chan error)
 
-	go AsyncQueryCount(db, &total, param, &dbmodels.Lookup{}, "lookup_group", errCount)
+	go AsyncQueryCount(db, &total, param, &dbmodels.Lookup{}, "code", errCount)
 	// if limit == 0 {
 	// 	limit = total
 	// }
-	go AsyncQuery(db, offset, limit, &lookup, param, "lookup_group", errQuery)
+	go AsyncQuery(db, offset, limit, &lookup, param, "code", errQuery)
 
 	resErrCount := <-errCount
 	resErrQuery := <-errQuery

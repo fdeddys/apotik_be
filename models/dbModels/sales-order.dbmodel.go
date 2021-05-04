@@ -23,7 +23,8 @@ type SalesOrder struct {
 	// 10 = new order
 	// 20 = approve
 	// 30 = reject
-	// 40 = paid
+	// 40 = INVOICE
+	// 50 = PAID
 	Status int8 `json:"status" gorm:"column:status"`
 	Top    int8 `json:"top" gorm:"column:top"`
 	IsCash int8 `json:"isCash" gorm:"column:iscash"`

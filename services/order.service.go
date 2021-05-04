@@ -6,6 +6,7 @@ import (
 	"distribution-system-be/models"
 	dbmodels "distribution-system-be/models/dbModels"
 	dto "distribution-system-be/models/dto"
+	"distribution-system-be/utils/util"
 	"fmt"
 	"time"
 )
@@ -162,3 +163,114 @@ func generateNewOrderNo() (newOrderNo string, errCode string, errMsg string) {
 
 // 	return constants.ERR_CODE_00, constants.ERR_CODE_00_MSG
 // }
+
+// CreateInvoice ...
+func (o OrderService) CreateInvoice(orderID int64) (errCode, errDesc string) {
+
+	db := database.GetDbCon()
+	tx := db.Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
+	// cek qty
+	salesOrder, err := database.GetSalesOrderByOrderId(orderID)
+	if err != nil {
+		return errCode, errDesc
+	}
+
+	salesOrderDetails := database.GetAllDataDetail(salesOrder.ID)
+
+	var total float32
+	for _, sod := range salesOrderDetails {
+
+		product, _, _ := database.FindProductByID(sod.ProductID)
+		stock, _, _ := database.GetStockByProductAndWarehouse(sod.ProductID, salesOrder.WarehouseID)
+
+		curStock := stock.Qty
+		newStock := curStock - sod.QtyReceive
+
+		db.Model(&dbmodels.Stock{}).
+			Where("id = ?", stock.ID).
+			Update(dbmodels.Stock{
+				Qty:          newStock,
+				LastUpdateBy: dto.CurrUser,
+				LastUpdate:   util.GetCurrDate(),
+			})
+
+		var history dbmodels.HistoryStock
+		history.Code = product.Code
+		history.Debet = 0
+		history.Description = "Sales Order"
+		history.Hpp = product.Hpp
+		history.Kredit = sod.QtyReceive
+		history.LastUpdate = util.GetCurrDate()
+		history.LastUpdateBy = dto.CurrUser
+		history.Name = product.Name
+		history.ReffNo = salesOrder.SalesOrderNo
+		history.Price = sod.Price
+		history.Saldo = newStock
+		history.TransDate = salesOrder.OrderDate
+		db.Save(&history)
+
+		total = total + (sod.Price * float32(sod.QtyOrder))
+
+	}
+
+	var grandTotal float32
+	invNo, _, _ := generateNewInvoiceNo()
+	total = 0
+	grandTotal = total
+
+	if salesOrder.Tax != 0 {
+		grandTotal = total * 1.1
+	}
+	// salesOrder.GrandTotal = grandTotal
+	// salesOrder.Status = 40
+	// salesOrder.LastUpdate = util.GetCurrDate()
+	// salesOrder.LastUpdateBy = dto.CurrUser
+	// salesOrder.InvoiceNo = invNo
+	// salesOrder.Total = total
+	// db.Save(&salesOrder)
+
+	db.Model(&dbmodels.SalesOrder{}).
+		Where("id = ?", salesOrder.ID).
+		Update(dbmodels.SalesOrder{
+			GrandTotal:   grandTotal,
+			Status:       40,
+			InvoiceNo:    invNo,
+			Total:        total,
+			LastUpdateBy: dto.CurrUser,
+			LastUpdate:   util.GetCurrDate(),
+		})
+
+	tx.Commit()
+
+	return constants.ERR_CODE_00, constants.ERR_CODE_00_MSG
+}
+
+func generateNewInvoiceNo() (newOrderNo string, errCode string, errMsg string) {
+
+	t := time.Now()
+	bln := t.Format("01")
+	thn := t.Format("06")
+	header := "IV"
+
+	err, number, errdesc := database.AddSequence(bln, thn, header)
+	if err != constants.ERR_CODE_00 {
+		return "", err, errdesc
+	}
+	newNumb := fmt.Sprintf("00000%v", number)
+	fmt.Println("new numb bef : ", newNumb)
+	runes := []rune(newNumb)
+	newNumb = string(runes[len(newNumb)-5 : len(newNumb)])
+	fmt.Println("new numb after : ", newNumb)
+
+	// newNumb = newNumb[len(newNumb)-5 : len(newNumb)]
+	newOrderNo = fmt.Sprintf("%v%v%v%v", header, thn, bln, newNumb)
+
+	return newOrderNo, constants.ERR_CODE_00, constants.ERR_CODE_00_MSG
+
+}
