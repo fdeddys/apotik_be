@@ -187,9 +187,19 @@ func InitRouter() *gin.Engine {
 
 	api = r.Group("/api/warehouse")
 	api.GET("", WarehouseController.GetWarehouse)
+	api.POST("/page/:page/count/:count", cekToken, WarehouseController.GetWarehouseFilter)
+	api.GET("/id/:id", cekToken, WarehouseController.GetFilterWarehouse)
+	api.POST("", cekToken, WarehouseController.SaveWarehouse)
+	api.PUT("", cekToken, WarehouseController.UpdateWarehouse)
+	api.GET("/like", cekToken, WarehouseController.GetWarehouseLike)
 
 	api = r.Group("/api/salesman")
-	api.GET("", SalesmanController.GetSalesman)
+	api.GET("", cekToken, SalesmanController.GetSalesman)
+	api.POST("/page/:page/count/:count", cekToken, SalesmanController.GetSalesmanFilter)
+	api.GET("/id/:id", cekToken, SalesmanController.GetFilterSalesman)
+	api.POST("", cekToken, SalesmanController.SaveSalesman)
+	api.PUT("", cekToken, SalesmanController.UpdateSalesman)
+	api.GET("/like", cekToken, SalesmanController.GetSalesmanLike)
 
 	// Dashboard
 	dashboard := r.Group("/dashboard")

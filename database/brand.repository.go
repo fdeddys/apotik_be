@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"log"
 	"strconv"
-	"strings"
 	"sync"
 )
 
@@ -141,32 +140,65 @@ func GetBrand(param dto.FilterBrand, offset int, limit int) ([]dbmodels.Brand, i
 	return brand, total, nil
 }
 
+// func GenerateBrandCode() string {
+// 	db := GetDbCon()
+// 	db.Debug().LogMode(true)
+
+// 	// err := db.Order(order).First(&models)
+// 	var brand []dbmodels.Brand
+// 	err := db.Model(&dbmodels.Brand{}).Order("id desc").First(&brand).Error
+// 	// err := db.Model(&dbmodels.Brand{}).Where("id = 200000").Order("id desc").First(&brand).Error
+
+// 	if err != nil {
+// 		return "B001"
+// 	}
+// 	if len(brand) > 0 {
+// 		// fmt.Printf("ini latest code nya : %s \n", brand[0].Code)
+// 		woprefix := strings.TrimPrefix(brand[0].Code, "")
+// 		latestCode, err := strconv.Atoi(woprefix)
+// 		if err != nil {
+// 			fmt.Printf("error")
+// 			return "B001"
+// 		}
+// 		// fmt.Printf("ini latest code nya : %d \n", latestCode)
+// 		wpadding := fmt.Sprintf("%03s", strconv.Itoa(latestCode+1))
+// 		// fmt.Printf("ini pake padding : %s \n", "B"+wpadding)
+// 		return wpadding
+// 	}
+// 	return "B001"
+
+// }
+
 func GenerateBrandCode() string {
 	db := GetDbCon()
 	db.Debug().LogMode(true)
 
-	// err := db.Order(order).First(&models)
-	var brand []dbmodels.Brand
-	err := db.Model(&dbmodels.Brand{}).Order("id desc").First(&brand).Error
-	// err := db.Model(&dbmodels.Brand{}).Where("id = 200000").Order("id desc").First(&brand).Error
+	var brands []dbmodels.Brand
+	err := db.Model(&dbmodels.Brand{}).Order("id desc").Find(&brands).Error
+	header := "B"
+	defaultCode := "B001"
 
 	if err != nil {
-		return "B001"
+		return defaultCode
 	}
-	if len(brand) > 0 {
-		// fmt.Printf("ini latest code nya : %s \n", brand[0].Code)
-		woprefix := strings.TrimPrefix(brand[0].Code, "")
-		latestCode, err := strconv.Atoi(woprefix)
+	if len(brands) > 0 {
+		// fmt.Printf("ini latest code nya : %s \n", salesman[0].Code)
+		code := brands[0].Code
+		runes := []rune(code)
+		latestNumb := string(runes[1:len(code)])
+		fmt.Println("latest numb-", latestNumb)
+		// woprefix := strings.TrimPrefix(salesman[0].Code, "")
+		latestCode, err := strconv.Atoi(latestNumb)
 		if err != nil {
-			fmt.Printf("error")
-			return "B001"
+			fmt.Println("error =>", err.Error())
+			return defaultCode
 		}
 		// fmt.Printf("ini latest code nya : %d \n", latestCode)
-		wpadding := fmt.Sprintf("%03s", strconv.Itoa(latestCode+1))
+		wpadding := fmt.Sprintf("%v%03s", header, strconv.Itoa(latestCode+1))
 		// fmt.Printf("ini pake padding : %s \n", "B"+wpadding)
 		return wpadding
 	}
-	return "B001"
+	return defaultCode
 
 }
 
