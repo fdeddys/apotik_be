@@ -68,6 +68,12 @@ const (
 const (
 	ERR_CODE_90     = "90"
 	ERR_CODE_90_MSG = "Failed get from Body Request"
+
+	ERR_CODE_95     = "95"
+	ERR_CODE_95_MSG = "NO Order found for payment !"
+
+	ERR_CODE_96     = "96"
+	ERR_CODE_96_MSG = "Payment total order / return / detail not MATCH  !"
 )
 
 // STATUS Sales Order

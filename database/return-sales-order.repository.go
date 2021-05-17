@@ -167,3 +167,23 @@ func RejectReturnSalesOrder(salesOrderReturnId int64) (errCode string, errDesc s
 
 	return constants.ERR_CODE_00, constants.ERR_CODE_00_MSG
 }
+
+func GetSalesOrderReturnForPayment(param dto.FilterOrderReturnDetail, offset, limit int) ([]dbmodels.ReturnSalesOrder, int, error) {
+	db := GetDbCon()
+	db.Debug().LogMode(true)
+
+	var returns []dbmodels.ReturnSalesOrder
+	var total int
+
+	total = 0
+	err := db.Offset(offset).Limit(limit).Preload("Customer").Order("return_date DESC").Find(&returns, "  ( status  in ('20','40') ) AND (is_paid is null or is_paid = false) AND customer_id = ? ", param.CustomerID).Error
+
+	if err != nil {
+		return returns, total, err
+	}
+
+	var cekReturn []dbmodels.ReturnSalesOrder
+	db.Model(&cekReturn).Where("  ( status  in  ('20','40')  ) AND (is_paid is null or is_paid = false) AND customer_id = ? ", param.CustomerID).Count(&total)
+
+	return returns, total, nil
+}

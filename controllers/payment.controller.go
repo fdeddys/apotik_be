@@ -21,20 +21,20 @@ import (
 	"github.com/jinzhu/gorm"
 )
 
-// RetusnSalesOrderController ...
-type RetusnSalesOrderController struct {
+// PaymentController ...
+type PaymentController struct {
 	DB *gorm.DB
 }
 
-// ReturnSalesOrderService ...
-var ReturnSalesOrderService = new(services.ReturnSalesOrderService)
+// PaymentService ...
+var PaymentService = new(services.PaymentService)
 
 // GetByOrderId ...
-func (s *RetusnSalesOrderController) GetByReturnSalesOrderId(c *gin.Context) {
+func (s *PaymentController) GetByPaymentId(c *gin.Context) {
 
-	res := dbmodels.ReturnSalesOrder{}
+	res := dbmodels.Payment{}
 
-	orderID, errPage := strconv.ParseInt(c.Param("id"), 10, 64)
+	paymentID, errPage := strconv.ParseInt(c.Param("id"), 10, 64)
 	if errPage != nil {
 		logs.Info("error", errPage)
 		c.JSON(http.StatusBadRequest, res)
@@ -42,7 +42,7 @@ func (s *RetusnSalesOrderController) GetByReturnSalesOrderId(c *gin.Context) {
 		return
 	}
 
-	res = ReturnSalesOrderService.GetDataOrderReturnById(orderID)
+	res = PaymentService.GetDataById(paymentID)
 
 	c.JSON(http.StatusOK, res)
 	c.Abort()
@@ -51,8 +51,8 @@ func (s *RetusnSalesOrderController) GetByReturnSalesOrderId(c *gin.Context) {
 }
 
 // FilterData ...
-func (s *RetusnSalesOrderController) FilterData(c *gin.Context) {
-	req := dto.FilterOrderReturnDetail{}
+func (s *PaymentController) FilterData(c *gin.Context) {
+	req := dto.FilterPayment{}
 	res := models.ResponsePagination{}
 
 	page, errPage := strconv.Atoi(c.Param("page"))
@@ -89,7 +89,7 @@ func (s *RetusnSalesOrderController) FilterData(c *gin.Context) {
 	temp, _ := json.Marshal(req)
 	log.Println("searchName-->", string(temp))
 
-	res = ReturnSalesOrderService.GetDataSalesOrderReturnPage(req, page, count)
+	res = PaymentService.GetDataPage(req, page, count)
 
 	c.JSON(http.StatusOK, res)
 
@@ -97,15 +97,15 @@ func (s *RetusnSalesOrderController) FilterData(c *gin.Context) {
 }
 
 // Save ...
-func (s *RetusnSalesOrderController) Save(c *gin.Context) {
+func (s *PaymentController) Save(c *gin.Context) {
 
-	req := dbmodels.ReturnSalesOrder{}
+	req := dbmodels.Payment{}
 	body := c.Request.Body
-	res := dto.ReturnOrderSaveResult{}
+	res := dto.SavePaymentResult{}
 	dataBodyReq, _ := ioutil.ReadAll(body)
 
 	if err := json.Unmarshal(dataBodyReq, &req); err != nil {
-		fmt.Println("Error, unmarshal body Request to Sales Order stuct ", dataBodyReq)
+		fmt.Println("Error, unmarshal body Request to PAYMENT stuct ", dataBodyReq)
 		res.ErrDesc = constants.ERR_CODE_03_MSG
 		res.ErrCode = constants.ERR_CODE_03
 		c.JSON(http.StatusBadRequest, res)
@@ -113,11 +113,11 @@ func (s *RetusnSalesOrderController) Save(c *gin.Context) {
 		return
 	}
 
-	errCode, errMsg, orderNo, returnOrderID, status := ReturnSalesOrderService.Save(&req)
+	errCode, errMsg, paymentNo, paymentID, status := PaymentService.Save(&req)
 	res.ErrDesc = errMsg
 	res.ErrCode = errCode
-	res.ReturnNo = orderNo
-	res.ID = returnOrderID
+	res.PaymentNo = paymentNo
+	res.ID = paymentID
 	res.Status = status
 	// res.OrderNo = newNumb
 	c.JSON(http.StatusOK, res)
@@ -126,15 +126,15 @@ func (s *RetusnSalesOrderController) Save(c *gin.Context) {
 }
 
 // Approve ...
-func (s *RetusnSalesOrderController) Approve(c *gin.Context) {
+func (s *PaymentController) Approve(c *gin.Context) {
 
-	req := dbmodels.ReturnSalesOrder{}
+	req := dbmodels.Payment{}
 	body := c.Request.Body
-	res := dto.ReturnOrderSaveResult{}
+	res := dto.SaveResult{}
 	dataBodyReq, _ := ioutil.ReadAll(body)
 
 	if err := json.Unmarshal(dataBodyReq, &req); err != nil {
-		fmt.Println("Error, unmarshal body Request to Sales Order stuct ", dataBodyReq)
+		fmt.Println("Error, unmarshal body Request to Payment stuct ", dataBodyReq)
 		res.ErrDesc = constants.ERR_CODE_03_MSG
 		res.ErrCode = constants.ERR_CODE_03
 		c.JSON(http.StatusBadRequest, res)
@@ -142,7 +142,7 @@ func (s *RetusnSalesOrderController) Approve(c *gin.Context) {
 		return
 	}
 
-	errCode, errMsg := ReturnSalesOrderService.Approve(req.ID)
+	errCode, errMsg := PaymentService.Approve(&req)
 	res.ErrDesc = errMsg
 	res.ErrCode = errCode
 	c.JSON(http.StatusOK, res)
@@ -151,11 +151,11 @@ func (s *RetusnSalesOrderController) Approve(c *gin.Context) {
 }
 
 // Approve ...
-func (s *RetusnSalesOrderController) Reject(c *gin.Context) {
+func (s *PaymentController) Reject(c *gin.Context) {
 
-	req := dbmodels.ReturnSalesOrder{}
+	req := dbmodels.Payment{}
 	body := c.Request.Body
-	res := dto.ReturnOrderSaveResult{}
+	res := dto.OrderSaveResult{}
 	dataBodyReq, _ := ioutil.ReadAll(body)
 
 	if err := json.Unmarshal(dataBodyReq, &req); err != nil {
@@ -167,18 +167,19 @@ func (s *RetusnSalesOrderController) Reject(c *gin.Context) {
 		return
 	}
 
-	errCode, errMsg := ReturnSalesOrderService.Reject(&req)
+	errCode, errMsg := PaymentService.Reject(&req)
 	res.ErrDesc = errMsg
 	res.ErrCode = errCode
+	// res.OrderNo = newNumb
 	c.JSON(http.StatusOK, res)
 
 	return
 }
 
 // PrintSO ...
-func (s *RetusnSalesOrderController) PrintReturnSO(c *gin.Context) {
+func (s *PaymentController) PrintPayment(c *gin.Context) {
 
-	returnSoID, errPage := strconv.ParseInt(c.Param("id"), 10, 64)
+	orderID, errPage := strconv.ParseInt(c.Param("id"), 10, 64)
 	if errPage != nil {
 		logs.Info("error", errPage)
 		c.JSON(http.StatusBadRequest, "id not supplied")
@@ -188,61 +189,16 @@ func (s *RetusnSalesOrderController) PrintReturnSO(c *gin.Context) {
 
 	// fmt.Println("-------->", req)
 
-	report.GenerateReturnSalesOrderReport(returnSoID)
+	report.GenerateSalesOrderReport(orderID, "so")
 
 	header := c.Writer.Header()
+	// header["Content-type"] = []string{"application/octet-stream"}
 	header["Content-type"] = []string{"application/x-pdf"}
-	header["Content-Disposition"] = []string{"attachment; filename=tes.pdf"}
+	header["Content-Disposition"] = []string{"attachment; filename= tes.pdf"}
 
-	file, _ := os.Open("return-so.pdf")
+	// file, _ := os.Open("/Users/deddysyuhendra/go/src/tes-print/invoice.pdf")
+	file, _ := os.Open("invoice.pdf")
 
 	io.Copy(c.Writer, file)
-	return
-}
-
-// FilterData ...
-func (s *RetusnSalesOrderController) FilterDataForSalesOrderReturn(c *gin.Context) {
-	req := dto.FilterOrderReturnDetail{}
-	res := models.ResponsePagination{}
-
-	page, errPage := strconv.Atoi(c.Param("page"))
-	if errPage != nil {
-		logs.Info("error", errPage)
-		res.Error = errPage.Error()
-		c.JSON(http.StatusBadRequest, res)
-		c.Abort()
-		return
-	}
-
-	count, errCount := strconv.Atoi(c.Param("count"))
-	if errCount != nil {
-		logs.Info("error", errPage)
-		res.Error = errCount.Error()
-		c.JSON(http.StatusBadRequest, res)
-		c.Abort()
-		return
-	}
-
-	log.Println("page->", page, "count->", count)
-
-	body := c.Request.Body
-	dataBodyReq, _ := ioutil.ReadAll(body)
-
-	if err := json.Unmarshal(dataBodyReq, &req); err != nil {
-		fmt.Println("Error, body Request ")
-		res.Error = err.Error()
-		c.JSON(http.StatusBadRequest, res)
-		c.Abort()
-		return
-	}
-
-	// temp, _ := json.Marshal(req)
-	// log.Println("searchName-->", string(temp))
-	// log.Println("is release ", req.InternalStatus)
-
-	res = ReturnSalesOrderService.GetDataForSalesOrderReturnPage(req, page, count)
-
-	c.JSON(http.StatusOK, res)
-
 	return
 }

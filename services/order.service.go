@@ -213,7 +213,7 @@ func (o OrderService) CreateInvoice(orderID int64) (errCode, errDesc string) {
 		history.Price = sod.Price
 		history.Saldo = newStock
 		history.TransDate = salesOrder.OrderDate
-		db.Save(&history)
+		tx.Save(&history)
 
 		total = total + (sod.Price * float32(sod.QtyOrder))
 
@@ -235,7 +235,7 @@ func (o OrderService) CreateInvoice(orderID int64) (errCode, errDesc string) {
 	// salesOrder.Total = total
 	// db.Save(&salesOrder)
 
-	db.Model(&dbmodels.SalesOrder{}).
+	tx.Model(&dbmodels.SalesOrder{}).
 		Where("id = ?", salesOrder.ID).
 		Update(dbmodels.SalesOrder{
 			GrandTotal:   grandTotal,
@@ -273,4 +273,24 @@ func generateNewInvoiceNo() (newOrderNo string, errCode string, errMsg string) {
 
 	return newOrderNo, constants.ERR_CODE_00, constants.ERR_CODE_00_MSG
 
+}
+
+// GetDataForSalesOrderPage ...
+func (o OrderService) GetDataForSalesOrderPage(param dto.FilterOrder, page int, limit int) models.ResponsePagination {
+	var res models.ResponsePagination
+
+	offset := (page - 1) * limit
+	data, totalData, err := database.GetSalesOrderForPayment(param, offset, limit)
+
+	if err != nil {
+		res.Error = err.Error()
+		return res
+	}
+
+	res.Contents = data
+	res.TotalRow = totalData
+	res.Page = page
+	res.Count = limit
+
+	return res
 }

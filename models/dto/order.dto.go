@@ -9,6 +9,7 @@ type FilterOrder struct {
 	SalesNo        string `json:"salesNo"`
 	MerchantPhone  string `json:"merchantPhone"`
 	OrderID        int64  `json:"orderId"`
+	CustomerID     int64  `json:"customerId"`
 }
 
 // FilterOrderResult ...
@@ -73,4 +74,12 @@ type OrderDetailSaveResult struct {
 type OrderDetailResult struct {
 	ErrDesc string `json:"errDesc"`
 	ErrCode string `json:"errCode"`
+}
+
+type SaveResult struct {
+	ErrDesc string `json:"errDesc"`
+	ErrCode string `json:"errCode"`
+	OrderNo string `json:"salesOrderNo"`
+	Status  int8   `json:"status"`
+	ID      int64  `json:"id"`
 }

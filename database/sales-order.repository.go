@@ -116,6 +116,7 @@ func SaveSalesOrderApprove(order *dbmodels.SalesOrder) (errCode string, errDesc 
 	db.Debug().LogMode(true)
 	// r := db.Model(&newOrder).Where("id = ?", order.ID).Update(dbmodels.SalesOrder{OrderNo: order.OrderNo, StatusCode: "001", WarehouseCode: order.WarehouseCode, InternalStatus: 1, OrderDate: order.OrderDate})
 
+	grandTotal = total
 	if order.Tax != 0 {
 		grandTotal = total * 1.1
 	}
@@ -272,4 +273,24 @@ func AsyncQuerysOrders(db *gorm.DB, offset int, limit int, status int, orders *[
 		resChan <- err
 	}
 	resChan <- nil
+}
+
+func GetSalesOrderForPayment(param dto.FilterOrder, offset, limit int) ([]dbmodels.SalesOrder, int, error) {
+	db := GetDbCon()
+	db.Debug().LogMode(true)
+
+	var orders []dbmodels.SalesOrder
+	var total int
+
+	total = 0
+	err := db.Offset(offset).Limit(limit).Preload("Customer").Preload("Salesman").Order("order_date DESC").Find(&orders, "  ( status  in ('20','40') ) AND (is_paid is null or is_paid = false) AND customer_id = ? ", param.CustomerID).Error
+
+	if err != nil {
+		return orders, total, err
+	}
+
+	var cekOorders []dbmodels.SalesOrder
+	db.Model(&cekOorders).Where("  ( status  in  ('20','40')  ) AND (is_paid is null or is_paid = false) AND customer_id = ? ", param.CustomerID).Count(&total)
+
+	return orders, total, nil
 }

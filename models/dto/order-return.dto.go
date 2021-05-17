@@ -8,6 +8,8 @@ type FilterOrderReturnDetail struct {
 	EndDate             string `json:"endDate"`
 	OrderReturnDetailId int64  `json:"orderReturnDetailId"`
 	QtyReturn           int64  `json:"QtyReturn"`
+	SalesOrderReturnID  int64  `json:"salesOrderReturnId"`
+	CustomerID          int64  `json:"customerId"`
 }
 
 // ReturnOrderSaveResult ...

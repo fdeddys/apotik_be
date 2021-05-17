@@ -106,6 +106,7 @@ func UpdateProduct(updatedProduct dbmodels.Product) models.NoContentResponse {
 	if err2 != nil {
 		res.ErrCode = "02"
 		res.ErrDesc = "Error update data to DB"
+		return res
 	}
 
 	res.ErrCode = "00"

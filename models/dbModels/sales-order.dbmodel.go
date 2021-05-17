@@ -37,6 +37,7 @@ type SalesOrder struct {
 	PickingNo   string    `json:"pickingNo" gorm:"column:picking_no"`
 	PickingDate time.Time `json:"pickingDate" gorm:"column:picking_date"`
 	PickingUser string    `json:"pickingUser" gorm:"column:picking_user"`
+	IsPaid      bool      `json:"isPaid" gorm:"column:is_paid"`
 
 	DeliveryNo     string    `json:"deliveryNo" gorm:"column:delivery_no"`
 	DeliveryDate   time.Time `json:"deliveryDate" gorm:"column:delivery_date"`

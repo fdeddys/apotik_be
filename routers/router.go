@@ -45,14 +45,23 @@ func InitRouter() *gin.Engine {
 	DashboardController := new(controllers.DashboardController)
 	ReceiveController := new(controllers.ReceiveController)
 	ReceiveDetailController := new(controllers.ReceiveDetailController)
+
 	RetusnSalesOrderController := new(controllers.RetusnSalesOrderController)
 	ReturnSalesOrderDetailController := new(controllers.ReturnSalesOrderDetailController)
+
+	RetusnReceiveController := new(controllers.ReturnReceiveController)
+	ReturnReceiveDetailController := new(controllers.ReturnReceiveDetailController)
 
 	AdjustmentController := new(controllers.AdjustmentController)
 	AdjustmentDetailController := new(controllers.AdjustmentDetailController)
 
 	WarehouseController := new(controllers.WarehouseController)
 	SalesmanController := new(controllers.SalesmanController)
+
+	PaymentController := new(controllers.PaymentController)
+	PaymentDetailController := new(controllers.PaymentDetailController)
+	PaymentOrderController := new(controllers.PaymentOrderController)
+	PaymentReturnController := new(controllers.PaymentReturnController)
 
 	api := r.Group("/api/user")
 	api.POST("/filter/page/:page/count/:count", UserController.GetUser)
@@ -137,6 +146,7 @@ func InitRouter() *gin.Engine {
 	api.POST("/reject", cekToken, OrderController.Reject)
 	api.POST("/print/so/:id", OrderController.PrintSO)
 	api.POST("/print/invoice/:id", OrderController.PrintInvoice)
+	api.POST("/payment/page/:page/count/:count", cekToken, OrderController.FilterDataForSalesOrder)
 
 	api = r.Group("/api/sales-order-detail")
 	api.POST("/page/:page/count/:count", OrderDetailController.GetDetail)
@@ -152,6 +162,7 @@ func InitRouter() *gin.Engine {
 	api.POST("/approve", cekToken, RetusnSalesOrderController.Approve)
 	api.POST("/reject", cekToken, RetusnSalesOrderController.Reject)
 	api.POST("/print/:id", cekToken, RetusnSalesOrderController.PrintReturnSO)
+	api.POST("/payment/page/:page/count/:count", cekToken, RetusnSalesOrderController.FilterDataForSalesOrderReturn)
 
 	api = r.Group("/api/return-sales-order-detail")
 	api.POST("/page/:page/count/:count", ReturnSalesOrderDetailController.GetDetail)
@@ -172,6 +183,21 @@ func InitRouter() *gin.Engine {
 	api.POST("", cekToken, ReceiveDetailController.Save)
 	api.DELETE("/:id", cekToken, ReceiveDetailController.DeleteByID)
 
+	// RETURN RECEIVE
+	api = r.Group("/api/return-receive")
+	api.GET("/:id", cekToken, RetusnReceiveController.GetByReturnReceiveId)
+	api.POST("/page/:page/count/:count", cekToken, RetusnReceiveController.FilterData)
+	api.POST("", cekToken, RetusnReceiveController.Save)
+	api.POST("/approve", cekToken, RetusnReceiveController.Approve)
+	api.POST("/reject", cekToken, RetusnReceiveController.Reject)
+	api.POST("/print/:id", cekToken, RetusnReceiveController.PrintReturn)
+
+	api = r.Group("/api/return-receive-detail")
+	api.POST("/page/:page/count/:count", ReturnReceiveDetailController.GetDetail)
+	api.POST("", cekToken, ReturnReceiveDetailController.Save)
+	api.POST("/updateQty", cekToken, ReturnReceiveDetailController.UpdateQty)
+	api.DELETE("/:id", cekToken, ReturnReceiveDetailController.DeleteById)
+
 	// ADJUSTMENT
 	api = r.Group("/api/adjustment")
 	api.POST("/page/:page/count/:count", cekToken, AdjustmentController.FilterData)
@@ -185,6 +211,30 @@ func InitRouter() *gin.Engine {
 	api.POST("", cekToken, AdjustmentDetailController.Save)
 	api.DELETE("/:id", cekToken, AdjustmentDetailController.DeleteByID)
 
+	// PAYMENT
+	api = r.Group("/api/payment")
+	api.POST("/page/:page/count/:count", cekToken, PaymentController.FilterData)
+	api.GET("/:id", cekToken, PaymentController.GetByPaymentId)
+	api.POST("", cekToken, PaymentController.Save)
+	api.POST("/approve", cekToken, PaymentController.Approve)
+	api.POST("/print/:id", cekToken, PaymentController.PrintPayment)
+
+	api = r.Group("/api/payment-detail")
+	api.POST("/all", cekToken, PaymentDetailController.GetDetail)
+	api.POST("", cekToken, PaymentDetailController.Save)
+	api.DELETE("/:id", cekToken, PaymentDetailController.DeleteById)
+
+	api = r.Group("/api/payment-order")
+	api.POST("/all", cekToken, PaymentOrderController.GetDetail)
+	api.POST("", cekToken, PaymentOrderController.Save)
+	api.DELETE("/:id", cekToken, PaymentOrderController.DeleteById)
+
+	api = r.Group("/api/payment-return")
+	api.POST("/all", cekToken, PaymentReturnController.GetDetail)
+	api.POST("", cekToken, PaymentReturnController.Save)
+	api.DELETE("/:id", cekToken, PaymentReturnController.DeleteById)
+
+	// Warehouse
 	api = r.Group("/api/warehouse")
 	api.GET("", WarehouseController.GetWarehouse)
 	api.POST("/page/:page/count/:count", cekToken, WarehouseController.GetWarehouseFilter)
@@ -200,6 +250,21 @@ func InitRouter() *gin.Engine {
 	api.POST("", cekToken, SalesmanController.SaveSalesman)
 	api.PUT("", cekToken, SalesmanController.UpdateSalesman)
 	api.GET("/like", cekToken, SalesmanController.GetSalesmanLike)
+
+	// Payment - SALES ORDER
+	// api = r.Group("/api/payment")
+	// api.GET("/:id", cekToken, RetusnSalesOrderController.GetByReturnSalesOrderId)
+	// api.POST("/page/:page/count/:count", cekToken, RetusnSalesOrderController.FilterData)
+	// api.POST("", cekToken, RetusnSalesOrderController.Save)
+	// api.POST("/approve", cekToken, RetusnSalesOrderController.Approve)
+	// api.POST("/reject", cekToken, RetusnSalesOrderController.Reject)
+	// api.POST("/print/:id", cekToken, RetusnSalesOrderController.PrintReturnSO)
+
+	// api = r.Group("/api/payment-detail")
+	// api.POST("/page/:page/count/:count", ReturnSalesOrderDetailController.GetDetail)
+	// api.POST("", cekToken, ReturnSalesOrderDetailController.Save)
+	// api.POST("/updateQty", cekToken, ReturnSalesOrderDetailController.UpdateQty)
+	// api.DELETE("/:id", cekToken, ReturnSalesOrderDetailController.DeleteById)
 
 	// Dashboard
 	dashboard := r.Group("/dashboard")

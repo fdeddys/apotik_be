@@ -55,7 +55,7 @@ func (o ReturnSalesOrderService) Save(salesOrderReturn *dbmodels.ReturnSalesOrde
 		}
 		salesOrderReturn.ReturnSalesOrderNo = newSalesOrderReturnNo
 		salesOrderReturn.Status = 10
-		salesOrderReturn.SalesmanID = dto.CurrUserId
+		salesOrderReturn.SalesmanID = salesOrderReturn.SalesmanID
 	}
 	salesOrderReturn.LastUpdateBy = dto.CurrUser
 	salesOrderReturn.LastUpdate = time.Now()
@@ -150,8 +150,10 @@ func (o ReturnSalesOrderService) Approve(salesOrderReturnID int64) (errCode, err
 	}
 
 	var grandTotal float32
-	total = 0
-	grandTotal = 0.0
+	// total = 0
+	grandTotal = total
+
+	fmt.Println("total = ", total, "  grand total = ", grandTotal)
 
 	if salesOrderReturn.Tax != 0 {
 		grandTotal = total * 1.1
@@ -180,4 +182,24 @@ func (o ReturnSalesOrderService) Reject(returnOrder *dbmodels.ReturnSalesOrder) 
 		return err, errDesc
 	}
 	return constants.ERR_CODE_00, constants.ERR_CODE_00_MSG
+}
+
+// GetDataForSalesOrderPage ...
+func (o ReturnSalesOrderService) GetDataForSalesOrderReturnPage(param dto.FilterOrderReturnDetail, page int, limit int) models.ResponsePagination {
+	var res models.ResponsePagination
+
+	offset := (page - 1) * limit
+	data, totalData, err := database.GetSalesOrderReturnForPayment(param, offset, limit)
+
+	if err != nil {
+		res.Error = err.Error()
+		return res
+	}
+
+	res.Contents = data
+	res.TotalRow = totalData
+	res.Page = page
+	res.Count = limit
+
+	return res
 }
