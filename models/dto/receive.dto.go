@@ -16,11 +16,11 @@ type FilterReceiveDetail struct {
 
 // ReceiveSaveResult ...
 type ReceiveSaveResult struct {
-	ErrDesc string `json:"errDesc"`
-	ErrCode string `json:"errCode"`
+	ErrDesc   string `json:"errDesc"`
+	ErrCode   string `json:"errCode"`
 	ReceiveNo string `json:"receiveNo"`
-	Status  int8   `json:"status"`
-	ID      int64  `json:"id"`
+	Status    int8   `json:"status"`
+	ID        int64  `json:"id"`
 }
 
 // ReceiveDetailSaveResult ...

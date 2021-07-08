@@ -71,7 +71,7 @@ func SaveSalesOrderApprove(order *dbmodels.SalesOrder) (errCode string, errDesc 
 		}
 	}()
 
-	// update stock
+	// update stock -> jika penjualan kredit , klo tunai update saat payment
 	// update history stock
 	// hitung ulang
 	var total float32
@@ -82,34 +82,9 @@ func SaveSalesOrderApprove(order *dbmodels.SalesOrder) (errCode string, errDesc 
 	for idx, orderDetail := range salesOrderDetails {
 		fmt.Println("idx -> ", idx)
 
-		// product, _, _ := FindProductByID(orderDetail.ProductID)
-		// if errCodeProd != constants.ERR_CODE_00 {
-		// 	tx.Rollback()
-		// 	return errCodeProd, errDescProd
-		// }
-		// curQty := product.QtyStock
-		// checkStock, _, _ := GetStockByProductAndWarehouse(product.ID, order.WarehouseID)
-		// curQty := checkStock.Qty
-
-		// updateQty := curQty - orderDetail.QtyOrder
-
-		// fmt.Println("cur qty =", curQty, " update =", updateQty)
-		// var historyStock dbmodels.HistoryStock
-		// historyStock.Code = product.Code
-		// historyStock.Description = "Sales Order"
-		// historyStock.Hpp = checkStock.Hpp
-		// historyStock.Name = product.Name
-		// historyStock.Price = orderDetail.Price
-		// historyStock.ReffNo = order.SalesOrderNo
-		// historyStock.TransDate = order.OrderDate
-		// historyStock.Debet = 0
-		// historyStock.Kredit = orderDetail.QtyOrder
-		// historyStock.Saldo = updateQty
-		// historyStock.LastUpdate = time.Now()
-		// historyStock.LastUpdateBy = dto.CurrUser
-
-		// UpdateStockProductByID(orderDetail.ProductID, updateQty, order.WarehouseID)
-		// SaveHistory(historyStock)
+		if order.IsCash == false {
+			updateStockInsertHistory(*order, orderDetail)
+		}
 		total = total + (orderDetail.Price * float32(orderDetail.QtyOrder))
 	}
 
@@ -138,6 +113,43 @@ func SaveSalesOrderApprove(order *dbmodels.SalesOrder) (errCode string, errDesc 
 
 	tx.Commit()
 	return constants.ERR_CODE_00, constants.ERR_CODE_00_MSG
+}
+
+func updateStockInsertHistory(order dbmodels.SalesOrder, orderDetail dbmodels.SalesOrderDetail) {
+	product, _, _ := FindProductByID(orderDetail.ProductID)
+	// if errCodeProd != constants.ERR_CODE_00 {
+	// 	tx.Rollback()
+	// 	return errCodeProd, errDescProd
+	// }
+	// curQty := product.QtyStock
+	checkStock, _, _ := GetStockByProductAndWarehouse(product.ID, order.WarehouseID)
+	curQty := checkStock.Qty
+
+	updateQty := curQty - orderDetail.QtyOrder
+
+	fmt.Println("cur qty =", curQty, " update =", updateQty)
+	var historyStock dbmodels.HistoryStock
+	historyStock.Code = product.Code
+	if order.IsCash {
+		historyStock.Description = "Direct Sales"
+	} else {
+		historyStock.Description = "Sales Order"
+	}
+	historyStock.Hpp = product.Hpp
+	historyStock.WarehouseID = order.WarehouseID
+	historyStock.Name = product.Name
+	historyStock.Price = orderDetail.Price
+	historyStock.ReffNo = order.SalesOrderNo
+	historyStock.TransDate = order.OrderDate
+	historyStock.Debet = 0
+	historyStock.Kredit = orderDetail.QtyOrder
+	historyStock.Saldo = updateQty
+	historyStock.Disc1 = orderDetail.Disc1 * orderDetail.Price / 100
+	historyStock.LastUpdate = time.Now()
+	historyStock.LastUpdateBy = dto.CurrUser
+
+	UpdateStockProductByID(orderDetail.ProductID, updateQty, order.WarehouseID)
+	SaveHistory(historyStock)
 }
 
 // GetOrderByOrderNo ...
@@ -207,7 +219,7 @@ func GetOrderPage(param dto.FilterOrder, offset, limit, internalStatus int) ([]d
 	return orders, total, nil
 }
 
-func getParam(param dto.FilterOrder, status int) (merchantCode, orderNumber string, byStatus bool) {
+func getParam(param dto.FilterOrder, status int) (merchantCode, orderNumber string, byStatus, isCash bool) {
 
 	merchantCode = "%"
 
@@ -223,21 +235,22 @@ func getParam(param dto.FilterOrder, status int) (merchantCode, orderNumber stri
 		byStatus = false
 	}
 
+	isCash = param.IsCash
 	return
 }
 
 // AsyncQueryCountsOrders ...
 func AsyncQueryCountsOrders(db *gorm.DB, total *int, status int, orders *[]dbmodels.SalesOrder, param dto.FilterOrder, resChan chan error) {
 
-	merchantCode, orderNumber, byStatus := getParam(param, status)
+	merchantCode, orderNumber, byStatus, isCash := getParam(param, status)
 
-	fmt.Println("ISI MERCHANT ", merchantCode, " orderNumber ", orderNumber, "  status ", status, " fill status ", byStatus)
+	fmt.Println("ISI MERCHANT ", merchantCode, " orderNumber ", orderNumber, "  status ", status, " fill status ", byStatus, "  Is Cash : ", isCash)
 
 	var err error
 	if strings.TrimSpace(param.StartDate) != "" && strings.TrimSpace(param.EndDate) != "" {
-		err = db.Model(&orders).Where(" ( (status = ?) or ( not ?) ) AND  COALESCE(sales_order_no, '') ilike ? AND order_date between ? and ?  ", status, byStatus, orderNumber, param.StartDate, param.EndDate).Count(&*total).Error
+		err = db.Model(&orders).Where(" ( (status = ?) or ( not ?) ) AND  COALESCE(sales_order_no, '') ilike ? AND order_date between ? and ?  and is_cash = ? ", status, byStatus, orderNumber, param.StartDate, param.EndDate, isCash).Count(&*total).Error
 	} else {
-		err = db.Model(&orders).Where(" ( (status = ?) or ( not ?) ) AND COALESCE(sales_order_no,'') ilike ? ", status, byStatus, orderNumber).Count(&*total).Error
+		err = db.Model(&orders).Where(" ( (status = ?) or ( not ?) ) AND COALESCE(sales_order_no,'') ilike ? and is_cash = ?", status, byStatus, orderNumber, isCash).Count(&*total).Error
 	}
 
 	if err != nil {
@@ -251,17 +264,17 @@ func AsyncQuerysOrders(db *gorm.DB, offset int, limit int, status int, orders *[
 
 	var err error
 
-	merchantCode, orderNumber, byStatus := getParam(param, status)
+	merchantCode, orderNumber, byStatus, isCash := getParam(param, status)
 
 	fmt.Println("ISI MERCHANT ", merchantCode, " order no ", orderNumber, "  status ", status, " fill status ", byStatus)
 
 	fmt.Println("isi dari filter [", param, "] ")
 	if strings.TrimSpace(param.StartDate) != "" && strings.TrimSpace(param.EndDate) != "" {
 		fmt.Println("isi dari filter [", param.StartDate, '-', param.EndDate, "] ")
-		err = db.Preload("Customer").Preload("Salesman").Order("order_date DESC").Offset(offset).Limit(limit).Find(&orders, " ( ( status = ?) or ( not ?) ) AND COALESCE(sales_order_no, '') ilike ? AND order_date between ? and ?   ", status, byStatus, orderNumber, param.StartDate, param.EndDate).Error
+		err = db.Preload("Customer").Preload("Salesman").Order("order_date DESC").Offset(offset).Limit(limit).Find(&orders, " ( ( status = ?) or ( not ?) ) AND COALESCE(sales_order_no, '') ilike ? AND order_date between ? and ?  and is_cash = ? ", status, byStatus, orderNumber, param.StartDate, param.EndDate, isCash).Error
 	} else {
 		fmt.Println("isi dari kosong ")
-		err = db.Offset(offset).Limit(limit).Preload("Customer").Preload("Salesman").Order("order_date DESC").Find(&orders, " ( ( status = ?) or ( not ?) ) AND COALESCE(sales_order_no,'') ilike ?  ", status, byStatus, orderNumber).Error
+		err = db.Offset(offset).Limit(limit).Preload("Customer").Preload("Salesman").Order("order_date DESC").Find(&orders, " ( ( status = ?) or ( not ?) ) AND COALESCE(sales_order_no,'') ilike ?  and is_cash = ? ", status, byStatus, orderNumber, isCash).Error
 		if err != nil {
 			fmt.Println("error --> ", err)
 		}

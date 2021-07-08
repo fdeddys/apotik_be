@@ -280,13 +280,26 @@ func showLogo(pdf *gopdf.GoPdf) {
 	pdf.Image("imgs/logo3.png", posX, posY, &gopdf.Rect{W: imgSize + 68, H: imgSize})
 }
 
-func setDetail(pdf *gopdf.GoPdf, data []DataDetail) {
+// param [0] = tipe report
+// ex: SO, MT
+func setDetail(pdf *gopdf.GoPdf, data []DataDetail, param ...string) {
 
 	setPageNumb(pdf, curPage)
 	pdf.SetX(20)
 	pdf.SetY(spaceLen * 8)
 
-	showCustomer(pdf)
+	if len(param) > 0 {
+		switch param[0] {
+		case "mt":
+			showWarehouse(pdf)
+		case "so":
+			showCustomer(pdf)
+		default:
+			showCustomer(pdf)
+		}
+	} else {
+		showCustomer(pdf)
+	}
 
 	space(pdf)
 	showHeaderTable(pdf)
@@ -498,6 +511,44 @@ func showCustomer(pdf *gopdf.GoPdf) {
 	space(pdf)
 	pdf.SetX(spaceCustomerInfo)
 	pdf.Text("Customer ")
+	pdf.SetX(spaceTitik)
+	pdf.Text(":")
+	pdf.SetX(spaceValue)
+	pdf.Text(invInfo.CustName)
+
+	space(pdf)
+	pdf.SetX(spaceCustomerInfo)
+	pdf.Text("Transaction at ")
+	pdf.SetX(spaceTitik)
+	pdf.Text(":")
+	pdf.SetX(spaceValue)
+	pdf.Text(invInfo.TransAt)
+
+	space(pdf)
+	pdf.SetX(spaceCustomerInfo)
+	pdf.Text("Source Document ")
+	pdf.SetX(spaceTitik)
+	pdf.Text(":")
+	pdf.SetX(spaceValue)
+	pdf.Text(invInfo.SourceDoc)
+
+}
+
+func showWarehouse(pdf *gopdf.GoPdf) {
+	// , code, name, transDate, ssNo string
+	space(pdf)
+	setFont(pdf, 10)
+
+	pdf.SetX(spaceCustomerInfo)
+	pdf.Text("Warehouse Source")
+	pdf.SetX(spaceTitik)
+	pdf.Text(":")
+	pdf.SetX(spaceValue)
+	pdf.Text(invInfo.CustCode)
+
+	space(pdf)
+	pdf.SetX(spaceCustomerInfo)
+	pdf.Text("Warehouse Dest ")
 	pdf.SetX(spaceTitik)
 	pdf.Text(":")
 	pdf.SetX(spaceValue)

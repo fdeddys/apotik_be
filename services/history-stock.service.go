@@ -1,6 +1,7 @@
 package services
 
 import (
+	"distribution-system-be/database"
 	repository "distribution-system-be/database"
 	"distribution-system-be/models"
 	dbmodels "distribution-system-be/models/dbModels"
@@ -16,8 +17,27 @@ type HistoryStockService struct {
 func (h HistoryStockService) SaveHistoryStock(history *dbmodels.HistoryStock) models.NoContentResponse {
 	history.LastUpdate = time.Now()
 	history.LastUpdateBy = dto.CurrUser
-	// var res models.ResponseSave
+
 	res := repository.SaveHistory(*history)
+	return res
+}
+
+// GetHistoryStockPage
+func (h HistoryStockService) GetHistoryStockPage(param dto.FilterHistoryStock, page, limit int) models.ResponsePagination {
+
+	res := models.ResponsePagination{}
+	offset := (page - 1) * limit
+	historyStocks, totalData, err := database.GetHistoryPage(param, offset, limit)
+
+	if err != nil {
+		res.Error = err.Error()
+		return res
+	}
+
+	res.Contents = historyStocks
+	res.Count = totalData
+	res.Page = page
+	res.Count = limit
 
 	return res
 }

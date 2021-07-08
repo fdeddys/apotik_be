@@ -27,7 +27,7 @@ type SalesOrder struct {
 	// 50 = PAID
 	Status int8 `json:"status" gorm:"column:status"`
 	Top    int8 `json:"top" gorm:"column:top"`
-	IsCash int8 `json:"isCash" gorm:"column:iscash"`
+	IsCash bool `json:"isCash" gorm:"column:is_cash"`
 
 	WarehouseID int64     `json:"warehouseId" gorm:"column:warehouse_id"`
 	Warehouse   Warehouse `json:"warehouse" gorm:"foreignkey:id;association_foreignkey:WarehouseID;association_autoupdate:false;association_autocreate:false"`

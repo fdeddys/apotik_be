@@ -5,6 +5,7 @@ import (
 	"distribution-system-be/models"
 	dbmodels "distribution-system-be/models/dbModels"
 	dto "distribution-system-be/models/dto"
+	"distribution-system-be/utils/util"
 	"fmt"
 	"log"
 	"reflect"
@@ -118,42 +119,97 @@ func UpdateProduct(updatedProduct dbmodels.Product) models.NoContentResponse {
 //SaveProduct ...
 func SaveProduct(product dbmodels.Product) models.ContentResponse {
 	var res models.ContentResponse
+	res.ErrCode = constants.ERR_CODE_00
+	res.ErrDesc = constants.ERR_CODE_00_MSG
+
+	newProduct := false
 	db := GetDbCon()
+	tx := db.Begin()
 	db.Debug().LogMode(true)
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
 
 	// prefix := product.Name[:3]
 	if product.ID < 1 {
-		product.Code = GenerateProductCode()
+		product.Code = GenerateProductCode(product.Name)
+		newProduct = true
 	}
 	// product.Code = GenerateProductCode(strings.ToUpper(prefix))
 
-	if r := db.Save(&product); r.Error != nil {
-		res.ErrCode = "02"
-		res.ErrDesc = "Error save data to DB"
+	if r := tx.Save(&product); r.Error != nil {
+		res.ErrCode = constants.ERR_CODE_30
+		res.ErrDesc = constants.ERR_CODE_30_MSG
 		res.Contents = r.Error
+		tx.Rollback()
+		return res
+	}
+	res.Contents = product
+
+	if !newProduct {
+		tx.Commit()
+		return res
 	}
 
-	// url := beego.AppConfig.String("kafka.rest-server")
-	// var kafka dbmodels.KafkaReq
-	// var productVendor dbmodels.ProductVendor
+	// InitStock(productId)
+	productId := product.ID
+	warehouses, errCode, _ := GetAllWarehouse()
+	if errCode != constants.ERR_CODE_00 {
+		tx.Commit()
+		return res
+	}
 
-	// productVendor.Code = product.Code
-	// productVendor.Name = product.Name
-	// productVendor.Uom = product.UOM
+	for _, warehouse := range warehouses {
+		var stock dbmodels.Stock
+		stock.ProductID = productId
+		stock.LastUpdateBy = dto.CurrUser
+		stock.LastUpdate = util.GetCurrDate()
+		stock.Qty = 0
+		stock.WarehouseID = warehouse.ID
 
-	// // kafka.Topic = "oasis-add-product-uki-topic"
-	// kafka.Data = productVendor
+		err := tx.Save(&stock).Error
+		if err != nil {
+			tx.Rollback()
+			return res
+		}
 
-	// _, err := http.HttpPost(url, kafka, "60s", 1)
-	// if err != nil {
-	// 	logs.Error("Error hit kafka")
-	// }
+		var history dbmodels.HistoryStock
+		history.Code = product.Code
+		history.WarehouseID = warehouse.ID
+		history.Debet = 0
+		history.Description = "INIT STOCK"
+		history.Hpp = 0
+		history.Kredit = 0
+		history.LastUpdate = util.GetCurrDate()
+		history.LastUpdateBy = dto.CurrUser
+		history.Name = product.Name
+		history.ReffNo = ""
+		history.Price = 0
+		history.Saldo = 0
+		history.TransDate = util.GetCurrFormatDate()
+		tx.Save(&history)
 
-	res.ErrCode = "00"
-	res.ErrDesc = "Success"
-	res.Contents = product
+	}
+
+	tx.Commit()
+
 	return res
 }
+
+// func InitStock(productID int64) {
+
+// 	warehouses, errCode, _ := GetAllWarehouse()
+// 	if errCode != constants.ERR_CODE_00 {
+// 		return
+// 	}
+
+// 	for _, warehouse := range warehouses {
+// 		SaveStock(productID, warehouse.ID)
+// 	}
+
+// }
 
 // ProductQuerys ...
 func ProductQuerys(db *gorm.DB, offset int, limit int, product *[]dbmodels.Product, param dto.FilterProduct, resChan chan error) {
@@ -196,32 +252,33 @@ func ProductList() []dbmodels.Product {
 	return product
 
 }
-func GenerateProductCode() string {
+func GenerateProductCode(name string) string {
 	db := GetDbCon()
 	db.Debug().LogMode(true)
 
-	// err := db.Order(order).First(&models)
-	var productGroup []dbmodels.ProductGroup
-	err := db.Model(&dbmodels.ProductGroup{}).Order("id desc").First(&productGroup).Error
-	// err := db.Model(&dbmodels.Brand{}).Where("id = 200000").Order("id desc").First(&brand).Error
+	defaultCode := "X0001"
+	header := name[:1]
+	header = strings.ToUpper(header)
+
+	var product []dbmodels.Product
+	err := db.Where("substring(code,1,1) = ? ", header).Order("id desc").Find(&product).Error
 
 	if err != nil {
-		return "P000001"
+		fmt.Println("Error not found ", err.Error())
+		return header + "0001"
 	}
-	if len(productGroup) > 0 {
-		// fmt.Printf("ini latest code nya : %s \n", brand[0].Code)
-		woprefix := strings.TrimPrefix(productGroup[0].Code, "P")
+
+	if len(product) > 0 {
+		woprefix := strings.TrimPrefix(product[0].Code, header)
 		latestCode, err := strconv.Atoi(woprefix)
 		if err != nil {
 			fmt.Printf("error")
-			return "P000001"
+			return defaultCode
 		}
-		// fmt.Printf("ini latest code nya : %d \n", latestCode)
-		wpadding := fmt.Sprintf("%06s", strconv.Itoa(latestCode+1))
-		// fmt.Printf("ini pake padding : %s \n", "B"+wpadding)
-		return "G" + wpadding
+		wpadding := fmt.Sprintf("%04s", strconv.Itoa(latestCode+1))
+		return header + wpadding
 	}
-	return "P000001"
+	return header + "0001"
 }
 
 // // GenerateProductCode ...
@@ -299,11 +356,22 @@ func UpdateStockProductByID(prodID, qty, warehouseID int64) (string, string) {
 	db.Debug().LogMode(true)
 
 	var stock dbmodels.Stock
-	db.Where("product_id=? and warehouse_id", prodID, warehouseID).First(&stock)
+	result := db.Where("product_id=? and warehouse_id = ?", prodID, warehouseID).Find(&stock)
 
-	stock.Qty = qty
-	err := db.Save(&stock).Error
+	fmt.Println("Find stock for update ", prodID, " wh", warehouseID, " err => ", result)
+	if stock.ID == 0 {
+		fmt.Println("Find stock for update -- create new record ")
+		stock.ProductID = prodID
+		stock.WarehouseID = warehouseID
+		stock.LastUpdateBy = dto.CurrUser
+		stock.LastUpdate = util.GetCurrDate()
+		stock.Qty = qty
+		db.Save(&stock)
+		return constants.ERR_CODE_00, constants.ERR_CODE_00_MSG
+	}
 
+	fmt.Println("UpdateStockProductByID -- Update  ")
+	err := db.Model(&dbmodels.Stock{}).Where("id = ?", stock.ID).Update("qty", qty).Error
 	if err != nil {
 		return constants.ERR_CODE_80, err.Error()
 	}

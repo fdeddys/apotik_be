@@ -10,6 +10,7 @@ type FilterOrder struct {
 	MerchantPhone  string `json:"merchantPhone"`
 	OrderID        int64  `json:"orderId"`
 	CustomerID     int64  `json:"customerId"`
+	IsCash         bool   `json:"isCash"`
 }
 
 // FilterOrderResult ...

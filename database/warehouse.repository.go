@@ -5,6 +5,7 @@ import (
 	"distribution-system-be/models"
 	dbmodels "distribution-system-be/models/dbModels"
 	"distribution-system-be/models/dto"
+	"distribution-system-be/utils/util"
 	"fmt"
 	"log"
 	"strconv"
@@ -79,20 +80,78 @@ func GetWarehouseLike(warehouseTerms string) ([]dbmodels.Warehouse, string, stri
 //SaveWarehouse ...
 func SaveWarehouse(warehouse dbmodels.Warehouse) models.NoContentResponse {
 	var res models.NoContentResponse
+	res.ErrCode = constants.ERR_CODE_00
+	res.ErrDesc = constants.ERR_CODE_00_MSG
+
+	newWarehouse := false
 	db := GetDbCon()
+	tx := db.Begin()
 	db.Debug().LogMode(true)
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
 
 	if warehouse.ID < 1 {
 		warehouse.Code = GenerateWarehouseCode()
+		newWarehouse = true
 	}
 
 	if r := db.Save(&warehouse); r.Error != nil {
-		res.ErrCode = "02"
-		res.ErrDesc = "Error save data to DB"
+		res.ErrCode = constants.ERR_CODE_30
+		res.ErrDesc = constants.ERR_CODE_30_MSG
+		tx.Rollback()
+		return res
 	}
 
-	res.ErrCode = "00"
-	res.ErrDesc = "Success"
+	if !newWarehouse {
+		tx.Commit()
+		return res
+	}
+
+	// InitStock(productId)
+	warehouseId := warehouse.ID
+	products := ProductList()
+	if len(products) < 1 {
+		tx.Commit()
+		return res
+	}
+
+	for _, product := range products {
+		var stock dbmodels.Stock
+		stock.ProductID = product.ID
+		stock.LastUpdateBy = dto.CurrUser
+		stock.LastUpdate = util.GetCurrDate()
+		stock.Qty = 0
+		stock.WarehouseID = warehouseId
+		err := tx.Save(&stock).Error
+		if err != nil {
+			tx.Rollback()
+			return res
+		}
+
+		// trxDate, _ := time.Parse("2006-01-02", time.Now().String())
+
+		var history dbmodels.HistoryStock
+		history.Code = product.Code
+		history.WarehouseID = warehouseId
+		history.Debet = 0
+		history.Description = "INIT STOCK"
+		history.Hpp = 0
+		history.Kredit = 0
+		history.LastUpdate = util.GetCurrDate()
+		history.LastUpdateBy = dto.CurrUser
+		history.Name = product.Name
+		history.ReffNo = ""
+		history.Price = 0
+		history.Saldo = 0
+		history.TransDate = util.GetCurrFormatDate()
+		tx.Save(&history)
+
+	}
+	tx.Commit()
+
 	return res
 }
 

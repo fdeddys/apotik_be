@@ -17,10 +17,10 @@ type Product struct {
 	Brand   Brand `gorm:"foreignkey:id; association_foreignkey:BrandID; association_autoupdate:false;association_autocreate:false"`
 
 	BigUomID int64  `json:"bigUomId" gorm:"column:big_uom_id"`
-	BigUom   Lookup `gorm:"foreignkey:ID; association_foreignkey:BigUomID; association_autoupdate:false;association_autocreate:false"`
+	BigUom   Lookup `json:"bigUom"   gorm:"foreignkey:ID; association_foreignkey:BigUomID; association_autoupdate:false;association_autocreate:false"`
 
 	SmallUomID int64  `json:"smallUomId" gorm:"column:small_uom_id"`
-	SmallUom   Lookup `gorm:"foreignkey:ID; association_foreignkey:SmallUomID;association_autoupdate:false;association_autocreate:false"`
+	SmallUom   Lookup `json:"smallUom" gorm:"foreignkey:ID; association_foreignkey:SmallUomID;association_autoupdate:false;association_autocreate:false"`
 
 	Status       int       `json:"status" gorm:"column:status"`
 	LastUpdateBy string    `json:"lastUpdateBy" gorm:"column:last_update_by"`

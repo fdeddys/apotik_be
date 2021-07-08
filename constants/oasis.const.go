@@ -76,6 +76,11 @@ const (
 	ERR_CODE_96_MSG = "Payment total order / return / detail not MATCH  !"
 )
 
+const (
+	ERR_CODE_40     = "40"
+	ERR_CODE_40_MSG = "Data not found"
+)
+
 // STATUS Sales Order
 // 10 = new order
 // 20 = approve
@@ -84,6 +89,9 @@ const (
 // 50 = PAID
 
 const (
-	ERR_CODE_40     = "40"
-	ERR_CODE_40_MSG = "Data not found"
+	STATUS_APPROVE = 20
+)
+
+const (
+	PARAMETER_TAX_VALUE = "tax"
 )

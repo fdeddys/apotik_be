@@ -202,7 +202,7 @@ func AsyncQuerysReceives(db *gorm.DB, offset int, limit int, status int, receive
 		err = db.Preload("Supplier").Order("receive_date DESC").Offset(offset).Limit(limit).Find(&receives, " ( ( status = ?) or ( not ?) ) AND COALESCE(receive_no, '') ilike ? AND receive_date between ? and ?   ", status, byStatus, receiveNumber, param.StartDate, param.EndDate).Error
 	} else {
 		fmt.Println("isi dari kosong ")
-		err = db.Offset(offset).Limit(limit).Preload("Supplier").Find(&receives, " ( ( status = ?) or ( not ?) ) AND COALESCE(receive_no,'') ilike ?  ", status, byStatus, receiveNumber).Error
+		err = db.Order("receive_date DESC").Offset(offset).Limit(limit).Preload("Supplier").Find(&receives, " ( ( status = ?) or ( not ?) ) AND COALESCE(receive_no,'') ilike ?  ", status, byStatus, receiveNumber).Error
 		if err != nil {
 			fmt.Println("receive --> ", err)
 		}
@@ -261,5 +261,41 @@ func RejectReceive(receive *dbmodels.Receive) (errCode string, errDesc string) {
 		return
 	}
 
+	return constants.ERR_CODE_00, constants.ERR_CODE_00_MSG
+}
+
+// RemovePO ...
+func RemovePO(receive *dbmodels.Receive) (errCode string, errDesc string) {
+
+	fmt.Println("Remove PO Receiving ------------------------------------------ ")
+	db := GetDbCon()
+	tx := db.Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
+	// remove PO numb from Receive
+	// update PO status
+
+	currPO := dbmodels.PurchaseOrder{}
+	tx.First(&currPO, "po_no = ? ", receive.PoNo)
+	currPO.Status = 20
+	tx.Save(currPO)
+
+	currReceive := dbmodels.Receive{}
+	tx.Find(&currReceive, " id = ?  ", receive.ID)
+	currReceive.PoNo = ""
+
+	r := tx.Save(currReceive)
+	if r.Error != nil {
+		errCode = constants.ERR_CODE_80
+		errDesc = r.Error.Error()
+		fmt.Println("Error update ", errDesc)
+		return
+	}
+
+	tx.Commit()
 	return constants.ERR_CODE_00, constants.ERR_CODE_00_MSG
 }

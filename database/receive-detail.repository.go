@@ -108,6 +108,7 @@ func SaveReceiveDetail(receiveDetail *dbmodels.ReceiveDetail) (errCode string, e
 	if r := db.Save(&receiveDetail); r.Error != nil {
 		errCode = "99"
 		errDesc = r.Error.Error()
+		return
 	}
 
 	errCode = "00"
@@ -127,6 +128,7 @@ func DeleteReceiveDetailById(id int64) (errCode string, errDesc string) {
 	if r := db.Where("id = ? ", id).Delete(dbmodels.ReceiveDetail{}); r.Error != nil {
 		errCode = "99"
 		errDesc = r.Error.Error()
+		return
 	}
 
 	errCode = "00"

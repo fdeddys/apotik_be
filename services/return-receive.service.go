@@ -105,6 +105,7 @@ func (o ReturnReceiveService) Approve(returnReceiveID int64) (errCode, errDesc s
 	// cek qty
 	returnReceive, err := database.GetReturnReceiveById(returnReceiveID)
 	if err != nil {
+		tx.Rollback()
 		return errCode, errDesc
 	}
 
@@ -133,6 +134,7 @@ func (o ReturnReceiveService) Approve(returnReceiveID int64) (errCode, errDesc s
 
 		var history dbmodels.HistoryStock
 		history.Code = product.Code
+		history.WarehouseID = returnReceive.WarehouseID
 		history.Debet = 0
 		history.Description = "Return Receive"
 		history.Hpp = hpp
@@ -144,7 +146,7 @@ func (o ReturnReceiveService) Approve(returnReceiveID int64) (errCode, errDesc s
 		history.Price = returnReceiveDetail.Price
 		history.Saldo = newStock
 		history.TransDate = returnReceive.ReturnReceiveDate
-		db.Save(&history)
+		tx.Save(&history)
 
 		total = total + (returnReceiveDetail.Price * float32(returnReceiveDetail.Qty))
 
@@ -158,7 +160,7 @@ func (o ReturnReceiveService) Approve(returnReceiveID int64) (errCode, errDesc s
 		grandTotal = total * 1.1
 	}
 
-	db.Model(&dbmodels.ReturnReceive{}).
+	tx.Model(&dbmodels.ReturnReceive{}).
 		Where("id = ?", returnReceive.ID).
 		Update(dbmodels.ReturnReceive{
 			GrandTotal:   grandTotal,

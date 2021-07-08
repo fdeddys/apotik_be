@@ -63,6 +63,16 @@ func InitRouter() *gin.Engine {
 	PaymentOrderController := new(controllers.PaymentOrderController)
 	PaymentReturnController := new(controllers.PaymentReturnController)
 
+	StockMutationController := new(controllers.StockMutationController)
+	StockMutationDetailController := new(controllers.StockMutationDetailController)
+
+	StockController := new(controllers.StockController)
+
+	HistoryController := new(controllers.HistoryStockController)
+
+	PurchaseOrderController := new(controllers.PurchaseOrderController)
+	PurchaseOrderDetailController := new(controllers.PurchaseOrderDetailController)
+
 	api := r.Group("/api/user")
 	api.POST("/filter/page/:page/count/:count", UserController.GetUser)
 	api.POST("/", UserController.SaveDataUser)
@@ -175,6 +185,8 @@ func InitRouter() *gin.Engine {
 	api.POST("/page/:page/count/:count", cekToken, ReceiveController.FilterData)
 	api.GET("/:id", cekToken, ReceiveController.GetByReceiveId)
 	api.POST("", cekToken, ReceiveController.Save)
+	api.POST("/byPO", cekToken, ReceiveController.SaveByPO)
+	api.POST("/remove-PO", cekToken, ReceiveController.RemovePO)
 	api.POST("/approve", cekToken, ReceiveController.Approve)
 	api.POST("/print/:id", cekToken, ReceiveController.PrintPreview)
 
@@ -250,6 +262,42 @@ func InitRouter() *gin.Engine {
 	api.POST("", cekToken, SalesmanController.SaveSalesman)
 	api.PUT("", cekToken, SalesmanController.UpdateSalesman)
 	api.GET("/like", cekToken, SalesmanController.GetSalesmanLike)
+
+	// STOCK - MUTATION
+	api = r.Group("/api/stock-mutation")
+	api.GET("/:id", StockMutationController.GetByStockMutationById)
+	api.POST("/page/:page/count/:count", cekToken, StockMutationController.GetStockMutationPage)
+	api.POST("", cekToken, StockMutationController.Save)
+	api.POST("/approve", cekToken, StockMutationController.Approve)
+	api.POST("/reject", cekToken, StockMutationController.Reject)
+	api.POST("/print/:id", StockMutationController.PrintStockMutationForm)
+
+	api = r.Group("/api/stock-mutation-detail")
+	api.POST("/page/:page/count/:count", StockMutationDetailController.GetDetail)
+	api.POST("", cekToken, StockMutationDetailController.Save)
+	api.DELETE("/:id", cekToken, StockMutationDetailController.DeleteById)
+	api.POST("/updateItemQty", cekToken, StockMutationDetailController.UpdateQty)
+
+	// STOCK - MUTATION
+	api = r.Group("/api/stock")
+	api.GET("/:id/page/:page/count/:count", cekToken, StockController.GetByStockByProductIdPage)
+
+	// HISTORY - STOCK
+	api = r.Group("/api/history-stock")
+	api.POST("/page/:page/count/:count", HistoryController.FilterDataHistoryStock)
+
+	// PURCHASE ORDER
+	api = r.Group("/api/purchase-order")
+	api.POST("/page/:page/count/:count", cekToken, PurchaseOrderController.FilterData)
+	api.GET("/:id", cekToken, PurchaseOrderController.GetByPurchaseOrderId)
+	api.POST("", cekToken, PurchaseOrderController.Save)
+	api.POST("/approve", cekToken, PurchaseOrderController.Approve)
+	api.POST("/print/:id", cekToken, PurchaseOrderController.PrintPreview)
+
+	api = r.Group("/api/purchase-order-detail")
+	api.POST("/page/:page/count/:count", PurchaseOrderDetailController.GetDetail)
+	api.POST("", cekToken, PurchaseOrderDetailController.Save)
+	api.DELETE("/:id", cekToken, PurchaseOrderDetailController.DeleteByID)
 
 	// Payment - SALES ORDER
 	// api = r.Group("/api/payment")

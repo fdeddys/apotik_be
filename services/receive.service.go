@@ -66,6 +66,53 @@ func (r ReceiveService) Save(receive *dbmodels.Receive) (errCode, errDesc, recei
 	return constants.ERR_CODE_00, constants.ERR_CODE_00_MSG, receive.ReceiveNo, receive.ID, status
 }
 
+// Save ...
+func (r ReceiveService) SaveByPO(receive *dbmodels.Receive) (errCode, errDesc, receiveNo string, receiveID int64, status int8) {
+
+	if receive.ID == 0 {
+		newNumber, errCode, errMsg := generateNewReceiveNo()
+		if errCode != constants.ERR_CODE_00 {
+			return errCode, errMsg, "", 0, 0
+		}
+		receive.ReceiveNo = newNumber
+		receive.Status = 10
+	}
+	receive.LastUpdateBy = dto.CurrUser
+	receive.LastUpdate = time.Now()
+
+	// fmt.Println("isi order ", order)
+	err, errDesc, _, status := database.SaveReceive(receive)
+	if err != constants.ERR_CODE_00 {
+		return err, errDesc, "", 0, 0
+	}
+
+	fmt.Println("Po No => ", receive.PoNo)
+	if receive.PoNo != "" {
+		// insertDetailFromPoNo
+		poDetails := database.GetAllDataDetailPurchaseOrderByPoNo(receive.PoNo)
+
+		for _, poDetail := range poDetails {
+
+			product, _, _ := database.FindProductByID(poDetail.ProductID)
+
+			var receiveDetail dbmodels.ReceiveDetail
+			receiveDetail.Disc1 = poDetail.Disc1
+			receiveDetail.Disc2 = poDetail.Disc2
+			receiveDetail.Hpp = product.Hpp
+			receiveDetail.LastUpdate = time.Now()
+			receiveDetail.LastUpdateBy = dto.CurrUser
+			receiveDetail.Price = poDetail.Price
+			receiveDetail.ProductID = poDetail.ProductID
+			receiveDetail.Qty = poDetail.Qty
+			receiveDetail.ReceiveID = receive.ID
+			receiveDetail.UomID = poDetail.UomID
+			database.SaveReceiveDetail(&receiveDetail)
+		}
+		database.UpdatePoPaid(receive.PoNo)
+	}
+	return constants.ERR_CODE_00, constants.ERR_CODE_00_MSG, receive.ReceiveNo, receive.ID, status
+}
+
 // ApproveReceive ...
 func (r ReceiveService) ApproveReceive(order *dbmodels.Receive) (errCode, errDesc string) {
 
@@ -107,4 +154,15 @@ func generateNewReceiveNo() (newNumber string, errCode string, errMsg string) {
 
 	return newNumber, constants.ERR_CODE_00, constants.ERR_CODE_00_MSG
 
+}
+
+// ApproveReceive ...
+func (r ReceiveService) RemovePO(order *dbmodels.Receive) (errCode, errDesc string) {
+
+	// fmt.Println("isi order ", order)
+	err, errDesc := database.RemovePO(order)
+	if err != constants.ERR_CODE_00 {
+		return err, errDesc
+	}
+	return constants.ERR_CODE_00, constants.ERR_CODE_00_MSG
 }

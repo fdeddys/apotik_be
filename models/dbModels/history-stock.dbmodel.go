@@ -7,6 +7,7 @@ import (
 // HistoryStock ...
 type HistoryStock struct {
 	ID           int64     `json:"id" gorm:"column:id"`
+	WarehouseID  int64     `json:"warehouseId" gorm:"column:warehouse_id"`
 	Code         string    `json:"code" gorm:"column:code"`
 	Name         string    `json:"name" gorm:"column:name"`
 	Debet        int64     `json:"debet" gorm:"column:debet"`

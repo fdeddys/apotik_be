@@ -2,13 +2,13 @@ package database
 
 import (
 	"crypto/sha256"
-	"encoding/hex"
-	"fmt"
-	"log"
 	"distribution-system-be/constants"
 	"distribution-system-be/models"
 	dbmodels "distribution-system-be/models/dbModels"
 	dto "distribution-system-be/models/dto"
+	"encoding/hex"
+	"fmt"
+	"log"
 	"sync"
 
 	"github.com/jinzhu/gorm"
@@ -172,6 +172,7 @@ func SaveUser(user dbmodels.User) models.ContentResponse {
 	if r := db.Save(&user); r.Error != nil {
 		res.ErrCode = constants.ERR_CODE_51
 		res.ErrDesc = constants.ERR_CODE_51_MSG
+		return res
 	}
 
 	// byt := []byte(`{"enc_pass":"` + enc + `"}`)
@@ -200,6 +201,7 @@ func UpdateUser(updateduser dbmodels.User) models.NoContentResponse {
 	if err != nil {
 		res.ErrCode = constants.ERR_CODE_51
 		res.ErrDesc = constants.ERR_CODE_51_MSG
+		return res
 	}
 
 	user.UserName = updateduser.UserName
@@ -217,6 +219,7 @@ func UpdateUser(updateduser dbmodels.User) models.NoContentResponse {
 	if err2 != nil {
 		res.ErrCode = constants.ERR_CODE_03
 		res.ErrDesc = constants.ERR_CODE_03_MSG
+		return res
 	}
 
 	res.ErrCode = constants.ERR_CODE_00

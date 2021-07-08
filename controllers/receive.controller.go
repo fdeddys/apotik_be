@@ -130,6 +130,36 @@ func (r *ReceiveController) Save(c *gin.Context) {
 	return
 }
 
+// Save ...
+func (r *ReceiveController) SaveByPO(c *gin.Context) {
+
+	req := dbmodels.Receive{}
+	body := c.Request.Body
+	res := dto.ReceiveSaveResult{}
+	dataBodyReq, _ := ioutil.ReadAll(body)
+
+	if err := json.Unmarshal(dataBodyReq, &req); err != nil {
+		fmt.Println("Error, unmarshal body Request to Receive stuct ", dataBodyReq)
+		res.ErrDesc = constants.ERR_CODE_03_MSG
+		res.ErrCode = constants.ERR_CODE_03
+		c.JSON(http.StatusBadRequest, res)
+		c.Abort()
+		return
+	}
+
+	fmt.Println("Req ==>", req)
+	errCode, errMsg, receiveNo, receiveID, status := receiveService.SaveByPO(&req)
+	res.ErrDesc = errMsg
+	res.ErrCode = errCode
+	res.ReceiveNo = receiveNo
+	res.ID = receiveID
+	res.Status = status
+	// res.OrderNo = newNumb
+	c.JSON(http.StatusOK, res)
+
+	return
+}
+
 // Approve ...
 func (r *ReceiveController) Approve(c *gin.Context) {
 
@@ -178,5 +208,31 @@ func (r *ReceiveController) PrintPreview(c *gin.Context) {
 	file, _ := os.Open("receive.pdf")
 
 	io.Copy(c.Writer, file)
+	return
+}
+
+// Approve ...
+func (r *ReceiveController) RemovePO(c *gin.Context) {
+
+	req := dbmodels.Receive{}
+	body := c.Request.Body
+	res := dto.OrderSaveResult{}
+	dataBodyReq, _ := ioutil.ReadAll(body)
+
+	if err := json.Unmarshal(dataBodyReq, &req); err != nil {
+		fmt.Println("Error, unmarshal body Request to Receive stuct ", dataBodyReq)
+		res.ErrDesc = constants.ERR_CODE_03_MSG
+		res.ErrCode = constants.ERR_CODE_03
+		c.JSON(http.StatusBadRequest, res)
+		c.Abort()
+		return
+	}
+
+	errCode, errMsg := receiveService.RemovePO(&req)
+	res.ErrDesc = errMsg
+	res.ErrCode = errCode
+	// res.OrderNo = newNumb
+	c.JSON(http.StatusOK, res)
+
 	return
 }
