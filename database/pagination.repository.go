@@ -72,6 +72,8 @@ func AsyncQuery(db *gorm.DB, offset int, limit int, modelWVal interface{}, param
 		criteriaName = "%" + strQuery + "%"
 	}
 
+
+
 	var err error
 	// err = db.Set("gorm:auto_preload", true).Order("name ASC").Offset(offset).Limit(limit).Find(modelsDump, fieldLookup+" ~* ?", criteriaName).Error
 	err = db.Set("gorm:auto_preload", true).Order("name ASC").Offset(offset).Limit(limit).Find(modelsDump, "COALESCE("+fieldLookup+",'') ILIKE ?", criteriaName).Error

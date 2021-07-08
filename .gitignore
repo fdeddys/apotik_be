@@ -3,3 +3,4 @@ invoice.pdf
 
 *.pdf
 *.sh
+.idea/workspace.xml
