@@ -69,12 +69,12 @@ func SaveAdjustmentApprove(adjustment *dbmodels.Adjustment) (errCode string, err
 		if adjustmentDetail.Qty > 0 {
 			historyStock.Debet = adjustmentDetail.Qty
 			historyStock.Kredit = 0
-			updateQty = curQty + adjustmentDetail.Qty
+			// updateQty = curQty + adjustmentDetail.Qty
 		} else {
 			historyStock.Debet = 0
-			historyStock.Kredit = adjustmentDetail.Qty
-			updateQty = curQty - adjustmentDetail.Qty
+			historyStock.Kredit = -1 * adjustmentDetail.Qty
 		}
+		updateQty = curQty + adjustmentDetail.Qty
 		historyStock.Saldo = updateQty
 		historyStock.Code = product.Code
 		historyStock.Description = "Adjustment"
@@ -83,9 +83,10 @@ func SaveAdjustmentApprove(adjustment *dbmodels.Adjustment) (errCode string, err
 		historyStock.Price = curHpp
 		historyStock.ReffNo = adjustment.AdjustmentNo
 		historyStock.TransDate = adjustment.AdjustmentDate
-
+		historyStock.WarehouseID = adjustment.WarehouseID
 		historyStock.LastUpdate = time.Now()
 		historyStock.LastUpdateBy = dto.CurrUser
+		historyStock.Total = float32(adjustmentDetail.Qty * int64(adjustmentDetail.Hpp))
 
 		UpdateStockAndHppProductByID(adjustmentDetail.ProductID, adjustment.WarehouseID, updateQty, curHpp)
 		SaveHistory(historyStock)
@@ -188,10 +189,10 @@ func AsyncQuerysAdjustments(db *gorm.DB, offset int, limit int, status int, adju
 	fmt.Println("isi dari filter [", param, "] ")
 	if strings.TrimSpace(param.StartDate) != "" && strings.TrimSpace(param.EndDate) != "" {
 		fmt.Println("isi dari filter [", param.StartDate, '-', param.EndDate, "] ")
-		err = db.Order("adjustment_date DESC").Offset(offset).Limit(limit).Find(&adjustments, " ( ( status = ?) or ( not ?) ) AND COALESCE(adjustment_no, '') ilike ? AND adjustment_date between ? and ?   ", status, byStatus, adjustmentNumber, param.StartDate, param.EndDate).Error
+		err = db.Order("adjustment_date DESC, id desc").Offset(offset).Limit(limit).Find(&adjustments, " ( ( status = ?) or ( not ?) ) AND COALESCE(adjustment_no, '') ilike ? AND adjustment_date between ? and ?   ", status, byStatus, adjustmentNumber, param.StartDate, param.EndDate).Error
 	} else {
 		fmt.Println("isi dari kosong ")
-		err = db.Offset(offset).Limit(limit).Find(&adjustments, " ( ( status = ?) or ( not ?) ) AND COALESCE(adjustment_no,'') ilike ?  ", status, byStatus, adjustmentNumber).Error
+		err = db.Order("adjustment_date DESC, id desc").Offset(offset).Limit(limit).Find(&adjustments, " ( ( status = ?) or ( not ?) ) AND COALESCE(adjustment_no,'') ilike ?  ", status, byStatus, adjustmentNumber).Error
 		if err != nil {
 			fmt.Println("adjustment --> ", err)
 		}

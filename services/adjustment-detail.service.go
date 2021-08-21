@@ -6,6 +6,7 @@ import (
 	"distribution-system-be/models"
 	dbmodels "distribution-system-be/models/dbModels"
 	"distribution-system-be/models/dto"
+	"distribution-system-be/utils/util"
 )
 
 // AdjustmentDetailService ...
@@ -39,6 +40,8 @@ func (r AdjustmentDetailService) SaveAdjustmentDetail(adjustmentDetail *dbmodels
 		return "99", err.Error()
 	}
 
+	adjustmentDetail.LastUpdate = util.GetCurrDate()
+	adjustmentDetail.LastUpdateBy = dto.CurrUser
 	if err, errDesc := database.SaveAdjustmentDetail(adjustmentDetail); err != constants.ERR_CODE_00 {
 		return err, errDesc
 	}

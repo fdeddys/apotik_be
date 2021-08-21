@@ -87,6 +87,14 @@ func GenerateReceiveReport(receiveId int64) {
 	tblCol5 = 430
 	tblCol6 = 500
 
+	spaceCustomerInfo1 = tblCol1
+	spaceTitik1 = spaceCustomerInfo1 + 150
+	spaceValue1 = spaceCustomerInfo1 + 160
+
+	spaceCustomerInfo = 300
+	spaceTitik = spaceCustomerInfo + 150
+	spaceValue = spaceCustomerInfo + 160
+
 	pdf := gopdf.GoPdf{}
 	pdf.Start(gopdf.Config{PageSize: *gopdf.PageSizeA4})
 	pdf.SetMargins(pageMargin, pageMargin, pageMargin, pageMargin)
@@ -173,7 +181,10 @@ func fillDataRecvDetail(receiveId int64) []DataRecvDetail {
 	totalRec = len(res)
 	fmt.Println("Jumlah record [fill] =>", totalRec)
 
-	tax = subTotal / 10
+	tax = 0
+	if receive.Tax > 0 {
+		tax = int64(receive.Tax)
+	}
 	grandTotal = subTotal + tax
 
 	return res
@@ -188,7 +199,7 @@ func fillDataSupplier(receive dbmodels.Receive) {
 
 func setHeaderReceive(pdf *gopdf.GoPdf) {
 
-	showLogoRecv(pdf)
+	showLogo(pdf)
 	showCompany(pdf)
 	space(pdf)
 	showLine(pdf)
@@ -196,14 +207,14 @@ func setHeaderReceive(pdf *gopdf.GoPdf) {
 
 }
 
-func showLogoRecv(pdf *gopdf.GoPdf) {
+// func showLogoRecv(pdf *gopdf.GoPdf) {
 
-	imgSize := spaceLen * 5
-	posX := 20.0
-	posY := spaceLen
+// 	imgSize := spaceLen * 5
+// 	posX := 20.0
+// 	posY := spaceLen
 
-	pdf.Image("imgs/logo4.jpg", posX, posY, &gopdf.Rect{W: imgSize + 68, H: imgSize})
-}
+// 	pdf.Image("imgs/logo4.jpg", posX, posY, &gopdf.Rect{W: imgSize + 68, H: imgSize})
+// }
 
 func showReceiveNo(pdf *gopdf.GoPdf) {
 
@@ -415,17 +426,17 @@ func showDataReceive(pdf *gopdf.GoPdf, no, item, unit string, qty, price, total 
 
 func showSupplier(pdf *gopdf.GoPdf) {
 	// , code, name, transDate, ssNo string
-	space(pdf)
+	// space(pdf)
 	setFont(pdf, 10)
 
-	pdf.SetX(spaceCustomerInfo)
+	pdf.SetX(spaceCustomerInfo1)
 	pdf.Text("Supplier Code")
-	pdf.SetX(spaceTitik)
+	pdf.SetX(spaceTitik1)
 	pdf.Text(":")
-	pdf.SetX(spaceValue)
+	pdf.SetX(spaceValue1)
 	pdf.Text(dataHdr.SupplierCode)
 
-	space(pdf)
+	// space(pdf)
 	pdf.SetX(spaceCustomerInfo)
 	pdf.Text("Supplier ")
 	pdf.SetX(spaceTitik)
@@ -434,14 +445,14 @@ func showSupplier(pdf *gopdf.GoPdf) {
 	pdf.Text(dataHdr.SupplierName)
 
 	space(pdf)
-	pdf.SetX(spaceCustomerInfo)
+	pdf.SetX(spaceCustomerInfo1)
 	pdf.Text("Transaction at ")
-	pdf.SetX(spaceTitik)
+	pdf.SetX(spaceTitik1)
 	pdf.Text(":")
-	pdf.SetX(spaceValue)
+	pdf.SetX(spaceValue1)
 	pdf.Text(dataHdr.TransAt)
 
-	space(pdf)
+	// space(pdf)
 	pdf.SetX(spaceCustomerInfo)
 	pdf.Text("Source Document ")
 	pdf.SetX(spaceTitik)

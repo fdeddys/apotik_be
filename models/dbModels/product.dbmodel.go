@@ -9,6 +9,7 @@ type Product struct {
 	ID   int64  `json:"id" gorm:"column:id"`
 	Code string `json:"code" gorm:"column:code"`
 	Name string `json:"name" gorm:"column:name"`
+	PLU  string `json:"plu" gorm:"column:plu"`
 
 	ProductGroupID int64        `json:"productGroupId" gorm:"column:product_group_id"`
 	ProductGroup   ProductGroup `gorm:"foreignkey:id; association_foreignkey:ProductGroupID; association_autoupdate:false;association_autocreate:false"`
@@ -27,8 +28,12 @@ type Product struct {
 	LastUpdate   time.Time `json:"lastUpdate"  gorm:"column:last_update"`
 	QtyUom       int16     `json:"qtyUom" gorm:"column:qty_uom"`
 	// QtyStock     float32   `json:"qtyStock" gorm:"column:qty_stock"`
-	Hpp       float32 `json:"hpp" gorm:"column:hpp"`
-	SellPrice float32 `json:"sellPrice" gorm:"column:sell_price"`
+	Hpp           float32 `json:"hpp" gorm:"column:hpp"`
+	SellPrice     float32 `json:"sellPrice" gorm:"column:sell_price"`
+	SellPriceType int     `json:"sellPriceType" gorm:"column:sell_price_type"`
+	// SellPricePercent float32 `json:"sellPricePercent" gorm:"column:sell_price_percent"`
+
+	Composition string `json:"composition" gorm:"column:composition"`
 }
 
 // TableName ...

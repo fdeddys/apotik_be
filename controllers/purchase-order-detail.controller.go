@@ -117,3 +117,27 @@ func (r *PurchaseOrderDetailController) DeleteByID(c *gin.Context) {
 
 	return
 }
+
+// GetDetail ...
+func (r *PurchaseOrderDetailController) GetLastPrice(c *gin.Context) {
+
+	res := models.ResponseCheckPrice{}
+
+	productId, err := strconv.ParseInt(c.Param("productId"), 10, 64)
+
+	if err != nil {
+		logs.Info("error", err)
+		res.ErrCode = constants.ERR_CODE_03
+		res.ErrDesc = constants.ERR_CODE_03_MSG
+		c.JSON(http.StatusBadRequest, res)
+		c.Abort()
+		return
+	}
+
+	log.Println("productCode->", productId)
+	res = purchaseOrderDetailService.GetLastPricePurchaseOrderDetail(productId)
+
+	c.JSON(http.StatusOK, res)
+
+	return
+}

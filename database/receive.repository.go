@@ -54,23 +54,36 @@ func SaveReceiveApprove(receive *dbmodels.Receive) (errCode string, errDesc stri
 	receiveDetails := GetAllDataDetailReceive(receive.ID)
 	for idx, receiveDetail := range receiveDetails {
 		fmt.Println("idx -> ", idx)
-
+		addNewStock := false
 		product, errCodeProd, errDescProd := FindProductByID(receiveDetail.ProductID)
 		if errCodeProd != constants.ERR_CODE_00 {
 			tx.Rollback()
 			return errCodeProd, errDescProd
 		}
 
-		checkStock, _, _ := GetStockByProductAndWarehouse(product.ID, receive.WarehouseID)
+		checkStock, errCode, _ := GetStockByProductAndWarehouse(product.ID, receive.WarehouseID)
+
+		if errCode != constants.ERR_CODE_00 {
+			addNewStock = true
+		}
+
+		curQty := int64(0)
+		updateQty := int64(0)
+		newHpp := float32(0)
+		if addNewStock {
+			updateQty = receiveDetail.Qty
+			newHpp = receiveDetail.Price
+		} else {
+			curQty = checkStock.Qty
+			updateQty = curQty + receiveDetail.Qty
+			newHpp = reCalculateHpp(product.Hpp, checkStock.Qty, receiveDetail.Price, receiveDetail.Qty)
+		}
 		// curQty := checkStock.Qty
-		curQty := checkStock.Qty
-		updateQty := curQty + receiveDetail.Qty
-		newHpp := reCalculateHpp(product.Hpp, checkStock.Qty, receiveDetail.Price, receiveDetail.Qty)
 
 		var historyStock dbmodels.HistoryStock
 		historyStock.Code = product.Code
 		historyStock.Description = "Receive"
-		historyStock.Hpp = product.Hpp
+		historyStock.Hpp = newHpp
 		historyStock.Name = product.Name
 		historyStock.Price = receiveDetail.Price
 		historyStock.ReffNo = receive.ReceiveNo
@@ -81,13 +94,18 @@ func SaveReceiveApprove(receive *dbmodels.Receive) (errCode string, errDesc stri
 		historyStock.LastUpdate = time.Now()
 		historyStock.LastUpdateBy = dto.CurrUser
 		historyStock.Disc1 = receiveDetail.Disc1
+		historyStock.WarehouseID = receive.WarehouseID
 
 		total = total + (receiveDetail.Price * float32(receiveDetail.Qty) * ((100 - receiveDetail.Disc1) / 100))
 		historyStock.Total = total
 		fmt.Println("total -> ", total)
 
-		UpdateStockAndHppProductByID(receiveDetail.ProductID, receive.WarehouseID, updateQty, newHpp)
-		SaveHistory(historyStock)
+		if addNewStock {
+			AddnewStockAndHppProductByID(receiveDetail.ProductID, receive.WarehouseID, updateQty, newHpp)
+		} else {
+			UpdateStockAndHppProductByID(receiveDetail.ProductID, receive.WarehouseID, updateQty, newHpp)
+		}
+		db.Save(&historyStock)
 
 	}
 
@@ -199,10 +217,10 @@ func AsyncQuerysReceives(db *gorm.DB, offset int, limit int, status int, receive
 	fmt.Println("isi dari filter [", param, "] ")
 	if strings.TrimSpace(param.StartDate) != "" && strings.TrimSpace(param.EndDate) != "" {
 		fmt.Println("isi dari filter [", param.StartDate, '-', param.EndDate, "] ")
-		err = db.Preload("Supplier").Order("receive_date DESC").Offset(offset).Limit(limit).Find(&receives, " ( ( status = ?) or ( not ?) ) AND COALESCE(receive_no, '') ilike ? AND receive_date between ? and ?   ", status, byStatus, receiveNumber, param.StartDate, param.EndDate).Error
+		err = db.Preload("Supplier").Order("receive_date DESC, id DESC").Offset(offset).Limit(limit).Find(&receives, " ( ( status = ?) or ( not ?) ) AND COALESCE(receive_no, '') ilike ? AND receive_date between ? and ?   ", status, byStatus, receiveNumber, param.StartDate, param.EndDate).Error
 	} else {
 		fmt.Println("isi dari kosong ")
-		err = db.Order("receive_date DESC").Offset(offset).Limit(limit).Preload("Supplier").Find(&receives, " ( ( status = ?) or ( not ?) ) AND COALESCE(receive_no,'') ilike ?  ", status, byStatus, receiveNumber).Error
+		err = db.Order("receive_date DESC, id DESC").Offset(offset).Limit(limit).Preload("Supplier").Find(&receives, " ( ( status = ?) or ( not ?) ) AND COALESCE(receive_no,'') ilike ?  ", status, byStatus, receiveNumber).Error
 		if err != nil {
 			fmt.Println("receive --> ", err)
 		}
@@ -239,7 +257,7 @@ func GetReceiveByReceiveID(receiveID int64) (dbmodels.Receive, error) {
 	db.Debug().LogMode(true)
 	receive := dbmodels.Receive{}
 
-	err := db.Preload("Supplier").Where(" id = ?  ", receiveID).First(&receive).Error
+	err := db.Preload("Supplier").Preload("Warehouse").Where(" id = ?  ", receiveID).First(&receive).Error
 
 	return receive, err
 

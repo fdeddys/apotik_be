@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"log"
 	"reflect"
+	"time"
 
 	// "distribution-system-be/utils/http"
 	"strconv"
@@ -62,7 +63,7 @@ func GetProductListPaging(param dto.FilterProduct, offset int, limit int) ([]dbm
 	errCount := make(chan error)
 
 	go ProductQuerys(db, offset, limit, &product, param, errQuery)
-	go AsyncQueryCount(db, &total, param, &dbmodels.Product{}, "name", errCount)
+	go AsyncProductQuerysCount(db, &total, param, &dbmodels.Product{}, errCount)
 
 	resErrQuery := <-errQuery
 	resErrCount := <-errCount
@@ -79,6 +80,64 @@ func GetProductListPaging(param dto.FilterProduct, offset int, limit int) ([]dbm
 	}
 
 	return product, total, nil
+}
+
+// SearchProduct ...
+func SearchProduct(param dto.FilterProduct, offset int, limit int) ([]dto.ProductSearch, error) {
+	db := GetDbCon()
+	db.Debug().LogMode(true)
+
+	var productSearchs []dto.ProductSearch
+	var products []dbmodels.Product
+	// var uom []dbmodels.Lookup
+	// var err error
+
+	var criteriaName = "%"
+
+	if param.Name != "" {
+		criteriaName = "%" + param.Name + "%"
+	}
+
+	err := db.Preload("Brand").Preload("ProductGroup").Preload("BigUom").Preload("SmallUom").Order("name ASC").Offset(offset).Limit(limit).Find(&products, "name ilike ?", criteriaName).Error
+
+	if err != nil {
+		return productSearchs, err
+	}
+
+	// check stock
+	for _, product := range products {
+		var productSearch dto.ProductSearch
+
+		productSearch = copyToDto(product)
+		stock, errcode, _ := GetStockByProductAndWarehouse(product.ID, param.WarehouseID)
+
+		if errcode == constants.ERR_CODE_00 {
+			productSearch.QtyOnHand = stock.Qty
+		}
+		productSearchs = append(productSearchs, productSearch)
+	}
+
+	return productSearchs, nil
+}
+
+func copyToDto(product dbmodels.Product) (productSearch dto.ProductSearch) {
+
+	productSearch.ID = product.ID
+	productSearch.Name = product.Name
+	productSearch.PLU = product.PLU
+	productSearch.BigUom = product.BigUom
+	productSearch.BigUomID = product.BigUomID
+	productSearch.SmallUomID = product.SmallUomID
+	productSearch.SmallUom = product.SmallUom
+	productSearch.Status = product.Status
+	productSearch.LastUpdateBy = product.LastUpdateBy
+	productSearch.LastUpdate = product.LastUpdate
+	productSearch.QtyUom = product.QtyUom
+	productSearch.Hpp = product.Hpp
+	productSearch.SellPrice = product.SellPrice
+	productSearch.SellPriceType = product.SellPriceType
+	productSearch.QtyOnHand = 0
+	return
 }
 
 // UpdateProduct ...
@@ -211,6 +270,36 @@ func SaveProduct(product dbmodels.Product) models.ContentResponse {
 
 // }
 
+func AsyncProductQuerysCount(db *gorm.DB, total *int, param interface{}, models interface{}, resChan chan error) {
+	// func AsyncQueryCount(db *gorm.DB, total *int, parameters AsyncQueryParam, resChan chan error) {
+	varInterface := reflect.ValueOf(param)
+	strQuery := varInterface.Field(0).Interface().(string)
+	strComposition := varInterface.Field(2).Interface().(string)
+	// var criteriaName = ""
+	// if strings.TrimSpace(strQuery) != "" {
+	// 	criteriaName = strQuery
+	// }
+	criteriaName := strQuery
+	if criteriaName == "" {
+		criteriaName = "%"
+	} else {
+		criteriaName = "%" + strQuery + "%"
+	}
+	criteriaComposition := strComposition
+	if criteriaComposition == "" {
+		criteriaComposition = "%"
+	} else {
+		criteriaComposition = "%" + strComposition + "%"
+	}
+	// err := db.Model(models).Where(fieldLookup+" ~* ?", criteriaName).Count(&*total).Error
+	err := db.Model(models).Where("COALESCE(name, '') ILIKE ? and  composition ilike ?", criteriaName, criteriaComposition).Count(&*total).Error
+
+	if err != nil {
+		resChan <- err
+	}
+	resChan <- nil
+}
+
 // ProductQuerys ...
 func ProductQuerys(db *gorm.DB, offset int, limit int, product *[]dbmodels.Product, param dto.FilterProduct, resChan chan error) {
 
@@ -219,6 +308,7 @@ func ProductQuerys(db *gorm.DB, offset int, limit int, product *[]dbmodels.Produ
 	// criteriaUserName := param.Name + '%' //+ criteriaUserName
 	varInterface := reflect.ValueOf(param)
 	strQuery := varInterface.Field(0).Interface().(string)
+	strComposition := varInterface.Field(2).Interface().(string)
 
 	criteriaName := strQuery
 	if criteriaName == "" {
@@ -227,10 +317,17 @@ func ProductQuerys(db *gorm.DB, offset int, limit int, product *[]dbmodels.Produ
 		criteriaName = "%" + strQuery + "%"
 	}
 
+	criteriaComposition := strComposition
+	if criteriaComposition == "" {
+		criteriaComposition = "%"
+	} else {
+		criteriaComposition = "%" + strComposition + "%"
+	}
+
 	// }
 
 	// err := db.Set("gorm:auto_preload", true).Order("name ASC").Offset(offset).Limit(limit).Find(&user, "name like ?", criteriaUserName).Error
-	err := db.Preload("Brand").Preload("ProductGroup").Preload("BigUom").Preload("SmallUom").Order("name ASC").Offset(offset).Limit(limit).Find(&product, "name ilike ?", criteriaName).Error
+	err := db.Preload("Brand").Preload("ProductGroup").Preload("BigUom").Preload("SmallUom").Order("name ASC").Offset(offset).Limit(limit).Find(&product, "name ilike ? and composition ilike ?", criteriaName, criteriaComposition).Error
 	// .Preload("StockLookup", "lookup_group=?", "STOCK_STATUS")
 	if err != nil {
 		resChan <- err
@@ -252,6 +349,7 @@ func ProductList() []dbmodels.Product {
 	return product
 
 }
+
 func GenerateProductCode(name string) string {
 	db := GetDbCon()
 	db.Debug().LogMode(true)
@@ -395,12 +493,38 @@ func UpdateStockAndHppProductByID(prodID, warehouseID int64, qty int64, newHpp f
 	// var product dbmodels.Product
 	// db.Model(&dbmodels.Product{}).Where("id=?", prodID).First(&product)
 	var stock dbmodels.Stock
-	db.Where("product_id=? and warehouse_id", prodID, warehouseID).First(&stock)
+	db.Where("product_id=? and warehouse_id = ?", prodID, warehouseID).First(&stock)
 	stock.Qty = qty
 	db.Save(&stock)
 
 	var product dbmodels.Product
-	db.Where("product_id=? ", prodID).First(&product)
+	db.Where("id=? ", prodID).First(&product)
+	product.Hpp = newHpp
+	db.Save(&product)
+
+	return stock, constants.ERR_CODE_00, constants.ERR_CODE_00_MSG
+}
+
+// AddnewStockAndHppProductByID ...
+func AddnewStockAndHppProductByID(prodID, warehouseID int64, qty int64, newHpp float32) (dbmodels.Stock, string, string) {
+
+	fmt.Println("Update stock", prodID, "qty ", qty)
+
+	db := GetDbCon()
+	db.Debug().LogMode(true)
+
+	// var product dbmodels.Product
+	// db.Model(&dbmodels.Product{}).Where("id=?", prodID).First(&product)
+	var stock dbmodels.Stock
+	stock.ProductID = prodID
+	stock.WarehouseID = warehouseID
+	stock.Qty = qty
+	stock.LastUpdate = time.Now()
+	stock.LastUpdateBy = dto.CurrUser
+	db.Save(&stock)
+
+	var product dbmodels.Product
+	db.Where("id=? ", prodID).First(&product)
 	product.Hpp = newHpp
 	db.Save(&product)
 

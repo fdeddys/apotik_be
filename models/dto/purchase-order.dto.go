@@ -29,3 +29,8 @@ type PurchaseOrderDetailSaveResult struct {
 	ErrCode string `json:"errCode"`
 	ID      int64  `json:"id"`
 }
+
+type ResultLastPrice struct {
+	Price int64 `json:"price"`
+	Disc1 int64 `json:"disc1"`
+}

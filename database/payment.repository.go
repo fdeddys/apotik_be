@@ -4,6 +4,7 @@ import (
 	"distribution-system-be/constants"
 	dbmodels "distribution-system-be/models/dbModels"
 	"distribution-system-be/models/dto"
+	"distribution-system-be/utils/util"
 	"fmt"
 	"log"
 	"strings"
@@ -24,13 +25,24 @@ func GetPaymentById(paymentID int64) (dbmodels.Payment, error) {
 
 }
 
+func GetPaymentOrderBySalesOrderId(salesOrderID int64) (dbmodels.PaymentOrder, error) {
+	db := GetDbCon()
+	db.Debug().LogMode(true)
+	paymentOrder := dbmodels.PaymentOrder{}
+
+	err := db.Where(" sales_order_id = ?  ", salesOrderID).First(&paymentOrder).Error
+
+	return paymentOrder, err
+
+}
+
 //SavePayment ...
 func SavePayment(payment *dbmodels.Payment) (errCode string, errDesc string, id int64) {
 
 	fmt.Println(" Update Payment - ")
 	db := GetDbCon()
 	db.Debug().LogMode(true)
-
+	payment.PaymentDate = util.GetCurrFormatDateTime()
 	r := db.Save(&payment)
 	if r.Error != nil {
 		errCode = constants.ERR_CODE_80

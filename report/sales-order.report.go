@@ -63,6 +63,12 @@ var (
 
 	invInfo InvHdrInfo
 	title   string
+
+	spaceCustomerInfo1 float64
+	spaceTitik1        float64
+	spaceValue1        float64
+
+	spaceSupplierInfo1 float64
 )
 
 func GenerateSalesOrderReport(orderId int64, reportType string) {
@@ -78,6 +84,19 @@ func GenerateSalesOrderReport(orderId int64, reportType string) {
 
 	curPage = 1
 
+	tblCol1 = 25
+	tblCol2 = 80
+	tblCol3 = 300
+	tblCol4 = 370
+	tblCol5 = 430
+	tblCol6 = 500
+
+	// customer baris kiri
+	spaceCustomerInfo1 = 50
+	spaceTitik1 = spaceCustomerInfo1 + 150
+	spaceValue1 = spaceCustomerInfo1 + 160
+
+	// customer baris kanan
 	spaceCustomerInfo = 300
 	spaceTitik = spaceCustomerInfo + 150
 	spaceValue = spaceCustomerInfo + 160
@@ -85,13 +104,6 @@ func GenerateSalesOrderReport(orderId int64, reportType string) {
 	spaceSummaryInfo = spaceCustomerInfo
 	spaceTitikSumamry = spaceTitik
 	spaceValueSummary = spaceValue
-
-	tblCol1 = 25
-	tblCol2 = 80
-	tblCol3 = 300
-	tblCol4 = 370
-	tblCol5 = 430
-	tblCol6 = 500
 
 	pdf := gopdf.GoPdf{}
 	pdf.Start(gopdf.Config{PageSize: *gopdf.PageSizeA4})
@@ -185,7 +197,11 @@ func fillDataDetail(orderID int64) []DataDetail {
 	totalRec = len(res)
 	fmt.Println("Jumlah record [fill] =>", totalRec)
 
-	tax = subTotal / 10
+	// tax = subTotal / 10
+	if order.Tax > 0 {
+		tax = int64(order.Tax)
+	}
+
 	grandTotal = subTotal + tax
 
 	return res
@@ -225,7 +241,8 @@ func showInvNo(pdf *gopdf.GoPdf) {
 	space(pdf)
 	setFont(pdf, 12)
 	pdf.SetX(450)
-	pdf.Text(invoiceNumb)
+	// pdf.Text(invoiceNumb)
+	pdf.Text("")
 
 	space(pdf)
 	setFont(pdf, 12)
@@ -236,24 +253,24 @@ func showInvNo(pdf *gopdf.GoPdf) {
 
 func showCompany(pdf *gopdf.GoPdf) {
 
-	line1 := beego.AppConfig.DefaultString("report.line1", "PT. ABC")
-	line2 := beego.AppConfig.DefaultString("report.line2", "ABC")
-	line3 := beego.AppConfig.DefaultString("report.line3", "Jl. adadedddd")
-	line4 := beego.AppConfig.DefaultString("report.line4", "Kav")
-	line5 := beego.AppConfig.DefaultString("report.line5", "Jekate")
-	line6 := beego.AppConfig.DefaultString("report.line6", "Postal code")
+	line1 := beego.AppConfig.DefaultString("report.line1", "")
+	// line2 := beego.AppConfig.DefaultString("report.line2", "")
+	line3 := beego.AppConfig.DefaultString("report.line3", "")
+	line4 := beego.AppConfig.DefaultString("report.line4", "")
+	line5 := beego.AppConfig.DefaultString("report.line5", "")
+	line6 := beego.AppConfig.DefaultString("report.line6", "")
 
 	pdf.Br(15)
 
-	setFontBold(pdf, 10)
+	setFontBold(pdf, 12)
 	pdf.SetX(200)
 	pdf.Text(line1)
 
-	space(pdf)
-	setFont(pdf, 10)
-	pdf.SetX(200)
-	pdf.Text(line2)
+	// space(pdf)
+	// pdf.SetX(200)
+	// pdf.Text(line2)
 
+	setFont(pdf, 10)
 	space(pdf)
 	pdf.SetX(200)
 	pdf.Text(line3)
@@ -274,10 +291,10 @@ func showCompany(pdf *gopdf.GoPdf) {
 func showLogo(pdf *gopdf.GoPdf) {
 
 	imgSize := spaceLen * 5
-	posX := 20.0
+	posX := 60.00
 	posY := spaceLen
 
-	pdf.Image("imgs/logo3.png", posX, posY, &gopdf.Rect{W: imgSize + 68, H: imgSize})
+	pdf.Image("imgs/logo_bg_putih.png", posX, posY, &gopdf.Rect{W: imgSize, H: imgSize})
 }
 
 // param [0] = tipe report
@@ -498,35 +515,33 @@ func showDataX(pdf *gopdf.GoPdf, no, item, unit string, qty, price, total int64)
 
 func showCustomer(pdf *gopdf.GoPdf) {
 	// , code, name, transDate, ssNo string
-	space(pdf)
+	// space(pdf)
 	setFont(pdf, 10)
 
-	pdf.SetX(spaceCustomerInfo)
-	pdf.Text("Customer Code")
-	pdf.SetX(spaceTitik)
+	pdf.SetX(25)
+	pdf.Text("Supplier ")
+	pdf.SetX(100)
 	pdf.Text(":")
-	pdf.SetX(spaceValue)
-	pdf.Text(invInfo.CustCode)
-
-	space(pdf)
-	pdf.SetX(spaceCustomerInfo)
-	pdf.Text("Customer ")
-	pdf.SetX(spaceTitik)
-	pdf.Text(":")
-	pdf.SetX(spaceValue)
+	pdf.SetX(110)
 	pdf.Text(invInfo.CustName)
 
-	space(pdf)
 	pdf.SetX(spaceCustomerInfo)
-	pdf.Text("Transaction at ")
+	pdf.Text("Order Date ")
 	pdf.SetX(spaceTitik)
 	pdf.Text(":")
 	pdf.SetX(spaceValue)
 	pdf.Text(invInfo.TransAt)
 
 	space(pdf)
+	pdf.SetX(spaceCustomerInfo1)
+	pdf.Text("")
+	pdf.SetX(spaceTitik1)
+	pdf.Text("")
+	pdf.SetX(spaceValue1)
+	pdf.Text("")
+
 	pdf.SetX(spaceCustomerInfo)
-	pdf.Text("Source Document ")
+	pdf.Text("PO Number ")
 	pdf.SetX(spaceTitik)
 	pdf.Text(":")
 	pdf.SetX(spaceValue)
@@ -623,6 +638,9 @@ func setSign(pdf *gopdf.GoPdf, sign1, sign2, sign3 string) {
 	if sign3 != "" {
 		pdf.SetX(xSign3)
 		pdf.Line(xSign3, pdf.GetY(), xLengSign3, pdf.GetY())
+		space(pdf)
+		pdf.SetX(xSign3)
+		pdf.Text(getApoteker())
 	}
 
 }

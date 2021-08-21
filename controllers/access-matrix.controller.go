@@ -1,14 +1,14 @@
 package controllers
 
 import (
-	"encoding/json"
-	"fmt"
-	"io/ioutil"
-	"net/http"
 	"distribution-system-be/models"
 	dbmodels "distribution-system-be/models/dbModels"
 	"distribution-system-be/models/dto"
 	"distribution-system-be/services"
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
+	"net/http"
 	"strconv"
 
 	"github.com/astaxie/beego/logs"
@@ -65,8 +65,7 @@ func (h *AccessMatrixController) SaveRoleMenu(c *gin.Context) {
 		fmt.Println("Error, body Request ")
 		res.ErrCode = "03"
 		res.ErrDesc = "Error, unmarshall body Request"
-		c.JSON(http.StatusBadRequest, res)
-		c.Abort()
+		c.JSON(http.StatusOK, res)
 		return
 	}
 
@@ -75,12 +74,32 @@ func (h *AccessMatrixController) SaveRoleMenu(c *gin.Context) {
 		logs.Info("error", err)
 		res.ErrCode = "03"
 		res.ErrDesc = "Error, unmarshall body Request"
-		c.JSON(http.StatusBadRequest, res)
-		c.Abort()
+		c.JSON(http.StatusOK, res)
 		return
 	}
 
 	res = RoleMenuService.SaveMenuByRole(roleID, req)
+
+	c.JSON(http.StatusOK, res)
+	return
+}
+
+// UpdateRoleMenu ...
+func (h *AccessMatrixController) UpdateRoleMenu(c *gin.Context) {
+	res := dto.NoContentResponse{}
+	req := dto.RequestUpdateRole{}
+
+	body := c.Request.Body
+	dataBodyReq, _ := ioutil.ReadAll(body)
+	if err := json.Unmarshal(dataBodyReq, &req); err != nil {
+		fmt.Println("Error, body Request ")
+		res.ErrCode = "03"
+		res.ErrDesc = "Error, unmarshall body Request"
+		c.JSON(http.StatusOK, res)
+		return
+	}
+
+	res = RoleMenuService.UpdateRoleMenu(req)
 
 	c.JSON(http.StatusOK, res)
 	c.Abort()

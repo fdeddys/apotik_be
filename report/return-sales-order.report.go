@@ -38,6 +38,14 @@ func GenerateReturnSalesOrderReport(returnSoID int64) {
 	tblCol5 = 430
 	tblCol6 = 500
 
+	spaceCustomerInfo1 = tblCol1
+	spaceTitik1 = spaceCustomerInfo1 + 150
+	spaceValue1 = spaceCustomerInfo1 + 160
+
+	spaceCustomerInfo = 300
+	spaceTitik = spaceCustomerInfo + 150
+	spaceValue = spaceCustomerInfo + 160
+
 	pdf := gopdf.GoPdf{}
 	pdf.Start(gopdf.Config{PageSize: *gopdf.PageSizeA4})
 	pdf.SetMargins(pageMargin, pageMargin, pageMargin, pageMargin)
@@ -121,7 +129,11 @@ func fillDataDetailReturnSO(returnSoID int64) []DataDetail {
 	totalRec = len(res)
 	fmt.Println("Jumlah record [fill] =>", totalRec)
 
-	tax = subTotal / 10
+	// tax = subTotal / 10
+	if returnSo.Tax > 0 {
+		tax = int64(returnSo.Tax)
+	}
+
 	grandTotal = subTotal + tax
 
 	return res

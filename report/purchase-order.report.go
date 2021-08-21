@@ -1,6 +1,7 @@
 package report
 
 import (
+	"distribution-system-be/constants"
 	"distribution-system-be/database"
 	"fmt"
 	"log"
@@ -12,6 +13,16 @@ import (
 var (
 	purchaseOrderNumber string
 )
+
+func getApoteker() string {
+
+	parameter, errCode, _, _ := database.GetParameterByNama(constants.PARAMETER_APOTEKER_NAME)
+	if errCode != constants.ERR_CODE_00 {
+		return ""
+	}
+
+	return parameter.Value
+}
 
 func GeneratePurchaseOrderReport(purchaseOrderID int64) {
 
@@ -70,7 +81,7 @@ func GeneratePurchaseOrderReport(purchaseOrderID int64) {
 
 	setDetail(&pdf, dataDetails, "")
 	setSummary(&pdf)
-	setSign(&pdf, "Admin", "Salesman", "Customer")
+	setSign(&pdf, "", "", "Apoteker")
 
 	pdf.WritePdf("purchase-order.pdf")
 

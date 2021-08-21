@@ -6,6 +6,7 @@ type FilterPayment struct {
 	StartDate       string `json:"startDate"`
 	EndDate         string `json:"endDate"`
 	PaymentDetailId int64  `json:"paymentDetailId"`
+	IsCash          bool   `json:"isCash"`
 }
 
 type SavePaymentResult struct {

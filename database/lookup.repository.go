@@ -106,7 +106,7 @@ func GetLookupByGroupName(groupName string) ([]dbmodels.Lookup, string, string, 
 	}
 
 	var lookup []dbmodels.Lookup
-	err = db.Model(&dbmodels.Lookup{}).Where("lookup_group = ?", lookupGroup.ID).Find(&lookup).Error
+	err = db.Model(&dbmodels.Lookup{}).Where("lookup_group_id = ?", lookupGroup.ID).Find(&lookup).Error
 
 	if err != nil {
 		return nil, constants.ERR_CODE_51, constants.ERR_CODE_51_MSG, err
@@ -126,10 +126,11 @@ func SaveLookup(lookup dbmodels.Lookup) models.NoContentResponse {
 	db.Debug().LogMode(true)
 
 	if lookup.ID < 1 {
-		lookup.Code = GenerateLookupCode(lookup.LookupGroup)
+		lookup.Code = GenerateLookupCode()
 	}
 
 	fmt.Println("Lookup ====> ", lookup)
+	lookup.IsViewable = 1
 	if r := db.Save(&lookup); r.Error != nil {
 		res.ErrCode = constants.ERR_CODE_51
 		res.ErrDesc = constants.ERR_CODE_51_MSG
@@ -174,7 +175,7 @@ func UpdateLookup(updatedlookup dbmodels.Lookup) models.NoContentResponse {
 	lookup.Name = updatedlookup.Name
 	lookup.Status = updatedlookup.Status
 	lookup.Code = updatedlookup.Code
-	lookup.LookupGroup = updatedlookup.LookupGroup
+	lookup.LookupGroupID = updatedlookup.LookupGroupID
 
 	err2 := db.Save(&lookup)
 	if err2 != nil {
@@ -186,7 +187,7 @@ func UpdateLookup(updatedlookup dbmodels.Lookup) models.NoContentResponse {
 }
 
 // GenerateLookupCode ...
-func GenerateLookupCode(loogkupGroup string) string {
+func GenerateLookupCode() string {
 	db := GetDbCon()
 	db.Debug().LogMode(true)
 
@@ -197,21 +198,37 @@ func GenerateLookupCode(loogkupGroup string) string {
 
 	// prefix := loogkupGroup[:2]
 	if err != nil {
-		return "L00001"
+		return "LK00001"
 	}
 	if len(lookup) > 0 {
 		// fmt.Printf("ini latest code nya : %s \n", brand[0].Code)
-		prefix := strings.TrimPrefix(lookup[0].Code, "L")
+		prefix := strings.TrimPrefix(lookup[0].Code, "LK")
 		latestCode, err := strconv.Atoi(prefix)
 		if err != nil {
 			fmt.Printf("error")
-			return "L00001"
+			return "LK00001"
 		}
 		// fmt.Printf("ini latest code nya : %d \n", latestCode)
 		wpadding := fmt.Sprintf("%05s", strconv.Itoa(latestCode+1))
 		// fmt.Printf("ini pake padding : %s \n", "B"+wpadding)
-		return "L" + wpadding
+		return "LK" + wpadding
 	}
-	return "L00001"
+	return "LK00001"
 
+}
+
+// GetLookupFilter ...
+func GetLookupByName(name string) (dbmodels.Lookup, string, string, error) {
+	db := GetDbCon()
+	db.Debug().LogMode(true)
+
+	var lookup dbmodels.Lookup
+	err := db.Model(&dbmodels.Lookup{}).Where("name = ?", &name).First(&lookup).Error
+
+	if err != nil {
+		return lookup, constants.ERR_CODE_51, constants.ERR_CODE_51_MSG, err
+	}
+	// else {
+	return lookup, constants.ERR_CODE_00, constants.ERR_CODE_00_MSG, nil
+	// }
 }

@@ -11,3 +11,6 @@ VALUES
 (1,
 (select id from m_menus where name = 'direct-sales-payment')
 ,1,'system',CURRENT_TIMESTAMP);
+
+
+alter table payment add column is_cash boolean default false;

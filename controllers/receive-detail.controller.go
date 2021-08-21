@@ -97,6 +97,32 @@ func (r *ReceiveDetailController) Save(c *gin.Context) {
 	return
 }
 
+// Save ...
+func (r *ReceiveDetailController) UpdateDetail(c *gin.Context) {
+
+	req := []dbmodels.ReceiveDetail{}
+	body := c.Request.Body
+	res := dto.ReceiveDetailSaveResult{}
+	dataBodyReq, _ := ioutil.ReadAll(body)
+
+	if err := json.Unmarshal(dataBodyReq, &req); err != nil {
+		fmt.Println("Error, unmarshal body Request to Sales Order stuct ", dataBodyReq)
+		res.ErrDesc = constants.ERR_CODE_03_MSG
+		res.ErrCode = constants.ERR_CODE_03
+		c.JSON(http.StatusBadRequest, res)
+		c.Abort()
+		return
+	}
+
+	errCode, errMsg := receiveDetailService.UpdateReceiveDetail(&req)
+	res.ErrDesc = errMsg
+	res.ErrCode = errCode
+	// res.OrderNo = newNumb
+	c.JSON(http.StatusOK, res)
+
+	return
+}
+
 // DeleteByID ...
 func (r *ReceiveDetailController) DeleteByID(c *gin.Context) {
 

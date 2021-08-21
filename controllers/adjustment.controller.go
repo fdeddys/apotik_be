@@ -5,6 +5,7 @@ import (
 	"distribution-system-be/models"
 	dbmodels "distribution-system-be/models/dbModels"
 	"distribution-system-be/models/dto"
+	"distribution-system-be/report"
 	"distribution-system-be/services"
 	"encoding/json"
 	"fmt"
@@ -194,7 +195,7 @@ func (a *AdjustmentController) PrintPreview(c *gin.Context) {
 
 	fmt.Println("-------->", adjustmentID)
 
-	// report.GenerateSalesAdjustmentReport(adjustmentID)
+	report.GenerateSalesAdjustmentReport(adjustmentID)
 
 	header := c.Writer.Header()
 	// header["Content-type"] = []string{"application/octet-stream"}

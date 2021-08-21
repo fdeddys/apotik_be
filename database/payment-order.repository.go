@@ -29,6 +29,7 @@ func SavePaymentOrder(paymentOrder *dbmodels.PaymentOrder) (errCode string, errD
 		Where("id = ?", paymentOrder.SalesOrderID).
 		Update(dbmodels.SalesOrder{
 			IsPaid: true,
+			Status: constants.STATUS_PAID,
 		})
 
 	payment := dbmodels.Payment{}

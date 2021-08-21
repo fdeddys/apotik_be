@@ -24,6 +24,21 @@ func (o PaymentService) GetDataById(paymentID int64) dbmodels.Payment {
 	return res
 }
 
+// GetDataOrderById ...
+func (o PaymentService) GetDataPaymentBySalesOrderId(salesOrderID int64) dbmodels.Payment {
+
+	var res dbmodels.Payment
+
+	// var err error
+	paymentOrder, err := database.GetPaymentOrderBySalesOrderId(salesOrderID)
+	if err != nil {
+		return res
+	}
+	res, _ = database.GetPaymentById(paymentOrder.PaymentID)
+
+	return res
+}
+
 // GetDataPage ...
 func (o PaymentService) GetDataPage(param dto.FilterPayment, page int, limit int) models.ResponsePagination {
 	var res models.ResponsePagination
@@ -48,12 +63,12 @@ func (o PaymentService) GetDataPage(param dto.FilterPayment, page int, limit int
 func (o PaymentService) Save(payment *dbmodels.Payment) (errCode, errDesc, orderNo string, orderID int64, status int8) {
 
 	if payment.ID == 0 {
-		newOrderNo, errCode, errMsg := generateNewPaymentNo()
+		newOrderNo, errCode, errMsg := generateNewPaymentNo(payment.IsCash)
 		if errCode != constants.ERR_CODE_00 {
 			return errCode, errMsg, "", 0, 0
 		}
 		payment.PaymentNo = newOrderNo
-		payment.Status = 10
+		payment.Status = constants.STATUS_NEW
 	} else {
 
 		// tidak boleh update customer
@@ -89,7 +104,7 @@ func (o PaymentService) Approve(payment *dbmodels.Payment) (errCode, errDesc str
 		return
 	}
 
-	paymentUpdate.Status = 20
+	paymentUpdate.Status = constants.STATUS_APPROVE
 	paymentUpdate.LastUpdateBy = dto.CurrUser
 	paymentUpdate.LastUpdate = time.Now()
 	err, errDesc, _ := database.SavePayment(&paymentUpdate)
@@ -109,12 +124,16 @@ func (o PaymentService) Reject(payment *dbmodels.Payment) (errCode, errDesc stri
 	return constants.ERR_CODE_00, constants.ERR_CODE_00_MSG
 }
 
-func generateNewPaymentNo() (newPaymentNo string, errCode string, errMsg string) {
+func generateNewPaymentNo(isCash bool) (newPaymentNo string, errCode string, errMsg string) {
 
 	t := time.Now()
 	bln := t.Format("01")
 	thn := t.Format("06")
-	header := "PY"
+
+	header := constants.HEADER_PAYMENT_CREDIT
+	if isCash {
+		header = constants.HEADER_PAYMENT_CASH
+	}
 
 	err, number, errdesc := database.AddSequence(bln, thn, header)
 	if err != constants.ERR_CODE_00 {

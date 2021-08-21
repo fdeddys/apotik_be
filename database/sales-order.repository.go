@@ -271,10 +271,10 @@ func AsyncQuerysOrders(db *gorm.DB, offset int, limit int, status int, orders *[
 	fmt.Println("isi dari filter [", param, "] ")
 	if strings.TrimSpace(param.StartDate) != "" && strings.TrimSpace(param.EndDate) != "" {
 		fmt.Println("isi dari filter [", param.StartDate, '-', param.EndDate, "] ")
-		err = db.Preload("Customer").Preload("Salesman").Order("order_date DESC").Offset(offset).Limit(limit).Find(&orders, " ( ( status = ?) or ( not ?) ) AND COALESCE(sales_order_no, '') ilike ? AND order_date between ? and ?  and is_cash = ? ", status, byStatus, orderNumber, param.StartDate, param.EndDate, isCash).Error
+		err = db.Preload("Customer").Preload("Salesman").Order("id DESC").Offset(offset).Limit(limit).Find(&orders, " ( ( status = ?) or ( not ?) ) AND COALESCE(sales_order_no, '') ilike ? AND order_date between ? and ?  and is_cash = ? ", status, byStatus, orderNumber, param.StartDate, param.EndDate, isCash).Error
 	} else {
 		fmt.Println("isi dari kosong ")
-		err = db.Offset(offset).Limit(limit).Preload("Customer").Preload("Salesman").Order("order_date DESC").Find(&orders, " ( ( status = ?) or ( not ?) ) AND COALESCE(sales_order_no,'') ilike ?  and is_cash = ? ", status, byStatus, orderNumber, isCash).Error
+		err = db.Offset(offset).Limit(limit).Preload("Customer").Preload("Salesman").Order("id DESC").Find(&orders, " ( ( status = ?) or ( not ?) ) AND COALESCE(sales_order_no,'') ilike ?  and is_cash = ? ", status, byStatus, orderNumber, isCash).Error
 		if err != nil {
 			fmt.Println("error --> ", err)
 		}

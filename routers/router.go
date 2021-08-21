@@ -73,6 +73,13 @@ func InitRouter() *gin.Engine {
 	PurchaseOrderController := new(controllers.PurchaseOrderController)
 	PurchaseOrderDetailController := new(controllers.PurchaseOrderDetailController)
 
+	DirectPaymentController := new(controllers.DirectPaymentController)
+
+	StockOpnameController := new(controllers.StockOpnameController)
+	StockOpnameDetailController := new(controllers.StockOpnameDetailController)
+
+	ReportPaymentCashController := new(controllers.ReportPaymentCashController)
+
 	api := r.Group("/api/user")
 	api.POST("/filter/page/:page/count/:count", UserController.GetUser)
 	api.POST("/", UserController.SaveDataUser)
@@ -107,10 +114,12 @@ func InitRouter() *gin.Engine {
 	ProductController := new(controllers.ProductController)
 	product := r.Group("/api/product")
 	product.POST("/page/:page/count/:count", ProductController.GetProductListPaging)
+	product.POST("/search/page/:page/count/:count", ProductController.SearchProduct)
 	product.GET("/id/:id", ProductController.GetProductDetails)
 	product.POST("", ProductController.SaveProduct)
 	product.GET("/list", ProductController.ProductList)
 	product.GET("", ProductController.GetProductLike)
+	product.GET("/processCSV", ProductController.ProcessCSV)
 
 	ProductGroupController := new(controllers.ProductGroupController)
 	productGroup := r.Group("/api/product-group")
@@ -136,8 +145,8 @@ func InitRouter() *gin.Engine {
 	RoleController := new(controllers.RoleController)
 	api = r.Group("/api/role")
 	api.POST("/filter/page/:page/count/:count", RoleController.GetRole)
-	api.POST("/", RoleController.SaveRole)
-	api.PUT("/", RoleController.UpdateRole)
+	api.POST("", cekToken, RoleController.SaveRole)
+	api.PUT("", RoleController.UpdateRole)
 
 	AccMatrixController := new(controllers.AccessMatrixController)
 	MenuController := new(controllers.MenuController)
@@ -146,6 +155,7 @@ func InitRouter() *gin.Engine {
 	api.GET("/list-all-active-menu", AccMatrixController.GetAllActiveMenu)
 	api.GET("/role/:roleId", AccMatrixController.GetMenuByRoleID)
 	api.POST("/role/:roleId", AccMatrixController.SaveRoleMenu)
+	api.POST("/update-role", cekToken, AccMatrixController.UpdateRoleMenu)
 
 	api = r.Group("/api/sales-order")
 	api.GET("/:id", OrderController.GetByOrderId)
@@ -193,6 +203,7 @@ func InitRouter() *gin.Engine {
 	api = r.Group("/api/receive-detail")
 	api.POST("/page/:page/count/:count", ReceiveDetailController.GetDetail)
 	api.POST("", cekToken, ReceiveDetailController.Save)
+	api.POST("/updateDetail", cekToken, ReceiveDetailController.UpdateDetail)
 	api.DELETE("/:id", cekToken, ReceiveDetailController.DeleteByID)
 
 	// RETURN RECEIVE
@@ -200,14 +211,6 @@ func InitRouter() *gin.Engine {
 	api.GET("/:id", cekToken, RetusnReceiveController.GetByReturnReceiveId)
 	api.POST("/page/:page/count/:count", cekToken, RetusnReceiveController.FilterData)
 	api.POST("", cekToken, RetusnReceiveController.Save)
-	api.POST("/approve", cekToken, RetusnReceiveController.Approve)
-	api.POST("/reject", cekToken, RetusnReceiveController.Reject)
-	api.POST("/print/:id", cekToken, RetusnReceiveController.PrintReturn)
-
-	api = r.Group("/api/return-receive-detail")
-	api.POST("/page/:page/count/:count", ReturnReceiveDetailController.GetDetail)
-	api.POST("", cekToken, ReturnReceiveDetailController.Save)
-	api.POST("/updateQty", cekToken, ReturnReceiveDetailController.UpdateQty)
 	api.DELETE("/:id", cekToken, ReturnReceiveDetailController.DeleteById)
 
 	// ADJUSTMENT
@@ -227,6 +230,7 @@ func InitRouter() *gin.Engine {
 	api = r.Group("/api/payment")
 	api.POST("/page/:page/count/:count", cekToken, PaymentController.FilterData)
 	api.GET("/:id", cekToken, PaymentController.GetByPaymentId)
+	api.POST("/salesOrderId/:salesOrderId", cekToken, PaymentController.GetBySalesOrderID)
 	api.POST("", cekToken, PaymentController.Save)
 	api.POST("/approve", cekToken, PaymentController.Approve)
 	api.POST("/print/:id", cekToken, PaymentController.PrintPayment)
@@ -245,6 +249,13 @@ func InitRouter() *gin.Engine {
 	api.POST("/all", cekToken, PaymentReturnController.GetDetail)
 	api.POST("", cekToken, PaymentReturnController.Save)
 	api.DELETE("/:id", cekToken, PaymentReturnController.DeleteById)
+
+	// PAYMENT_DIRECT
+
+	api = r.Group("/api/payment-direct")
+	api.POST("/page/:page/count/:count", DirectPaymentController.FilterData)
+	api.POST("/approve", DirectPaymentController.Approve)
+	api.POST("/reject", DirectPaymentController.Reject)
 
 	// Warehouse
 	api = r.Group("/api/warehouse")
@@ -297,7 +308,32 @@ func InitRouter() *gin.Engine {
 	api = r.Group("/api/purchase-order-detail")
 	api.POST("/page/:page/count/:count", PurchaseOrderDetailController.GetDetail)
 	api.POST("", cekToken, PurchaseOrderDetailController.Save)
+	api.GET("/last-price/:productId", PurchaseOrderDetailController.GetLastPrice)
 	api.DELETE("/:id", cekToken, PurchaseOrderDetailController.DeleteByID)
+
+	// STOCK - OPNAME
+	api = r.Group("/api/stock-opname")
+	api.GET("/:id", StockOpnameController.GetByStockOpnameById)
+	api.POST("/page/:page/count/:count", cekToken, StockOpnameController.GetStockOpnamePage)
+	api.POST("", cekToken, StockOpnameController.Save)
+	api.POST("/approve", cekToken, StockOpnameController.Approve)
+	api.POST("/download-template/:warehouseId", StockOpnameController.DownloadTemplate)
+	api.POST("/upload-template/:stockOpnameId", StockOpnameController.UploadTemplate)
+	// api.POST("/reject", cekToken, StockOpnameController.Reject)
+	// api.POST("/print/:id", StockOpnameController.PrintStockOpnameForm)
+
+	api = r.Group("/api/stock-opname-detail")
+	api.POST("/page/:page/count/:count", StockOpnameDetailController.GetDetail)
+	api.POST("", cekToken, StockOpnameDetailController.Save)
+	api.DELETE("/:id", cekToken, StockOpnameDetailController.DeleteById)
+	api.POST("/updateItemQty", cekToken, StockOpnameDetailController.UpdateQty)
+
+	// REPORT
+	api = r.Group("/api/report")
+	api.POST("/payment-cash", ReportPaymentCashController.DownloadReportPayment)
+	api.POST("/payment-sales", ReportPaymentCashController.DownloadReportSales)
+
+	// -- END REPORT
 
 	// Payment - SALES ORDER
 	// api = r.Group("/api/payment")

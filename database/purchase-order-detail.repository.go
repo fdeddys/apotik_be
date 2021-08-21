@@ -159,3 +159,19 @@ func DeletePurchaseOrderDetailById(id int64) (errCode string, errDesc string) {
 	return
 
 }
+
+func GetLastPricePurchaseOrderDetail(productCode int64) (res dto.ResultLastPrice) {
+
+	fmt.Println(" Get last price  ---- ", productCode)
+
+	db := GetDbCon()
+	db.Debug().LogMode(true)
+
+	db.Raw("select "+
+		"   price, disc1 from po_detail pd "+
+		" where  product_id = ? "+
+		" order by id desc  limit 1 ", productCode).Scan(&res)
+
+	return
+
+}

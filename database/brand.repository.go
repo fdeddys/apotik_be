@@ -22,6 +22,7 @@ func UpdateBrand(updatedbrand dbmodels.Brand) models.NoContentResponse {
 	if err != nil {
 		res.ErrCode = "02"
 		res.ErrDesc = "Error select data to DB"
+		return res
 	}
 
 	brand.Name = updatedbrand.Name
@@ -34,6 +35,7 @@ func UpdateBrand(updatedbrand dbmodels.Brand) models.NoContentResponse {
 	if err2 != nil {
 		res.ErrCode = "02"
 		res.ErrDesc = "Error update data to DB"
+		return res
 	}
 
 	res.ErrCode = "00"
@@ -69,6 +71,7 @@ func SaveBrand(brand dbmodels.Brand) models.NoContentResponse {
 	if r := db.Save(&brand); r.Error != nil {
 		res.ErrCode = "02"
 		res.ErrDesc = "Error save data to DB"
+		return res
 	}
 
 	res.ErrCode = "00"

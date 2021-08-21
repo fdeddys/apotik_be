@@ -69,19 +69,22 @@ func (r ReceiveService) Save(receive *dbmodels.Receive) (errCode, errDesc, recei
 // Save ...
 func (r ReceiveService) SaveByPO(receive *dbmodels.Receive) (errCode, errDesc, receiveNo string, receiveID int64, status int8) {
 
+	var updateReceive dbmodels.Receive
 	if receive.ID == 0 {
 		newNumber, errCode, errMsg := generateNewReceiveNo()
 		if errCode != constants.ERR_CODE_00 {
 			return errCode, errMsg, "", 0, 0
 		}
-		receive.ReceiveNo = newNumber
-		receive.Status = 10
+		updateReceive.ReceiveNo = newNumber
+		updateReceive.Status = 10
+	} else {
+		updateReceive, _ = database.GetReceiveByReceiveID(receive.ID)
 	}
-	receive.LastUpdateBy = dto.CurrUser
-	receive.LastUpdate = time.Now()
-
+	updateReceive.LastUpdateBy = dto.CurrUser
+	updateReceive.LastUpdate = time.Now()
+	updateReceive.PoNo = receive.PoNo
 	// fmt.Println("isi order ", order)
-	err, errDesc, _, status := database.SaveReceive(receive)
+	err, errDesc, _, status := database.SaveReceive(&updateReceive)
 	if err != constants.ERR_CODE_00 {
 		return err, errDesc, "", 0, 0
 	}

@@ -3,6 +3,7 @@ package database
 import (
 	dbmodels "distribution-system-be/models/dbModels"
 	"distribution-system-be/models/dto"
+	"distribution-system-be/utils/util"
 	"fmt"
 	"log"
 	"sync"
@@ -113,6 +114,34 @@ func SaveReceiveDetail(receiveDetail *dbmodels.ReceiveDetail) (errCode string, e
 
 	errCode = "00"
 	errDesc = fmt.Sprintf("%v", receiveDetail.ID)
+	return
+
+}
+
+//UpdateReceiveDetail ...
+func UpdateReceiveDetail(idDetail, qty int64, price, disc1 float32) (errCode string, errDesc string) {
+
+	fmt.Println(" Update Receive Detail  ------------------------------------------ ")
+
+	db := GetDbCon()
+	db.Debug().LogMode(true)
+
+	r := db.Model(dbmodels.ReceiveDetail{}).Where("id = ?", idDetail).Updates(
+		dbmodels.ReceiveDetail{
+			Qty:          qty,
+			Price:        price,
+			Disc1:        disc1,
+			LastUpdate:   util.GetCurrDate(),
+			LastUpdateBy: dto.CurrUser,
+		})
+	if r.Error != nil {
+		errCode = "99"
+		errDesc = r.Error.Error()
+		return
+	}
+
+	errCode = "00"
+	errDesc = fmt.Sprintf("%v", r.RowsAffected)
 	return
 
 }

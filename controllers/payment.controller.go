@@ -50,6 +50,27 @@ func (s *PaymentController) GetByPaymentId(c *gin.Context) {
 
 }
 
+// GetByOrderId ...
+func (s *PaymentController) GetBySalesOrderID(c *gin.Context) {
+
+	res := dbmodels.Payment{}
+
+	salesOrderID, errPage := strconv.ParseInt(c.Param("salesOrderId"), 10, 64)
+	if errPage != nil {
+		logs.Info("error", errPage)
+		c.JSON(http.StatusBadRequest, res)
+		c.Abort()
+		return
+	}
+
+	res = PaymentService.GetDataPaymentBySalesOrderId(salesOrderID)
+
+	c.JSON(http.StatusOK, res)
+	c.Abort()
+	return
+
+}
+
 // FilterData ...
 func (s *PaymentController) FilterData(c *gin.Context) {
 	req := dto.FilterPayment{}

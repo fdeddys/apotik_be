@@ -5,6 +5,7 @@ import (
 	"distribution-system-be/models"
 	dbmodels "distribution-system-be/models/dbModels"
 	dto "distribution-system-be/models/dto"
+	"time"
 )
 
 // RoleService ...
@@ -34,8 +35,11 @@ func (h RoleService) GetRoleFilterPaging(param dto.FilterName, page int, limit i
 
 // SaveRole ...
 func (h RoleService) SaveRole(role *dbmodels.Role) models.NoContentResponse {
-	res := repository.SaveRole(*role)
 
+	role.LastUpdate = time.Now()
+	role.LastUpdateBy = dto.CurrUser
+	res, newID := repository.SaveRole(*role)
+	repository.CreateRoleMenuByRoleId(newID)
 	return res
 }
 

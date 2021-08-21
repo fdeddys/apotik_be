@@ -55,3 +55,15 @@ func (r PurchaseOrderDetailService) DeletePurchaseOrderDetailByID(purchaseOrderD
 
 	return constants.ERR_CODE_00, constants.ERR_CODE_00_MSG
 }
+
+// GetDataPurchaseOrderDetailPage ...
+func (r PurchaseOrderDetailService) GetLastPricePurchaseOrderDetail(productId int64) models.ResponseCheckPrice {
+	var res models.ResponseCheckPrice
+
+	data := database.GetLastPricePurchaseOrderDetail(productId)
+	res.ErrCode = constants.ERR_CODE_00
+	res.ErrDesc = constants.ERR_CODE_00_MSG
+	res.Price = data.Price
+	res.Disc1 = data.Disc1
+	return res
+}

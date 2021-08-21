@@ -30,6 +30,13 @@ type Response struct {
 	ErrDesc string `json:"errDesc"`
 }
 
+type ResponseCheckPrice struct {
+	ErrCode string `json:"errCode"`
+	ErrDesc string `json:"errDesc"`
+	Price   int64  `json:"price"`
+	Disc1   int64  `json:"disc1"`
+}
+
 // Merchant ...
 type ResponseMerchant struct {
 	Data interface{} `json:"data"`
@@ -171,9 +178,8 @@ type ResponseFollowUpOrder struct {
 	Data    interface{} `json:"data"`
 }
 
-
 type ResponseStatus struct {
-	ErrCode 				string      `json:"errCode"`
-	ErrDesc 				string      `json:"errDesc"`
-	ApprovalStatus			bool		`json:"approvalStatus"`
+	ErrCode        string `json:"errCode"`
+	ErrDesc        string `json:"errDesc"`
+	ApprovalStatus bool   `json:"approvalStatus"`
 }

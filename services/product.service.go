@@ -33,6 +33,25 @@ func (h ProductService) GetProductFilterPaging(param dto.FilterProduct, page int
 	return res
 }
 
+func (h ProductService) SearchProduct(param dto.FilterProduct, page int, limit int) models.ResponsePagination {
+	var res models.ResponsePagination
+
+	offset := (page - 1) * limit
+	data, err := repository.SearchProduct(param, offset, limit)
+
+	if err != nil {
+		res.Error = err.Error()
+		return res
+	}
+
+	res.Contents = data
+	res.TotalRow = 0
+	res.Page = page
+	res.Count = len(data)
+
+	return res
+}
+
 // GetProductDetails ...
 func (h ProductService) GetProductDetails(id int) models.ContentResponse {
 

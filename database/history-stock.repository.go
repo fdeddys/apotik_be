@@ -1,6 +1,7 @@
 package database
 
 import (
+	"distribution-system-be/constants"
 	"distribution-system-be/models"
 	dbmodels "distribution-system-be/models/dbModels"
 	"distribution-system-be/models/dto"
@@ -20,10 +21,11 @@ func SaveHistory(history dbmodels.HistoryStock) models.NoContentResponse {
 	if r := db.Save(&history); r.Error != nil {
 		res.ErrCode = "02"
 		res.ErrDesc = "Error save data to DB"
+		return res
 	}
 
-	res.ErrCode = "00"
-	res.ErrDesc = "Success"
+	res.ErrCode = constants.ERR_CODE_00
+	res.ErrDesc = constants.ERR_CODE_00_MSG
 	return res
 }
 

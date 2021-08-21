@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
-# env GOOS=linux GOARCH=amd64 go build -o oasis_be
+env GOOS=linux GOARCH=amd64 go build -o apotik_be
 
-# scp oasis_be deddy@13.229.85.120:/home/deddy
+sshpass -p "Lh-3*LxDmSz32p4$" scp -P 8288 apotik_be root@103.82.242.11:/root
 
-env GOOS=windows GOARCH=amd64 go build -o oasis_be
+# env GOOS=windows GOARCH=amd64 go build -o oasis_be
 

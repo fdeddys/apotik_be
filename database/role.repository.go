@@ -1,10 +1,11 @@
 package database
 
 import (
-	"log"
 	constants "distribution-system-be/constants"
 	"distribution-system-be/models"
 	dbmodels "distribution-system-be/models/dbModels"
+	"fmt"
+	"log"
 	"sync"
 
 	dto "distribution-system-be/models/dto"
@@ -89,6 +90,7 @@ func UpdateRole(updatedRole dbmodels.Role) models.NoContentResponse {
 	if err != nil {
 		res.ErrCode = constants.ERR_CODE_51
 		res.ErrDesc = constants.ERR_CODE_51_MSG
+		return res
 	}
 
 	role.Name = updatedRole.Name
@@ -98,6 +100,7 @@ func UpdateRole(updatedRole dbmodels.Role) models.NoContentResponse {
 	if err2 != nil {
 		res.ErrCode = constants.ERR_CODE_51
 		res.ErrDesc = constants.ERR_CODE_51_MSG
+		return res
 	}
 
 	res.ErrCode = constants.ERR_CODE_00
@@ -107,18 +110,22 @@ func UpdateRole(updatedRole dbmodels.Role) models.NoContentResponse {
 }
 
 //SaveRole ...
-func SaveRole(role dbmodels.Role) models.NoContentResponse {
+func SaveRole(role dbmodels.Role) (models.NoContentResponse, int64) {
 	var res models.NoContentResponse
 	db := GetDbCon()
 	db.Debug().LogMode(true)
 
 	// brand.Code = GenerateBrandCode()
-	if r := db.Save(&role); r.Error != nil {
+	r := db.Save(&role)
+
+	fmt.Println("Last id sav ==> ", role.ID)
+	if r.Error != nil {
 		res.ErrCode = constants.ERR_CODE_51
 		res.ErrDesc = constants.ERR_CODE_51_MSG
+		return res, role.ID
 	}
 
 	res.ErrCode = constants.ERR_CODE_00
 	res.ErrDesc = constants.ERR_CODE_00_MSG
-	return res
+	return res, role.ID
 }

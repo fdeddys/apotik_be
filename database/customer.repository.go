@@ -61,7 +61,7 @@ func GetCustomerPaging(param dto.FilterName, offset int, limit int) ([]dbmodels.
 func AsyncQueryCountsCustomer(db *gorm.DB, total *int, param dto.FilterName, resChan chan error) {
 	var searchName = "%"
 	if strings.TrimSpace(param.Name) != "" {
-		searchName = param.Name + searchName
+		searchName = "%" + param.Name + "%"
 	}
 	// err := db.Table("issuer").Select("issuer.*, Customer.*").Joins("left join issuer on Customer.issuer_code = issuer.id").Model(&dbmodels.Customer{}).Where("Customer.name ilike ?", searchName).Count(&*total).Error
 	err := db.Model(&dbmodels.Customer{}).Where("name ilike ?", searchName).Count(&*total).Error
@@ -78,10 +78,10 @@ func AsyncQuerysCustomer(db *gorm.DB, offset int, limit int, Customer *[]dbmodel
 
 	var searchName = "%"
 	if strings.TrimSpace(param.Name) != "" {
-		searchName = param.Name + searchName
+		searchName = "%" + param.Name + "%"
 	}
 
-	err := db.Order("name ASC").Offset(offset).Limit(limit).Find(&Customer, "name like ?", searchName).Error
+	err := db.Order("name ASC").Offset(offset).Limit(limit).Find(&Customer, "name ilike ?", searchName).Error
 	if err != nil {
 		resChan <- err
 	}

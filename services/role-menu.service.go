@@ -5,6 +5,7 @@ import (
 	"distribution-system-be/models"
 	dbmodels "distribution-system-be/models/dbModels"
 	dto "distribution-system-be/models/dto"
+	"fmt"
 )
 
 // RoleMenuService ...
@@ -31,5 +32,13 @@ func (h RoleMenuService) GetMenuByRole(roleid int) []dto.RoleMenuDto {
 // SaveMenuByRole ...
 func (h RoleMenuService) SaveMenuByRole(roleid int, menuids []int) models.Response {
 	res := repository.SaveMenuByRole(roleid, menuids)
+	return res
+}
+
+// SaveMenuByRole ...
+func (h RoleMenuService) UpdateRoleMenu(req dto.RequestUpdateRole) dto.NoContentResponse {
+
+	fmt.Println("Updateee ", req)
+	res := repository.UpdateMenuByRole(req)
 	return res
 }

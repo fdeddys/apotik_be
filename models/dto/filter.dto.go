@@ -27,7 +27,9 @@ type FilterBrand struct {
 
 // FilterProduct ...
 type FilterProduct struct {
-	Name string `json:"name"`
+	Name        string `json:"name"`
+	WarehouseID int64  `json:"warehouseId"`
+	Composition string `json:"composition"`
 }
 
 // FilterProductGroup ...

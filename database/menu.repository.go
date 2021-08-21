@@ -98,7 +98,7 @@ func GetUserMenus(user string) ([]dbmodels.Menu, error) {
 		m_role_user b on (a.id = b.user_id) join
 		m_role_menu c on(b.role_id = c.role_id) join
 		m_menus d on(c.menu_id = d.id)
-		where a.user_name = ? and d.status = 1
+		where a.user_name = ? and d.status = 1 and c.status = 1
 		group by d.id, a.user_name
 		order by d.ordering
 	`, user).Scan(&menus).Error

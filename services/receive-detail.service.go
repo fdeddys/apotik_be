@@ -46,6 +46,23 @@ func (r ReceiveDetailService) SaveReceiveDetail(receiveDetail *dbmodels.ReceiveD
 	return constants.ERR_CODE_00, constants.ERR_CODE_00_MSG
 }
 
+// SaveReceiveDetail ...
+func (r ReceiveDetailService) UpdateReceiveDetail(receiveDetails *[]dbmodels.ReceiveDetail) (errCode string, errDesc string) {
+
+	for _, receiveDetail := range *receiveDetails {
+		// fmt.Println(receiveDetail.ID, "  ", receiveDetail.Qty, " ", receiveDetail.Price, " ", receiveDetail.Disc1)
+		if err, errDesc := database.UpdateReceiveDetail(receiveDetail.ID, receiveDetail.Qty, receiveDetail.Price, receiveDetail.Disc1); err != constants.ERR_CODE_00 {
+			return err, errDesc
+		}
+	}
+
+	// if err, errDesc := database.SaveReceiveDetail(receiveDetail); err != constants.ERR_CODE_00 {
+	// 	return err, errDesc
+	// }
+
+	return constants.ERR_CODE_00, constants.ERR_CODE_00_MSG
+}
+
 // DeleteReceiveDetailByID ...
 func (r ReceiveDetailService) DeleteReceiveDetailByID(receiveDetailID int64) (errCode string, errDesc string) {
 

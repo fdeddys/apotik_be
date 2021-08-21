@@ -129,7 +129,7 @@ func (o ReturnSalesOrderService) Approve(salesOrderReturnID int64) (errCode, err
 			})
 
 		// TODO hitung disc
-		hpp := (float32(curStock * stock.Qty)) + (float32(sord.Qty)*sord.Price)/float32(stock.Qty+sord.Qty)
+		hpp := (float32(int64(product.Hpp) * curStock)) + (float32(sord.Qty)*sord.Price)/float32(curStock+sord.Qty)
 		var history dbmodels.HistoryStock
 		history.Code = product.Code
 		history.Debet = sord.Qty
@@ -143,6 +143,8 @@ func (o ReturnSalesOrderService) Approve(salesOrderReturnID int64) (errCode, err
 		history.Price = sord.Price
 		history.Saldo = newStock
 		history.TransDate = salesOrderReturn.ReturnSalesOrderDate
+		history.WarehouseID = salesOrderReturn.WarehouseID
+		history.Total = salesOrderReturn.Total
 		db.Save(&history)
 
 		total = total + (sord.Price * float32(sord.Qty))

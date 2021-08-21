@@ -12,6 +12,15 @@ const (
 
 	ERR_CODE_03     = "03"
 	ERR_CODE_03_MSG = "Error, unmarshall body Request"
+
+	ERR_CODE_05     = "05"
+	ERR_CODE_05_MSG = "Error,Cannot get parameter query"
+
+	ERR_CODE_06     = "06"
+	ERR_CODE_06_MSG = "Error,Cannot get File"
+
+	ERR_CODE_07     = "07"
+	ERR_CODE_07_MSG = "Error,Cannot parse File"
 )
 
 // ERR code Global
@@ -87,11 +96,22 @@ const (
 // 30 = reject
 // 40 = INVOICE
 // 50 = PAID
+// 60 = Reject Payment
 
 const (
-	STATUS_APPROVE = 20
+	STATUS_APPROVE        = 20
+	STATUS_NEW            = 10
+	STATUS_REJECT         = 30
+	STATUS_PAID           = 50
+	STATUS_REJECT_PAYMENT = 60
 )
 
 const (
-	PARAMETER_TAX_VALUE = "tax"
+	PARAMETER_TAX_VALUE     = "tax"
+	PARAMETER_APOTEKER_NAME = "apoteker"
+)
+
+const (
+	HEADER_PAYMENT_CASH   = "PC"
+	HEADER_PAYMENT_CREDIT = "PY"
 )

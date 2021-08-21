@@ -119,10 +119,10 @@ func AsyncQuerysReturnSalesOrders(db *gorm.DB, offset int, limit int, orders *[]
 	fmt.Println("isi dari filter [", param, "] ")
 	if strings.TrimSpace(param.StartDate) != "" && strings.TrimSpace(param.EndDate) != "" {
 		fmt.Println("isi dari filter [", param.StartDate, '-', param.EndDate, "] ")
-		err = db.Preload("Customer").Preload("Salesman").Order("return_date DESC").Offset(offset).Limit(limit).Find(&orders, "  COALESCE(return_no, '') ilike ? AND return_date between ? and ?   ", orderNumber, param.StartDate, param.EndDate).Error
+		err = db.Preload("Customer").Preload("Salesman").Order("return_date DESC, id desc").Offset(offset).Limit(limit).Find(&orders, "  COALESCE(return_no, '') ilike ? AND return_date between ? and ?   ", orderNumber, param.StartDate, param.EndDate).Error
 	} else {
 		fmt.Println("isi dari kosong ")
-		err = db.Offset(offset).Limit(limit).Preload("Customer").Preload("Salesman").Order("return_date DESC").Find(&orders, "  COALESCE(return_no,'') ilike ?  ", orderNumber).Error
+		err = db.Offset(offset).Limit(limit).Preload("Customer").Preload("Salesman").Order("return_date DESC, id desc").Find(&orders, "  COALESCE(return_no,'') ilike ?  ", orderNumber).Error
 		if err != nil {
 			fmt.Println("error --> ", err)
 		}
