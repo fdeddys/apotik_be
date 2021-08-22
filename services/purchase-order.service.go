@@ -116,3 +116,15 @@ func generateNewPurchaseOrderNo() (newNumber string, errCode string, errMsg stri
 	return newNumber, constants.ERR_CODE_00, constants.ERR_CODE_00_MSG
 
 }
+
+// GetDataPurchaseOrderByID ...
+func (r PurchaseOrderService) RejectPO(poID int64) {
+
+	// po, err := database.GetPurchaseOrderByPurchaseOrderID(poID)
+
+	// if err != nil {
+
+	// }
+
+	// return res
+}

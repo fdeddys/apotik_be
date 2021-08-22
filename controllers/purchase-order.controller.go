@@ -179,3 +179,25 @@ func (r *PurchaseOrderController) PrintPreview(c *gin.Context) {
 	io.Copy(c.Writer, file)
 	return
 }
+
+// Approve ...
+func (r *PurchaseOrderController) Reject(c *gin.Context) {
+
+	res := dbmodels.PurchaseOrder{}
+
+	poID, errPage := strconv.ParseInt(c.Param("id"), 10, 64)
+	if errPage != nil {
+		logs.Info("error", errPage)
+		c.JSON(http.StatusBadRequest, res)
+		c.Abort()
+		return
+	}
+
+	errCode, errMsg := purchaseOrderService.RejectPO(poID)
+	res.ErrDesc = errMsg
+	res.ErrCode = errCode
+	// res.OrderNo = newNumb
+	c.JSON(http.StatusOK, res)
+
+	return
+}

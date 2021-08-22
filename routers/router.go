@@ -303,6 +303,7 @@ func InitRouter() *gin.Engine {
 	api.GET("/:id", cekToken, PurchaseOrderController.GetByPurchaseOrderId)
 	api.POST("", cekToken, PurchaseOrderController.Save)
 	api.POST("/approve", cekToken, PurchaseOrderController.Approve)
+	api.POST("/reject", cekToken, PurchaseOrderController.Reject)
 	api.POST("/print/:id", cekToken, PurchaseOrderController.PrintPreview)
 
 	api = r.Group("/api/purchase-order-detail")
