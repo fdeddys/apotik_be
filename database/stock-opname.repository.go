@@ -308,7 +308,7 @@ func FindDataStockByWarehouseID(warehousID int64) []dto.TemplateReportStockOpnam
 
 	db.Raw("select p.id as product_id, p.name as product_name , s.qty, l.name as uom_name , p.small_uom_id as uom_id "+
 		" from product p "+
-		" left join stock s on s.product_id = p.product_group_id and s.warehouse_id = ? "+
+		" inner join stock s on s.product_id = p.id and s.warehouse_id = ? "+
 		" left join lookup l on p.small_uom_id  = l.id  "+
 		" where p.status =1 order by p.name ", warehousID).Scan(&datas)
 

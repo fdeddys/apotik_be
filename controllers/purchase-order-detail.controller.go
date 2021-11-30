@@ -55,7 +55,7 @@ func (r *PurchaseOrderDetailController) GetDetail(c *gin.Context) {
 	dataBodyReq, _ := ioutil.ReadAll(body)
 
 	if err := json.Unmarshal(dataBodyReq, &req); err != nil {
-		fmt.Println("Error, body Request ")
+		fmt.Println("Error, body Request ", res)
 		res.Error = err.Error()
 		c.JSON(http.StatusBadRequest, res)
 		c.Abort()
@@ -80,7 +80,7 @@ func (r *PurchaseOrderDetailController) Save(c *gin.Context) {
 	dataBodyReq, _ := ioutil.ReadAll(body)
 
 	if err := json.Unmarshal(dataBodyReq, &req); err != nil {
-		fmt.Println("Error, unmarshal body Request to Sales Order stuct ", dataBodyReq)
+		fmt.Println("Error, unmarshal body Request to Sales Order stuct ", err)
 		res.ErrDesc = constants.ERR_CODE_03_MSG
 		res.ErrCode = constants.ERR_CODE_03
 		c.JSON(http.StatusBadRequest, res)

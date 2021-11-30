@@ -74,7 +74,7 @@ func GenerateReturnSalesOrderReport(returnSoID int64) {
 	}
 	fmt.Println("=============")
 	// setFont(&pdf, 12)
-	setHeader(&pdf)
+	setHeader(&pdf, "rso")
 	pdf.Br(20)
 
 	setDetail(&pdf, dataDetails)
@@ -105,6 +105,7 @@ func fillDataDetailReturnSO(returnSoID int64) []DataDetail {
 		returnSo.Customer.Name,
 		returnSo.ReturnSalesOrderDate.Format("02-01-2006"),
 		returnSo.ReturnSalesOrderNo,
+		"", "",
 	)
 	// tdk blh kosong
 	// per halaman max 25 item detail

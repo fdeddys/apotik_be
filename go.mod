@@ -23,8 +23,7 @@ require (
 	github.com/signintech/gopdf v0.9.15
 	github.com/smartystreets/goconvey v1.6.4
 	github.com/ugorji/go v1.2.4 // indirect
-	golang.org/x/sys v0.0.0-20191005200804-aed5e4c7ecf9 // indirect
-	golang.org/x/text v0.3.2 // indirect
+	github.com/xuri/excelize/v2 v2.4.1
 	gopkg.in/yaml.v2 v2.3.0 // indirect
 	moul.io/http2curl v1.0.0 // indirect
 )

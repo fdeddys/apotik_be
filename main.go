@@ -16,7 +16,6 @@ func main() {
 		beego.BConfig.WebConfig.StaticDir["/swagger"] = "swagger"
 	}
 	// beego.Run()
-
 	runMode := beego.AppConfig.DefaultString("gin.mode", "debug")
 	serverPort := beego.AppConfig.DefaultString("httpport", "8080")
 

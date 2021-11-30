@@ -3,4 +3,9 @@ invoice.pdf
 
 *.pdf
 *.sh
+*.xls
+*.csv
+*.xlsx
+*.zip
+vendor/
 .idea/workspace.xml

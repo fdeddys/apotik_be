@@ -12,6 +12,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"math"
 	"net/http"
 	"os"
 	"strconv"
@@ -207,16 +208,17 @@ func (h *ProductController) ProcessCSV(c *gin.Context) {
 	fmt.Println("Process")
 	fileObat, err := os.Open("obat.csv")
 	if err != nil {
-		fmt.Println("Error ", err)
+		fmt.Println("Error ==>", err)
 		panic(err)
 	}
 	defer fileObat.Close()
 
 	fmt.Println("reader")
 	csvReader := csv.NewReader(fileObat)
+	csvReader.Comma = ';'
 	records, err2 := csvReader.ReadAll()
 	if err2 != nil {
-		fmt.Println("Error ", err2)
+		fmt.Println("Error err2 ==>", err2)
 		return
 	}
 
@@ -228,9 +230,10 @@ func (h *ProductController) ProcessCSV(c *gin.Context) {
 		template.Name = value[1]
 		template.Satuan = value[2]
 		template.Qty = util.Atoi64(value[3])
-		template.Hargabeli = util.Atoi64(value[4])
-		template.Hargajual = util.AtoFloat64(value[5])
-
+		template.Hargabeli = math.Floor(util.AtoFloat64(value[7]) / util.AtoFloat64(value[3]))
+		template.Hargajual = util.Atoi64(value[6])
+		template.SatuanBesar = value[4]
+		template.Kadar = value[8]
 		datas = append(datas, template)
 
 	}
@@ -245,6 +248,15 @@ func (h *ProductController) ProcessCSV(c *gin.Context) {
 		} else {
 			uomID = lookup.ID
 		}
+
+		var uomID2 int64
+		lookup2, errcode2, _, _ := database.GetLookupByName(templateObat.SatuanBesar)
+		if errcode2 != constants.ERR_CODE_00 {
+			uomID2 = 30
+		} else {
+			uomID2 = lookup2.ID
+		}
+
 		produk.BigUomID = uomID
 		produk.BrandID = 1
 		produk.Code = ""
@@ -254,11 +266,13 @@ func (h *ProductController) ProcessCSV(c *gin.Context) {
 		produk.Name = templateObat.Name
 		produk.ProductGroupID = 1
 		produk.PLU = templateObat.Plu
-		produk.QtyUom = 1
+		produk.QtyUom = int16(templateObat.Qty)
 		produk.SellPrice = float32(templateObat.Hargajual)
 		produk.SellPriceType = 0
 		produk.SmallUomID = uomID
+		produk.BigUomID = uomID2
 		produk.Status = 1
+		produk.Composition = templateObat.Kadar
 
 		database.SaveProduct(produk)
 	}

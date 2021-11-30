@@ -6,6 +6,7 @@ import (
 	"distribution-system-be/models"
 	dbmodels "distribution-system-be/models/dbModels"
 	"distribution-system-be/models/dto"
+	"distribution-system-be/utils/excel"
 	"fmt"
 	"time"
 )
@@ -32,6 +33,19 @@ func (r PurchaseOrderService) GetDataPage(param dto.FilterPurchaseOrder, page, l
 	res.Count = limit
 
 	return res
+}
+
+func (r PurchaseOrderService) ExportPurchaseOrder(param dto.FilterPurchaseOrder, status int) (bool, string) {
+	res := false
+	namaFile := "po_per.xlsx"
+	data, _, err := database.GetPurchaseOrderPage(param, 1, 1000000, status)
+
+	if err != nil {
+		return res, ""
+	}
+	res = excel.ExportToExcelPo(data, namaFile)
+
+	return res, namaFile
 }
 
 // GetDataPurchaseOrderByID ...
@@ -78,17 +92,17 @@ func (r PurchaseOrderService) ApprovePurchaseOrder(purchaseOrder *dbmodels.Purch
 }
 
 // RejectPurchaseOrder ...
-func (o OrderService) RejectPurchaseOrder(purchaseOrder *dbmodels.PurchaseOrder) (errCode, errDesc string) {
+// func (o OrderService) RejectPurchaseOrder(purchaseOrder *dbmodels.PurchaseOrder) (errCode, errDesc string) {
 
-	// cek qty
-	// validateQty()
-	// fmt.Println("isi order ", order)
-	err, errDesc := database.RejectPurchaseOrder(purchaseOrder)
-	if err != constants.ERR_CODE_00 {
-		return err, errDesc
-	}
-	return constants.ERR_CODE_00, constants.ERR_CODE_00_MSG
-}
+// 	// cek qty
+// 	// validateQty()
+// 	// fmt.Println("isi order ", order)
+// 	err, errDesc := database.RejectPurchaseOrder(purchaseOrder)
+// 	if err != constants.ERR_CODE_00 {
+// 		return err, errDesc
+// 	}
+// 	return constants.ERR_CODE_00, constants.ERR_CODE_00_MSG
+// }
 
 func generateNewPurchaseOrderNo() (newNumber string, errCode string, errMsg string) {
 
@@ -118,13 +132,38 @@ func generateNewPurchaseOrderNo() (newNumber string, errCode string, errMsg stri
 }
 
 // GetDataPurchaseOrderByID ...
-func (r PurchaseOrderService) RejectPO(poID int64) {
+func (r PurchaseOrderService) RejectPO(poID int64) dto.NoContentResponse {
 
-	// po, err := database.GetPurchaseOrderByPurchaseOrderID(poID)
+	var res dto.NoContentResponse
+	po, err := database.GetPurchaseOrderByPurchaseOrderID(poID)
 
-	// if err != nil {
+	if err != nil {
+		res.ErrCode = constants.ERR_CODE_40
+		res.ErrDesc = err.Error()
+		return res
+	}
+	if !(po.Status == 10 || po.Status == 20) {
+		res.ErrCode = constants.ERR_CODE_99
+		res.ErrDesc = "Status yang diizinkan cancel hanya outstanding "
+		return res
+	}
 
-	// }
+	code, desc := database.RejectPurchaseOrder(po)
+	res.ErrCode = code
+	res.ErrDesc = desc
+	return res
+}
 
-	// return res
+func CalculateTotalPO(poID int64) {
+
+	po, _ := database.GetPurchaseOrderByPurchaseOrderID(poID)
+	totalPO := database.CountTotalPO(po.PurchaserNo)
+
+	tax := float32(0)
+	if po.Tax > 0 {
+		tax = totalPO * po.Tax / 100
+	}
+	grandTotal := totalPO + tax
+
+	database.UpdateTotal(po.ID, totalPO, tax, grandTotal)
 }

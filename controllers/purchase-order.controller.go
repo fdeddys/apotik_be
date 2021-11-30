@@ -97,7 +97,6 @@ func (r *PurchaseOrderController) GetByPurchaseOrderId(c *gin.Context) {
 	c.JSON(http.StatusOK, res)
 	c.Abort()
 	return
-
 }
 
 // Save ...
@@ -193,11 +192,41 @@ func (r *PurchaseOrderController) Reject(c *gin.Context) {
 		return
 	}
 
-	errCode, errMsg := purchaseOrderService.RejectPO(poID)
-	res.ErrDesc = errMsg
-	res.ErrCode = errCode
-	// res.OrderNo = newNumb
-	c.JSON(http.StatusOK, res)
+	c.JSON(http.StatusOK, purchaseOrderService.RejectPO(poID))
+
+	return
+}
+
+func (r *PurchaseOrderController) Export(c *gin.Context) {
+
+	req := dto.FilterPurchaseOrder{}
+
+	body := c.Request.Body
+	dataBodyReq, _ := ioutil.ReadAll(body)
+
+	if err := json.Unmarshal(dataBodyReq, &req); err != nil {
+		fmt.Println("Error, body Request ", err)
+		c.JSON(http.StatusBadRequest, "Failed un marshal")
+		c.Abort()
+		return
+	}
+
+	// temp, _ := json.Marshal(req)
+
+	success, filename := purchaseOrderService.ExportPurchaseOrder(req, req.Status)
+
+	if success {
+		fmt.Println("download template")
+		header := c.Writer.Header()
+		header["Content-type"] = []string{"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"}
+		header["Content-Disposition"] = []string{"attachment; filename=" + filename}
+
+		file, _ := os.Open(filename)
+
+		io.Copy(c.Writer, file)
+
+	}
+	c.JSON(http.StatusOK, "Failed !")
 
 	return
 }

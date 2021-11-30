@@ -153,8 +153,8 @@ func (o ReturnReceiveService) Approve(returnReceiveID int64) (errCode, errDesc s
 	}
 
 	var grandTotal float32
-	total = 0
-	grandTotal = 0.0
+	// total = 0
+	grandTotal = total
 
 	if returnReceive.Tax != 0 {
 		grandTotal = total * 1.1

@@ -17,6 +17,7 @@ func GenerateReturnReceiveReport(returnSoID int64) {
 
 	title = "Return Receive"
 
+	fmt.Println("Proses RR report ", title)
 	spaceLen = beego.AppConfig.DefaultFloat("report.space-len", 15)
 	pageMargin = beego.AppConfig.DefaultFloat("report.page-margin", 12)
 
@@ -63,16 +64,16 @@ func GenerateReturnReceiveReport(returnSoID int64) {
 	for i, ordDetail := range dataDetails {
 		fmt.Println(i, "====", ordDetail)
 	}
-	fmt.Println("=============")
+	fmt.Println("=============", title)
 	// setFont(&pdf, 12)
-	setHeader(&pdf)
+	setHeader(&pdf, "rr")
 	pdf.Br(20)
 
-	setDetail(&pdf, dataDetails)
+	setDetail(&pdf, dataDetails, "rr")
 	setSummary(&pdf)
-	setSign(&pdf, "Admin", "Salesman", "Customer")
+	setSign(&pdf, "Salesman", "", "Apoteker")
 
-	pdf.WritePdf("return-receive .pdf")
+	pdf.WritePdf("return-receive.pdf")
 
 }
 
@@ -96,6 +97,8 @@ func fillDataDetailReturnReceive(returnReceiveID int64) []DataDetail {
 		returnReceive.Supplier.Name,
 		returnReceive.ReturnReceiveDate.Format("02-01-2006"),
 		returnReceive.ReturnReceiveNo,
+		returnReceive.Supplier.Alamat,
+		returnReceive.Supplier.Kota,
 	)
 	// tdk blh kosong
 	// per halaman max 25 item detail

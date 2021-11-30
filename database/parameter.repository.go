@@ -20,3 +20,18 @@ func GetParameterByNama(nama string) (dbmodels.Parameter, string, string, error)
 	return parameter, constants.ERR_CODE_00, constants.ERR_CODE_00_MSG, nil
 	// }
 }
+
+func GetParameter() ([]dbmodels.Parameter, error) {
+	db := GetDbCon()
+	db.Debug().LogMode(true)
+
+	var parameter []dbmodels.Parameter
+	err := db.Model(&dbmodels.Parameter{}).Find(&parameter).Error
+
+	if err != nil {
+		return parameter, err
+	}
+	// else {
+	return parameter, nil
+	// }
+}

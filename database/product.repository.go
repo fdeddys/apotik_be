@@ -340,7 +340,7 @@ func ProductList() []dbmodels.Product {
 	db.Debug().LogMode(true)
 
 	var product []dbmodels.Product
-	err := db.Preload("Brand").Preload("ProductGroup").Preload("BigUom").Order("name ASC").Find(&product).Error
+	err := db.Preload("Brand").Preload("ProductGroup").Preload("BigUom").Preload("SmallUom").Order("name ASC").Find(&product).Error
 	// .Preload("StockLookup", "lookup_group=?", "STOCK_STATUS")
 
 	if err != nil {

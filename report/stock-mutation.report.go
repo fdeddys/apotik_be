@@ -65,7 +65,7 @@ func GenerateStockMutationReport(stockMutationID int64) {
 	}
 	fmt.Println("=============")
 	// setFont(&pdf, 12)
-	setHeader(&pdf)
+	setHeader(&pdf, "sm")
 	pdf.Br(20)
 
 	setDetail(&pdf, dataDetails, "mt")

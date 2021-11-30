@@ -53,8 +53,8 @@ func (a AdjustmentService) Save(adjustment *dbmodels.Adjustment) (errCode, errDe
 			return errCode, errMsg, "", 0, 0
 		}
 		adjustment.AdjustmentNo = newNumber
-		adjustment.Status = 0
 	}
+	adjustment.Status = 10
 	adjustment.LastUpdateBy = dto.CurrUser
 	adjustment.LastUpdate = time.Now()
 
@@ -63,7 +63,7 @@ func (a AdjustmentService) Save(adjustment *dbmodels.Adjustment) (errCode, errDe
 	if err != constants.ERR_CODE_00 {
 		return err, errDesc, "", 0, 0
 	}
-	return constants.ERR_CODE_00, constants.ERR_CODE_00_MSG, adjustment.AdjustmentNo, adjustment.ID, status
+	return constants.ERR_CODE_00, constants.ERR_CODE_00_MSG, adjustment.AdjustmentNo, adjustment.ID, adjustment.Status
 }
 
 // ApproveAdjustment ...

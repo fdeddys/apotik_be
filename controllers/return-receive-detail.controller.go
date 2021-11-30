@@ -62,7 +62,7 @@ func (s *ReturnReceiveDetailController) GetDetail(c *gin.Context) {
 		return
 	}
 
-	log.Println("order id => ", req.ReturnID)
+	log.Println("return id => ", req.ReturnID)
 
 	res = returnReceiveDetailService.GetReturnReceiveDetailPage(req, page, count)
 

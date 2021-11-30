@@ -234,8 +234,9 @@ func (s *StockOpnameController) UploadTemplate(c *gin.Context) {
 		res.ErrDesc = errdesc
 		res.ErrCode = errcode
 		res.Data = msg
-		log.Fatal(msg, err)
+		// log.Fatal(msg, err)
 		c.JSON(http.StatusOK, res)
+		return
 	}
 
 	// for _, rec := range templateRecords {
@@ -255,6 +256,7 @@ func (s *StockOpnameController) UploadTemplate(c *gin.Context) {
 func convertCSVtoData(file multipart.File) ([]dto.TemplateReportStockOpname, string, string, string) {
 
 	csvReader := csv.NewReader(file)
+	csvReader.Comma = ';'
 	records, err := csvReader.ReadAll()
 	if err != nil {
 

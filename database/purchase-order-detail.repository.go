@@ -19,7 +19,7 @@ func GetAllDataDetailPurchaseOrder(purchaseOrderID int64) []dbmodels.PurchaseOrd
 
 	var purchaseOrderDetails []dbmodels.PurchaseOrderDetail
 
-	db.Preload("Product").Preload("UOM").Find(&purchaseOrderDetails, " po_id = ? and qty > 0 ", purchaseOrderID)
+	db.Preload("Product").Preload("UOM").Preload("PoUOM").Find(&purchaseOrderDetails, " po_id = ? and qty > 0 ", purchaseOrderID)
 
 	return purchaseOrderDetails
 }
@@ -94,7 +94,7 @@ func AsyncQueryCountsPurchaseOrderDetails(db *gorm.DB, total *int, purchaseOrder
 
 	var err error
 
-	err = db.Model(&dbmodels.PurchaseOrderDetail{}).Offset(offset).Where("po_id = ?", purchaseOrderID).Count(total).Error
+	err = db.Model(&dbmodels.PurchaseOrderDetail{}).Where("po_id = ?", purchaseOrderID).Count(total).Error
 
 	if err != nil {
 		resChan <- err
@@ -107,7 +107,7 @@ func AsyncQuerysPurchaseOrderDetails(db *gorm.DB, offset int, limit int, purchas
 
 	var err error
 
-	err = db.Offset(offset).Limit(limit).Preload("Product").Preload("UOM").Find(&purchaseOrderDetails, "po_id = ? ", purchaseOrderID).Error
+	err = db.Offset(offset).Limit(limit).Preload("Product").Preload("UOM").Preload("PoUOM").Find(&purchaseOrderDetails, "po_id = ? ", purchaseOrderID).Error
 	if err != nil {
 		fmt.Println("error --> ", err)
 	}
@@ -168,9 +168,10 @@ func GetLastPricePurchaseOrderDetail(productCode int64) (res dto.ResultLastPrice
 	db.Debug().LogMode(true)
 
 	db.Raw("select "+
-		"   price, disc1 from po_detail pd "+
+		" price::numeric::integer, disc1 "+
+		" from receive_detail rd inner join receive r on rd.receive_id = r.id and r.status in(20, 40, 50, 60)  "+
 		" where  product_id = ? "+
-		" order by id desc  limit 1 ", productCode).Scan(&res)
+		" order by rd.id desc  limit 1 ", productCode).Scan(&res)
 
 	return
 

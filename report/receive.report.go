@@ -281,7 +281,7 @@ func setReceiveDetail(pdf *gopdf.GoPdf, data []DataRecvDetail) {
 	pdf.SetX(20)
 	pdf.SetY(spaceLen * 8)
 
-	showSupplier(pdf)
+	showSupplier(pdf, "Number")
 
 	space(pdf)
 	showHeaderTableReceive(pdf)
@@ -424,42 +424,60 @@ func showDataReceive(pdf *gopdf.GoPdf, no, item, unit string, qty, price, total 
 	pdf.Text(ac.FormatMoney(total))
 }
 
-func showSupplier(pdf *gopdf.GoPdf) {
+func showSupplier(pdf *gopdf.GoPdf, TitleNumber string) {
 	// , code, name, transDate, ssNo string
 	// space(pdf)
+	// setFont(pdf, 10)
+	setFontBold(pdf, 12)
+	pdf.SetX(25)
+	// pdf.Text("Supplier ")
+	// pdf.SetX(100)
+	// pdf.Text(":")
+	// pdf.SetX(110)
+	fmt.Println("supplier RR", invInfo.CustName)
+	pdf.Text(invInfo.CustName)
 	setFont(pdf, 10)
 
-	pdf.SetX(spaceCustomerInfo1)
-	pdf.Text("Supplier Code")
-	pdf.SetX(spaceTitik1)
-	pdf.Text(":")
-	pdf.SetX(spaceValue1)
-	pdf.Text(dataHdr.SupplierCode)
-
 	// space(pdf)
-	pdf.SetX(spaceCustomerInfo)
-	pdf.Text("Supplier ")
+	pdf.SetX(spaceCustomerInfo + 70)
+	pdf.Text("Date ")
 	pdf.SetX(spaceTitik)
 	pdf.Text(":")
 	pdf.SetX(spaceValue)
-	pdf.Text(dataHdr.SupplierName)
+	pdf.Text(invInfo.TransAt)
 
 	space(pdf)
-	pdf.SetX(spaceCustomerInfo1)
-	pdf.Text("Transaction at ")
-	pdf.SetX(spaceTitik1)
-	pdf.Text(":")
-	pdf.SetX(spaceValue1)
-	pdf.Text(dataHdr.TransAt)
+	pdf.SetX(25)
+	// pdf.Text("Address ")
+	// pdf.SetX(100)
+	// pdf.Text(":")
+	// pdf.SetX(110)
+	pdf.Text(invInfo.Address)
 
 	// space(pdf)
-	pdf.SetX(spaceCustomerInfo)
-	pdf.Text("Source Document ")
+	pdf.SetX(spaceCustomerInfo + 70)
+
+	pdf.Text(TitleNumber)
 	pdf.SetX(spaceTitik)
 	pdf.Text(":")
 	pdf.SetX(spaceValue)
-	pdf.Text(dataHdr.SourceDoc)
+	pdf.Text(invInfo.SourceDoc)
 
+	space(pdf)
+	pdf.SetX(25)
+	// pdf.Text("City ")
+	// pdf.SetX(100)
+	// pdf.Text(":")
+	// pdf.SetX(110)
+	pdf.Text(invInfo.City)
+
+	// space(pdf)
+	pdf.SetX(spaceCustomerInfo + 70)
+	pdf.Text("SIA")
+	pdf.SetX(spaceTitik)
+	pdf.Text(":")
+	pdf.SetX(spaceValue)
+	pdf.Text(sia)
 }
 
 func setSignReceive(pdf *gopdf.GoPdf, sign1, sign2, sign3 string) {
@@ -513,6 +531,9 @@ func setSignReceive(pdf *gopdf.GoPdf, sign1, sign2, sign3 string) {
 	if sign3 != "" {
 		pdf.SetX(xSign3)
 		pdf.Line(xSign3, pdf.GetY(), xLengSign3, pdf.GetY())
+		space(pdf)
+		pdf.SetX(xSign3)
+		pdf.Text(sipa)
 	}
 
 }

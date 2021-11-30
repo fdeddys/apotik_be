@@ -3,6 +3,8 @@ package constants
 const (
 	TokenSecretKey        = "OasI$_sEcrET_key$"
 	TokenExpiredInMinutes = 8 * 60 * 60
+	VERSION               = "B2"
+	VERSION_DATE          = "28OKT2021"
 )
 
 // ERR code Global
@@ -83,6 +85,9 @@ const (
 
 	ERR_CODE_96     = "96"
 	ERR_CODE_96_MSG = "Payment total order / return / detail not MATCH  !"
+
+	ERR_CODE_99     = "99"
+	ERR_CODE_99_MSG = "Error business process"
 )
 
 const (
@@ -109,9 +114,12 @@ const (
 const (
 	PARAMETER_TAX_VALUE     = "tax"
 	PARAMETER_APOTEKER_NAME = "apoteker"
+	PARAMETER_SIA           = "SIA"
+	PARAMETER_SIPA          = "SIPA"
 )
 
 const (
-	HEADER_PAYMENT_CASH   = "PC"
-	HEADER_PAYMENT_CREDIT = "PY"
+	HEADER_PAYMENT_CASH     = "PC"
+	HEADER_PAYMENT_CREDIT   = "PY"
+	HEADER_PAYMENT_SUPPLIER = "PS"
 )

@@ -39,20 +39,28 @@ func (r PurchaseOrderDetailService) SavePurchaseOrderDetail(purchaseOrderDetail 
 		return "99", err.Error()
 	}
 
+	curProd, _, _ := database.FindProductByID(purchaseOrderDetail.ProductID)
+	purchaseOrderDetail.Qty = purchaseOrderDetail.PoQty * purchaseOrderDetail.PoUOMQty
+	// purchaseOrderDetail.UomID = purchaseOrderDetail.PoUomID
+	purchaseOrderDetail.UomID = curProd.SmallUomID
+	purchaseOrderDetail.Price = (purchaseOrderDetail.PoPrice / float32(purchaseOrderDetail.PoUOMQty))
 	if err, errDesc := database.SavePurchaseOrderDetail(purchaseOrderDetail); err != constants.ERR_CODE_00 {
 		return err, errDesc
 	}
 
+	CalculateTotalPO(purchaseOrderDetail.PurchaseOrderID)
 	return constants.ERR_CODE_00, constants.ERR_CODE_00_MSG
 }
 
 // DeletePurchaseOrderDetailByID ...
 func (r PurchaseOrderDetailService) DeletePurchaseOrderDetailByID(purchaseOrderDetailID int64) (errCode string, errDesc string) {
 
+	po, _ := database.GetPurchaseOrderByPurchaseOrderDetailID(purchaseOrderDetailID)
 	if err, errDesc := database.DeletePurchaseOrderDetailById(purchaseOrderDetailID); err != constants.ERR_CODE_00 {
 		return err, errDesc
 	}
 
+	CalculateTotalPO(po.ID)
 	return constants.ERR_CODE_00, constants.ERR_CODE_00_MSG
 }
 

@@ -194,7 +194,7 @@ func AsyncQueryCountsReceives(db *gorm.DB, total *int, status int, orders *[]dbm
 
 	var err error
 	if strings.TrimSpace(param.StartDate) != "" && strings.TrimSpace(param.EndDate) != "" {
-		err = db.Model(&orders).Where(" ( (status = ?) or ( not ?) ) AND  COALESCE(receive_no, '') ilike ? AND order_date between ? and ?  ", status, byStatus, receiveNumber, param.StartDate, param.EndDate).Count(&*total).Error
+		err = db.Model(&orders).Where(" ( (status = ?) or ( not ?) ) AND  COALESCE(receive_no, '') ilike ? AND receive_date between ? and ?  ", status, byStatus, receiveNumber, param.StartDate, param.EndDate).Count(&*total).Error
 	} else {
 		err = db.Model(&orders).Where(" ( (status = ?) or ( not ?) ) AND COALESCE(receive_no,'') ilike ? ", status, byStatus, receiveNumber).Count(&*total).Error
 	}

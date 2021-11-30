@@ -1,14 +1,15 @@
 package controllers
 
 import (
-	"encoding/json"
-	"fmt"
-	"io/ioutil"
-	"net/http"
 	"distribution-system-be/models"
 	dbmodels "distribution-system-be/models/dbModels"
 	dto "distribution-system-be/models/dto"
 	"distribution-system-be/services"
+	"distribution-system-be/utils/util"
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
+	"net/http"
 	"strconv"
 
 	"distribution-system-be/constants"
@@ -112,6 +113,24 @@ func (h *UserController) UpdateUser(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, UserService.UpdateUser(&req))
+	return
+}
+
+// ResetUser ...
+func (h *UserController) ResetUser(c *gin.Context) {
+	res := models.ContentResponse{}
+
+	idUser := util.Atoi64(c.Param("iduser"))
+	if idUser == 0 {
+		logs.Info("error id")
+		res.ErrCode = constants.ERR_CODE_03
+		res.ErrCode = "Error get user id"
+		c.JSON(http.StatusBadRequest, res)
+		c.Abort()
+		return
+	}
+
+	c.JSON(http.StatusOK, UserService.ResetUser(idUser))
 	return
 }
 

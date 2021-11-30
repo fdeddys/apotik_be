@@ -126,7 +126,7 @@ func DeleteReturnReceiveDetailById(id int64) (errCode string, errDesc string) {
 	db := GetDbCon()
 	db.Debug().LogMode(true)
 
-	if r := db.Where("id = ? ", id).Delete(dbmodels.ReceiveDetail{}); r.Error != nil {
+	if r := db.Where("id = ? ", id).Delete(dbmodels.ReturnReceiveDetail{}); r.Error != nil {
 		errCode = constants.ERR_CODE_30
 		errDesc = r.Error.Error()
 	}

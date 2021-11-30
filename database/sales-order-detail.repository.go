@@ -68,7 +68,7 @@ func AsyncQueryCountsOrderDetails(db *gorm.DB, total *int, orderID int64, offset
 	// err = db.Model(&dbmodels.OrderDetail{}).Joins().Offset(offset).Where("order_id = ? AND  order_date between ? and ? ", orderId, param.StartDate, param.EndDate).Count(&*total).Error
 	// err = db.Model(&dbmodels.OrderDetail{}).Joins("left join 'order' on 'order'.id = order_detail.id").Offset(offset).Where("order_no = ? AND  order_date between ? and ? ", param.OrderNo, param.StartDate, param.EndDate).Count(&*total).Error
 	// } else {
-	err = db.Model(&dbmodels.SalesOrderDetail{}).Offset(offset).Where("sales_order_id = ?", orderID).Count(total).Error
+	err = db.Model(&dbmodels.SalesOrderDetail{}).Where("sales_order_id = ?", orderID).Count(total).Error
 	// err = db.Model(&dbmodels.OrderDetail{}).Joins("left join 'order' on 'order'.id = order_detail.id").Offset(offset).Where("order_no = ?", orderID).Count(total).Error
 	// }
 

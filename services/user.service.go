@@ -168,3 +168,9 @@ func (h UserService) UpdateUser(user *dbmodels.User) models.NoContentResponse {
 
 	return res
 }
+
+// ResetUser ...
+func (h UserService) ResetUser(idUser int64) models.ContentResponse {
+
+	return repository.ResetPassword(idUser)
+}

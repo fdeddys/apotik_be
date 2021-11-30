@@ -26,7 +26,9 @@ type Receive struct {
 	// 20 = approve
 	// 30 = reject
 	// 40 = paid
-	Status       int8      `json:"status" gorm:"column:status"`
+	Status int8 `json:"status" gorm:"column:status"`
+
+	IsPaid       bool      `json:"isPaid" gorm:"column:is_paid"`
 	LastUpdateBy string    `json:"lastUpdateBy" gorm:"column:last_update_by"`
 	LastUpdate   time.Time `json:"lastUpdate" gorm:"column:last_update"`
 }

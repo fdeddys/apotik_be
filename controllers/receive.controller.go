@@ -68,10 +68,11 @@ func (r *ReceiveController) FilterData(c *gin.Context) {
 	temp, _ := json.Marshal(req)
 	log.Println("searchName-->", string(temp))
 
-	status := -1
-	if intVal, errconv := strconv.Atoi(req.Status); errconv == nil {
-		status = intVal
-	}
+	// status := -1
+	// if intVal, errconv := strconv.Atoi(req.Status); errconv == nil {
+	// 	status = intVal
+	// }
+	status := req.Status
 
 	res = receiveService.GetDataPage(req, page, count, status)
 
@@ -233,6 +234,63 @@ func (r *ReceiveController) RemovePO(c *gin.Context) {
 	res.ErrCode = errCode
 	// res.OrderNo = newNumb
 	c.JSON(http.StatusOK, res)
+
+	return
+}
+
+// Approve ...
+func (s *ReceiveController) Reject(c *gin.Context) {
+
+	req := dbmodels.Receive{}
+	body := c.Request.Body
+	res := dto.ReceiveDetailResult{}
+	dataBodyReq, _ := ioutil.ReadAll(body)
+
+	if err := json.Unmarshal(dataBodyReq, &req); err != nil {
+		fmt.Println("Error, unmarshal body Request to Sales Order stuct ", dataBodyReq)
+		res.ErrDesc = constants.ERR_CODE_03_MSG
+		res.ErrCode = constants.ERR_CODE_03
+		c.JSON(http.StatusBadRequest, res)
+		c.Abort()
+		return
+	}
+
+	errCode, errMsg := receiveService.RejectReceive(&req)
+	res.ErrDesc = errMsg
+	res.ErrCode = errCode
+	c.JSON(http.StatusOK, res)
+
+	return
+}
+
+func (r *ReceiveController) Export(c *gin.Context) {
+
+	req := dto.FilterReceive{}
+
+	body := c.Request.Body
+	dataBodyReq, _ := ioutil.ReadAll(body)
+
+	if err := json.Unmarshal(dataBodyReq, &req); err != nil {
+		fmt.Println("Error, body Request ", err)
+		c.JSON(http.StatusBadRequest, "Failed un marshal")
+		c.Abort()
+		return
+	}
+
+	// temp, _ := json.Marshal(req)
+
+	success, filename := receiveService.ExportReceive(req, req.Status)
+
+	if success {
+		header := c.Writer.Header()
+		header["Content-type"] = []string{"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"}
+		header["Content-Disposition"] = []string{"attachment; filename=" + filename}
+		file, _ := os.Open(filename)
+
+		io.Copy(c.Writer, file)
+
+	}
+	c.JSON(http.StatusOK, "Failed !")
 
 	return
 }

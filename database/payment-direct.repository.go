@@ -94,6 +94,7 @@ func GetPaymentDirectPage(param dto.FilterPaymentDirect, offset, limit int) ([]d
 
 	wg.Done()
 
+	fmt.Println("total =>", *&total)
 	if resErrQuery != nil {
 		log.Println("errr-->", resErrCount)
 		return paymentDirects, 0, resErrCount
@@ -141,7 +142,7 @@ func asyncQuerysPaymentDirect(db *gorm.DB, offset int, limit int, paymentDirects
 		" 	from sales_order so "+
 		" 	left join payment_order po on po.sales_order_id = so.id  "+
 		" 	left join payment p on po.payment_id = p.id  "+
-		" where so.status in ('20','40', '50') "+
+		" where so.status in ('20','40', '50', '60') "+
 		" 	and so.is_cash "+
 		"   and so.order_date between ? and ? "+
 		" 	and so.sales_order_no like ?  "+
@@ -182,7 +183,7 @@ func asyncQueryCountsPaymentDirect(db *gorm.DB, total *int, param dto.FilterPaym
 	dateStart := param.StartDate + " 00:00:00.000"
 	dateEnd := param.EndDate + " 23:59:59.999"
 
-	row := db.Raw("count(*) "+
+	row := db.Raw("select count(*) "+
 		" 	from sales_order so "+
 		" 	left join payment_order po on po.sales_order_id = so.id  "+
 		" 	left join payment p on po.payment_id = p.id  "+
@@ -193,8 +194,9 @@ func asyncQueryCountsPaymentDirect(db *gorm.DB, total *int, param dto.FilterPaym
 		" 	and ( p.payment_no like ? or ( not ? )) "+
 		" 	and ( p.status = ?         or ( not ? )) ", dateStart, dateEnd,
 		salesOrderNo, paymentNo, isSearchPaymentNo, param.PaymentStatus, isSearchPaymentStatus).Row()
-	row.Scan(&total)
+	row.Scan(total)
 
+	fmt.Println("total rec =", *total)
 	resChan <- nil
 }
 

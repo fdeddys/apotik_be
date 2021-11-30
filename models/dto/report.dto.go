@@ -3,7 +3,7 @@ package dto
 type ReportPaymentCash struct {
 	PaymentTypeName string
 	PaymentNo       string
-	PaymentDate     string
+	PaymentDate1    string
 	SalesOrderNo    string
 	OrderDate       string
 	TotalOrder      int64

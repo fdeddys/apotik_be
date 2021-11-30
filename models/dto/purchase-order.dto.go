@@ -8,6 +8,13 @@ type FilterPurchaseOrder struct {
 	SupplierId          int64  `json:"supplierId"`
 }
 
+// FilterBatchExpired ...
+type FilterBatchExpired struct {
+	ExpiredStart string `json:"expiredStart"`
+	ExpiredEnd   string `json:"expiredEnd"`
+	Batch        string `json:"batch"`
+}
+
 // FilterReceiveDetail ...
 type FilterPurchaseOrderDetail struct {
 	PurchaseOrderNumber string `json:"purchaseOrderNumber"`

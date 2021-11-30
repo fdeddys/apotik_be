@@ -18,6 +18,9 @@ type ReceiveDetail struct {
 	UomID int64  `json:"uomId" gorm:"column:uom"`
 	UOM   Lookup `json:"uom" gorm:"foreignkey:id;association_foreignkey:UomID;association_autoupdate:false;association_autocreate:false"`
 
+	BatchNo string `json:"batchNo" gorm:"column:batch_no"`
+	Ed      string `json:"ed" gorm:"column:ed"`
+
 	LastUpdateBy string    `json:"lastUpdateBy" gorm:"column:last_update_by"`
 	LastUpdate   time.Time `json:"lastUpdate" gorm:"column:last_update"`
 }

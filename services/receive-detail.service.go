@@ -51,7 +51,7 @@ func (r ReceiveDetailService) UpdateReceiveDetail(receiveDetails *[]dbmodels.Rec
 
 	for _, receiveDetail := range *receiveDetails {
 		// fmt.Println(receiveDetail.ID, "  ", receiveDetail.Qty, " ", receiveDetail.Price, " ", receiveDetail.Disc1)
-		if err, errDesc := database.UpdateReceiveDetail(receiveDetail.ID, receiveDetail.Qty, receiveDetail.Price, receiveDetail.Disc1); err != constants.ERR_CODE_00 {
+		if err, errDesc := database.UpdateReceiveDetail(receiveDetail.ID, receiveDetail.Qty, receiveDetail.Price, receiveDetail.Disc1, receiveDetail.BatchNo, receiveDetail.Ed); err != constants.ERR_CODE_00 {
 			return err, errDesc
 		}
 	}
@@ -71,4 +71,24 @@ func (r ReceiveDetailService) DeleteReceiveDetailByID(receiveDetailID int64) (er
 	}
 
 	return constants.ERR_CODE_00, constants.ERR_CODE_00_MSG
+}
+
+// GetDataPurchaseOrderDetailPage ...
+func (r ReceiveDetailService) GetDataBatchExpired(param dto.FilterBatchExpired, page int, limit int) models.ResponsePagination {
+	var res models.ResponsePagination
+
+	offset := (page - 1) * limit
+	data, totalData, err := database.GetReceiveOrderDetailBatchExpiredPage(param, offset, limit)
+
+	if err != nil {
+		res.Error = err.Error()
+		return res
+	}
+
+	res.Contents = data
+	res.TotalRow = totalData
+	res.Page = page
+	res.Count = limit
+
+	return res
 }

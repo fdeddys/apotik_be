@@ -4,6 +4,7 @@ import (
 	"distribution-system-be/database"
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/astaxie/beego"
 	"github.com/leekchan/accounting"
@@ -15,6 +16,8 @@ type InvHdrInfo struct {
 	CustName  string
 	TransAt   string
 	SourceDoc string
+	Address   string
+	City      string
 }
 
 type DataDetail struct {
@@ -133,12 +136,12 @@ func GenerateSalesOrderReport(orderId int64, reportType string) {
 	}
 	fmt.Println("=============")
 	// setFont(&pdf, 12)
-	setHeader(&pdf)
+	setHeader(&pdf, reportType)
 	pdf.Br(20)
 
-	setDetail(&pdf, dataDetails)
+	setDetail(&pdf, dataDetails, reportType)
 	setSummary(&pdf)
-	setSign(&pdf, "Admin", "Salesman", "Customer")
+	setSign(&pdf, "Admin", "", "Cashier")
 	// 595, H: 842
 	// pdf.SetFont("open-sans", "", 14)
 
@@ -173,6 +176,7 @@ func fillDataDetail(orderID int64) []DataDetail {
 		order.Customer.Name,
 		order.OrderDate.Format("02-01-2006"),
 		order.SalesOrderNo,
+		"", "",
 	)
 	// tdk blh kosong
 	// per halaman max 25 item detail
@@ -214,15 +218,18 @@ func fillDataDetail(orderID int64) []DataDetail {
 // 	invInfo.SourceDoc = order.SalesOrderNo
 // }
 
-func fillDataCustomer(custCode, custName, transDate, orderNo string) {
+func fillDataCustomer(custCode, custName, transDate, orderNo, address, city string) {
 	invInfo.CustCode = custCode
 	invInfo.CustName = custName
 	invInfo.TransAt = transDate
 	invInfo.SourceDoc = orderNo
+	invInfo.Address = address
+	invInfo.City = city
 }
 
-func setHeader(pdf *gopdf.GoPdf) {
+func setHeader(pdf *gopdf.GoPdf, poType string) {
 
+	fmt.Println("set header", title)
 	showLogo(pdf)
 	showCompany(pdf)
 	space(pdf)
@@ -236,6 +243,7 @@ func showInvNo(pdf *gopdf.GoPdf) {
 	pdf.SetY(30)
 	pdf.SetX(450)
 	setFontBold(pdf, 10)
+	fmt.Println("set inv no", title)
 	pdf.Text(title)
 
 	space(pdf)
@@ -247,14 +255,15 @@ func showInvNo(pdf *gopdf.GoPdf) {
 	space(pdf)
 	setFont(pdf, 12)
 	pdf.SetX(450)
-	pdf.Text(invoiceNo)
+	pdf.Text("")
+	// pdf.Text(invoiceNo)
 
 }
 
 func showCompany(pdf *gopdf.GoPdf) {
 
 	line1 := beego.AppConfig.DefaultString("report.line1", "")
-	// line2 := beego.AppConfig.DefaultString("report.line2", "")
+	line2 := beego.AppConfig.DefaultString("report.line2", "")
 	line3 := beego.AppConfig.DefaultString("report.line3", "")
 	line4 := beego.AppConfig.DefaultString("report.line4", "")
 	line5 := beego.AppConfig.DefaultString("report.line5", "")
@@ -264,8 +273,14 @@ func showCompany(pdf *gopdf.GoPdf) {
 
 	setFontBold(pdf, 12)
 	pdf.SetX(200)
+	pdf.SetTextColor(0, 0, 255)
 	pdf.Text(line1)
 
+	pdf.SetX(248)
+	pdf.SetTextColor(255, 0, 0)
+	pdf.Text(line2)
+
+	pdf.SetTextColor(0, 0, 0)
 	// space(pdf)
 	// pdf.SetX(200)
 	// pdf.Text(line2)
@@ -300,17 +315,27 @@ func showLogo(pdf *gopdf.GoPdf) {
 // param [0] = tipe report
 // ex: SO, MT
 func setDetail(pdf *gopdf.GoPdf, data []DataDetail, param ...string) {
-
+	isPo := false
 	setPageNumb(pdf, curPage)
 	pdf.SetX(20)
 	pdf.SetY(spaceLen * 8)
 
+	fmt.Println("set detail", param[0])
 	if len(param) > 0 {
-		switch param[0] {
+		switch strings.TrimSpace(param[0]) {
 		case "mt":
 			showWarehouse(pdf)
 		case "so":
 			showCustomer(pdf)
+		case "po":
+			showSupplier(pdf, "PO Number")
+			isPo = true
+		case "invoice":
+			showCustomerInvoice(pdf)
+			// isPo = true
+		case "rr":
+			fmt.Println("set supplier rr")
+			showSupplier(pdf, "Number")
 		default:
 			showCustomer(pdf)
 		}
@@ -319,7 +344,11 @@ func setDetail(pdf *gopdf.GoPdf, data []DataDetail, param ...string) {
 	}
 
 	space(pdf)
-	showHeaderTable(pdf)
+	if isPo {
+		showHeaderTablePO(pdf)
+	} else {
+		showHeaderTable(pdf)
+	}
 
 	fmt.Println("Panjang array ", len(data), "] ")
 	fmt.Println("Total rec => set detail => ", totalRec, "] ")
@@ -329,7 +358,11 @@ func setDetail(pdf *gopdf.GoPdf, data []DataDetail, param ...string) {
 		for i := 1; i <= 25; i++ {
 			fmt.Println("idx ke [", i, "]", data[number])
 			space(pdf)
-			showData(pdf, fmt.Sprintf("%v", number), data[number].Item, data[number].Unit, data[number].Quantity, data[number].Price, data[number].Total)
+			if isPo {
+				showDataPO(pdf, fmt.Sprintf("%v", number), data[number].Item, data[number].Unit, data[number].Quantity)
+			} else {
+				showData(pdf, fmt.Sprintf("%v", number), data[number].Item, data[number].Unit, data[number].Quantity, data[number].Price, data[number].Total)
+			}
 			number++
 			if number >= totalRec {
 				break
@@ -349,8 +382,8 @@ func setDetail(pdf *gopdf.GoPdf, data []DataDetail, param ...string) {
 		fmt.Println("NEW page")
 		curPage++
 		pdf.AddPage()
-		setHeader(pdf)
-		setDetail(pdf, data)
+		setHeader(pdf, param[0])
+		setDetail(pdf, data, param[0])
 	}
 }
 
@@ -491,6 +524,43 @@ func showData(pdf *gopdf.GoPdf, no, item, unit string, qty, price, total int64) 
 	pdf.Text(ac.FormatMoney(total))
 }
 
+func showHeaderTablePO(pdf *gopdf.GoPdf) {
+
+	showLine(pdf)
+	space(pdf)
+	setFontBold(pdf, 10)
+	pdf.SetX(tblCol1 + 20)
+	pdf.Text("#")
+
+	pdf.SetX(tblCol2 + 10)
+	pdf.Text("Item")
+
+	pdf.SetX(tblCol3 + 100)
+	pdf.Text("Quantity")
+
+	pdf.SetX(tblCol4 + 120)
+	pdf.Text("Unit")
+
+	space(pdf)
+	showLine(pdf)
+}
+func showDataPO(pdf *gopdf.GoPdf, no, item, unit string, qty int64) {
+
+	setFont(pdf, 10)
+	pdf.SetX(tblCol1 + 20)
+	pdf.Text(no)
+
+	pdf.SetX(tblCol2 + 10)
+	pdf.Text(item)
+
+	pdf.SetX(tblCol3 + 110)
+	pdf.Text(fmt.Sprintf("%v", qty))
+
+	pdf.SetX(tblCol4 + 120)
+	pdf.Text(unit)
+
+}
+
 func showDataX(pdf *gopdf.GoPdf, no, item, unit string, qty, price, total int64) {
 
 	setFont(pdf, 10)
@@ -549,6 +619,42 @@ func showCustomer(pdf *gopdf.GoPdf) {
 
 }
 
+func showCustomerInvoice(pdf *gopdf.GoPdf) {
+	// , code, name, transDate, ssNo string
+	// space(pdf)
+	setFont(pdf, 10)
+
+	pdf.SetX(25)
+	// pdf.Text("Supplier ")
+	// pdf.SetX(100)
+	// pdf.Text(":")
+	// pdf.SetX(110)
+	pdf.Text(invInfo.CustName)
+
+	pdf.SetX(spaceCustomerInfo)
+	pdf.Text("Order Date ")
+	pdf.SetX(spaceTitik)
+	pdf.Text(":")
+	pdf.SetX(spaceValue)
+	pdf.Text(invInfo.TransAt)
+
+	space(pdf)
+	pdf.SetX(spaceCustomerInfo1)
+	pdf.Text("")
+	pdf.SetX(spaceTitik1)
+	pdf.Text("")
+	pdf.SetX(spaceValue1)
+	pdf.Text("")
+
+	pdf.SetX(spaceCustomerInfo)
+	pdf.Text("Invoice Number ")
+	pdf.SetX(spaceTitik)
+	pdf.Text(":")
+	pdf.SetX(spaceValue)
+	pdf.Text(invoiceNo)
+
+}
+
 func showWarehouse(pdf *gopdf.GoPdf) {
 	// , code, name, transDate, ssNo string
 	space(pdf)
@@ -593,7 +699,7 @@ func setSign(pdf *gopdf.GoPdf, sign1, sign2, sign3 string) {
 
 	xSign1 := tblCol1
 	xSign2 := tblCol1 + 200
-	xSign3 := tblCol1 + 400
+	xSign3 := tblCol1 + 380
 	maxLengLine := 100
 
 	xLengSign1 := xSign1 + float64(maxLengLine)
@@ -638,9 +744,15 @@ func setSign(pdf *gopdf.GoPdf, sign1, sign2, sign3 string) {
 	if sign3 != "" {
 		pdf.SetX(xSign3)
 		pdf.Line(xSign3, pdf.GetY(), xLengSign3, pdf.GetY())
-		space(pdf)
-		pdf.SetX(xSign3)
-		pdf.Text(getApoteker())
+
+		if sign3 == "Apoteker" {
+			space(pdf)
+			pdf.SetX(xSign3)
+			pdf.Text(apoteker)
+			space(pdf)
+			pdf.SetX(xSign3)
+			pdf.Text(sipa)
+		}
 	}
 
 }

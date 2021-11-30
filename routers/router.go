@@ -1,6 +1,7 @@
 package routers
 
 import (
+	"distribution-system-be/constants"
 	"distribution-system-be/controllers"
 	"distribution-system-be/models"
 	dto "distribution-system-be/models/dto"
@@ -80,16 +81,25 @@ func InitRouter() *gin.Engine {
 
 	ReportPaymentCashController := new(controllers.ReportPaymentCashController)
 
-	api := r.Group("/api/user")
-	api.POST("/filter/page/:page/count/:count", UserController.GetUser)
-	api.POST("/", UserController.SaveDataUser)
-	api.PUT("/", UserController.UpdateUser)
+	ReportMasterController := new(controllers.ReportMasterController)
+
+	PaymentSupplierController := new(controllers.PaymentSupplierController)
+	PaymentSupplierDetailController := new(controllers.PaymentSupplierDetailController)
 
 	AuthController := new(controllers.AuthController)
+
+	ParameterController := new(controllers.ParameterController)
+
+	api := r.Group("/api/user")
+	api.POST("/filter/page/:page/count/:count", UserController.GetUser)
+	api.POST("", UserController.SaveDataUser)
+	api.PUT("", UserController.UpdateUser)
+	api.POST("/reset/:iduser", cekToken, UserController.ResetUser)
+	api.GET("/current-user", AuthController.GetCurrPass)
+
 	api = r.Group("/auth")
 	api.POST("/login", AuthController.Login)
-	api.GET("/get_cur_user", AuthController.GetCurrPass)
-	api.POST("/change_pass", AuthController.ChangePass)
+	api.POST("/update-password", AuthController.ChangePass)
 
 	api = r.Group("/api/customer")
 	api.POST("/page/:page/count/:count", CustomerController.FilterDataCustomer)
@@ -196,21 +206,32 @@ func InitRouter() *gin.Engine {
 	api.GET("/:id", cekToken, ReceiveController.GetByReceiveId)
 	api.POST("", cekToken, ReceiveController.Save)
 	api.POST("/byPO", cekToken, ReceiveController.SaveByPO)
+	api.POST("/reject", cekToken, ReceiveController.Reject)
 	api.POST("/remove-PO", cekToken, ReceiveController.RemovePO)
 	api.POST("/approve", cekToken, ReceiveController.Approve)
 	api.POST("/print/:id", cekToken, ReceiveController.PrintPreview)
+	api.POST("/export", cekToken, ReceiveController.Export)
 
 	api = r.Group("/api/receive-detail")
 	api.POST("/page/:page/count/:count", ReceiveDetailController.GetDetail)
 	api.POST("", cekToken, ReceiveDetailController.Save)
 	api.POST("/updateDetail", cekToken, ReceiveDetailController.UpdateDetail)
 	api.DELETE("/:id", cekToken, ReceiveDetailController.DeleteByID)
+	api.POST("/search-batch-expired/page/:page/count/:count", ReceiveDetailController.SearchBatchExpired)
 
 	// RETURN RECEIVE
 	api = r.Group("/api/return-receive")
 	api.GET("/:id", cekToken, RetusnReceiveController.GetByReturnReceiveId)
 	api.POST("/page/:page/count/:count", cekToken, RetusnReceiveController.FilterData)
 	api.POST("", cekToken, RetusnReceiveController.Save)
+	api.POST("/approve", cekToken, RetusnReceiveController.Approve)
+	api.POST("/reject", cekToken, RetusnReceiveController.Reject)
+	api.POST("/print/:id", cekToken, RetusnReceiveController.PrintReturn)
+
+	// RETURN RECEIVE DETAIL
+	api = r.Group("/api/return-receive-detail")
+	api.POST("/page/:page/count/:count", cekToken, ReturnReceiveDetailController.GetDetail)
+	api.POST("", cekToken, ReturnReceiveDetailController.Save)
 	api.DELETE("/:id", cekToken, ReturnReceiveDetailController.DeleteById)
 
 	// ADJUSTMENT
@@ -303,8 +324,9 @@ func InitRouter() *gin.Engine {
 	api.GET("/:id", cekToken, PurchaseOrderController.GetByPurchaseOrderId)
 	api.POST("", cekToken, PurchaseOrderController.Save)
 	api.POST("/approve", cekToken, PurchaseOrderController.Approve)
-	api.POST("/reject", cekToken, PurchaseOrderController.Reject)
+	api.POST("/reject/:id", cekToken, PurchaseOrderController.Reject)
 	api.POST("/print/:id", cekToken, PurchaseOrderController.PrintPreview)
+	api.POST("/export", PurchaseOrderController.Export)
 
 	api = r.Group("/api/purchase-order-detail")
 	api.POST("/page/:page/count/:count", PurchaseOrderDetailController.GetDetail)
@@ -329,10 +351,29 @@ func InitRouter() *gin.Engine {
 	api.DELETE("/:id", cekToken, StockOpnameDetailController.DeleteById)
 	api.POST("/updateItemQty", cekToken, StockOpnameDetailController.UpdateQty)
 
+	// PAYMENT
+	api = r.Group("/api/payment-supplier")
+	api.POST("/page/:page/count/:count", cekToken, PaymentSupplierController.FilterData)
+	api.GET("/:id", cekToken, PaymentSupplierController.GetByPaymentId)
+	// api.POST("/salesOrderId/:salesOrderId", cekToken, PaymentController.GetBySalesOrderID)
+	api.POST("", cekToken, PaymentSupplierController.Save)
+	api.POST("/approve", cekToken, PaymentSupplierController.Approve)
+	// api.POST("/print/:id", cekToken, PaymentController.PrintPayment)
+
+	api = r.Group("/api/payment-supplier-detail")
+	api.POST("/page/:page/count/:count", cekToken, PaymentSupplierDetailController.GetDetail)
+	api.POST("", cekToken, PaymentSupplierDetailController.Save)
+	api.DELETE("/:id", cekToken, PaymentSupplierDetailController.DeleteById)
+
 	// REPORT
 	api = r.Group("/api/report")
-	api.POST("/payment-cash", ReportPaymentCashController.DownloadReportPayment)
-	api.POST("/payment-sales", ReportPaymentCashController.DownloadReportSales)
+	api.POST("/payment-cash", cekToken, ReportPaymentCashController.DownloadReportPayment)
+	api.POST("/payment-sales", cekToken, ReportPaymentCashController.DownloadReportSales)
+	api.GET("/master-barang", cekToken, ReportMasterController.DownloadReportMasterProduct)
+
+	// PARAMETER
+	api = r.Group("/api/parameter")
+	api.GET("/byname/:param-name", ParameterController.GetByName)
 
 	// -- END REPORT
 
@@ -354,6 +395,15 @@ func InitRouter() *gin.Engine {
 	// Dashboard
 	dashboard := r.Group("/dashboard")
 	dashboard.POST("/order-qty", DashboardController.FilterDataDashboard)
+
+	apiVersion := r.Group("/api/version")
+	apiVersion.GET("", func(c *gin.Context) {
+
+		c.JSON(http.StatusOK, gin.H{
+			"date":    constants.VERSION_DATE,
+			"version": constants.VERSION,
+		})
+	})
 
 	return r
 

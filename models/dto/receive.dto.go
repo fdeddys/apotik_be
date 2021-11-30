@@ -4,7 +4,7 @@ package dto
 type FilterReceive struct {
 	StartDate     string `json:"startDate"`
 	EndDate       string `json:"endDate"`
-	Status        string `json:"status"`
+	Status        int    `json:"status"`
 	ReceiveNumber string `json:"receiveNumber"`
 }
 

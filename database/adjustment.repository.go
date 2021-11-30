@@ -99,7 +99,7 @@ func SaveAdjustmentApprove(adjustment *dbmodels.Adjustment) (errCode string, err
 	adjustment.Total = total
 	adjustment.LastUpdateBy = dto.CurrUser
 	adjustment.LastUpdate = time.Now()
-	adjustment.Status = 10
+	adjustment.Status = 20
 	r := db.Save(&adjustment)
 	if r.Error != nil {
 		errCode = constants.ERR_CODE_80

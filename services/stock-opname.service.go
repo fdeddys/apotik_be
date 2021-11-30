@@ -118,6 +118,7 @@ func exportToCSV(datas []dto.TemplateReportStockOpname) {
 	}()
 
 	csvwriter := csv.NewWriter(csvFile)
+	csvwriter.Comma = ';'
 	result := util.ToSliceData(datas)
 
 	for _, data := range result {

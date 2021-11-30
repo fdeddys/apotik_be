@@ -194,7 +194,7 @@ func (s *ReturnReceiveController) PrintReturn(c *gin.Context) {
 	header["Content-type"] = []string{"application/x-pdf"}
 	header["Content-Disposition"] = []string{"attachment; filename=tes.pdf"}
 
-	file, _ := os.Open("return-so.pdf")
+	file, _ := os.Open("return-receive.pdf")
 
 	io.Copy(c.Writer, file)
 	return

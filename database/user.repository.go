@@ -6,6 +6,7 @@ import (
 	"distribution-system-be/models"
 	dbmodels "distribution-system-be/models/dbModels"
 	dto "distribution-system-be/models/dto"
+	"distribution-system-be/utils/util"
 	"encoding/hex"
 	"fmt"
 	"log"
@@ -166,13 +167,32 @@ func SaveUser(user dbmodels.User) models.ContentResponse {
 	fmt.Printf("decrypt password =>%s\n", dec)
 	hashPassword := sha256.Sum256([]byte(user.UserName + pass))
 	user.Password = hex.EncodeToString(hashPassword[:])
-
+	user.Status = 1
 	fmt.Printf("hash password =>%s\n", hex.EncodeToString(hashPassword[:]))
 
 	if r := db.Save(&user); r.Error != nil {
 		res.ErrCode = constants.ERR_CODE_51
 		res.ErrDesc = constants.ERR_CODE_51_MSG
 		return res
+	}
+
+	var roleUser dbmodels.RoleUser
+
+	err := db.Where("user_id = ?", user.ID).First(&roleUser).Error
+
+	if err == gorm.ErrRecordNotFound {
+		fmt.Println("inserted new")
+		roleUser.UserID = user.ID
+		roleUser.RoleID = user.RoleID
+		roleUser.Status = 1
+		roleUser.LastUpdate = util.GetCurrDate()
+		roleUser.LastUpdateBy = dto.CurrUser
+		db.Save(&roleUser)
+	} else {
+		fmt.Println("Updated")
+		db.Model(&dbmodels.RoleUser{}).Where("user_id = ?", user.ID).Updates(dbmodels.RoleUser{RoleID: user.RoleID, LastUpdate: util.GetCurrDate(), LastUpdateBy: dto.CurrUser})
+
+		// db.Update(&roleUser)
 	}
 
 	// byt := []byte(`{"enc_pass":"` + enc + `"}`)
@@ -182,7 +202,8 @@ func SaveUser(user dbmodels.User) models.ContentResponse {
 	// }
 	// fmt.Println(dat)
 
-	user.Password = enc
+	user.Email = pass
+	// user.CurPass = enc
 	// user.LastName = pass
 	res.ErrCode = constants.ERR_CODE_00
 	res.ErrDesc = constants.ERR_CODE_00_MSG
@@ -204,11 +225,12 @@ func UpdateUser(updateduser dbmodels.User) models.NoContentResponse {
 		return res
 	}
 
+	fmt.Println("isi file utk update ==>", updateduser)
 	user.UserName = updateduser.UserName
 	user.Email = updateduser.Email
 	user.LastUpdateBy = updateduser.LastUpdateBy
 	user.LastUpdate = updateduser.LastUpdate
-	user.SupplierCode = updateduser.SupplierCode
+	// user.SupplierCode = updateduser.SupplierCode
 	user.FirstName = updateduser.FirstName
 	user.LastName = updateduser.LastName
 	user.IsAdmin = updateduser.IsAdmin
@@ -226,4 +248,38 @@ func UpdateUser(updateduser dbmodels.User) models.NoContentResponse {
 	res.ErrDesc = constants.ERR_CODE_00_MSG
 
 	return res
+}
+
+//ResetPassword ..
+func ResetPassword(updateduserId int64) models.ContentResponse {
+	var res models.ContentResponse
+
+	db := GetDbCon()
+	db.Debug().LogMode(true)
+
+	var user dbmodels.User
+	err := db.Model(&dbmodels.User{}).Where("id=?", updateduserId).First(&user).Error
+	if err != nil {
+		res.ErrCode = constants.ERR_CODE_51
+		res.ErrDesc = constants.ERR_CODE_51_MSG
+		return res
+	}
+
+	pass := GeneratePassword(8)
+	hashPassword := sha256.Sum256([]byte(user.UserName + pass))
+	user.Password = hex.EncodeToString(hashPassword[:])
+
+	err2 := db.Save(&user).Error
+	if err2 != nil {
+		res.ErrCode = constants.ERR_CODE_03
+		res.ErrDesc = constants.ERR_CODE_03_MSG
+		return res
+	}
+
+	res.ErrCode = constants.ERR_CODE_00
+	res.ErrDesc = constants.ERR_CODE_00_MSG
+	res.Contents = pass
+	// user.Password = pass
+	return res
+
 }

@@ -1,7 +1,6 @@
 package report
 
 import (
-	"distribution-system-be/constants"
 	"distribution-system-be/database"
 	"fmt"
 	"log"
@@ -12,16 +11,44 @@ import (
 
 var (
 	purchaseOrderNumber string
+	apoteker            string
+	sia                 string
+	sipa                string
 )
 
-func getApoteker() string {
+func getParamValue() {
 
-	parameter, errCode, _, _ := database.GetParameterByNama(constants.PARAMETER_APOTEKER_NAME)
-	if errCode != constants.ERR_CODE_00 {
-		return ""
+	// parameter, errCode, _, _ := database.GetParameterByNama(constants.PARAMETER_APOTEKER_NAME)
+	// if errCode != constants.ERR_CODE_00 {
+	// 	fmt.Println("Parameter not set")
+	// 	return
+	// }
+	apoteker = "???"
+	sia = "??"
+	sipa = "??"
+	parameters, err := database.GetParameter()
+	if err != nil {
+		return
 	}
 
-	return parameter.Value
+	for _, parameter := range parameters {
+		if parameter.Name == "SIA" {
+			sia = parameter.Value
+		}
+		if parameter.Name == "SIPA" {
+			sipa = parameter.Value
+			fmt.Println("sipa =", sipa)
+		}
+		if parameter.Name == "apoteker" {
+			apoteker = parameter.Value
+		}
+
+	}
+
+}
+
+func init() {
+	getParamValue()
 }
 
 func GeneratePurchaseOrderReport(purchaseOrderID int64) {
@@ -76,11 +103,11 @@ func GeneratePurchaseOrderReport(purchaseOrderID int64) {
 	}
 	fmt.Println("=============")
 	// setFont(&pdf, 12)
-	setHeader(&pdf)
+	setHeader(&pdf, "po")
 	pdf.Br(20)
 
-	setDetail(&pdf, dataDetails, "")
-	setSummary(&pdf)
+	setDetail(&pdf, dataDetails, "po")
+	// setSummary(&pdf)
 	setSign(&pdf, "", "", "Apoteker")
 
 	pdf.WritePdf("purchase-order.pdf")
@@ -93,7 +120,7 @@ func fillDataDetailPurchaseOrder(purchaseOrderID int64) []DataDetail {
 	if err != nil {
 		fmt.Println(err)
 	}
-	fmt.Println(purchaseOrder)
+	fmt.Println("Header : ", purchaseOrder)
 
 	purchaseOrderNumber = purchaseOrder.PurchaserNo
 	// purchaseOrderNo = purchaseOrder.PurchaserNo
@@ -102,11 +129,13 @@ func fillDataDetailPurchaseOrder(purchaseOrderID int64) []DataDetail {
 
 	fmt.Println("Details : ", purchaseOrderDetails)
 
-	go fillDataCustomer(
+	fillDataCustomer(
 		purchaseOrder.Supplier.Code,
 		purchaseOrder.Supplier.Name,
 		purchaseOrder.PurchaserDate.Format("02-01-2006"),
 		purchaseOrder.PurchaserNo,
+		purchaseOrder.Supplier.Alamat,
+		purchaseOrder.Supplier.Kota,
 	)
 	// tdk blh kosong
 	// per halaman max 25 item detail
@@ -119,9 +148,11 @@ func fillDataDetailPurchaseOrder(purchaseOrderID int64) []DataDetail {
 	grandTotal = 0
 	for i, detail := range purchaseOrderDetails {
 		data.Item = detail.Product.Name
-		data.Quantity = int64(detail.Qty)
-		data.Unit = detail.UOM.Name
-		data.Price = int64(detail.Price)
+		data.Quantity = int64(detail.PoQty)
+		// data.Unit = detail.UOM.Name
+		data.Unit = detail.PoUOM.Name
+		// data.Price = int64(detail.Price)
+		data.Price = int64(detail.PoPrice)
 		total := data.Price * data.Quantity
 		data.Total = int64(detail.Price) * int64(detail.Qty)
 		subTotal += total
@@ -131,7 +162,10 @@ func fillDataDetailPurchaseOrder(purchaseOrderID int64) []DataDetail {
 	totalRec = len(res)
 	fmt.Println("Jumlah record [fill] =>", totalRec)
 
-	tax = subTotal / 10
+	tax = 0
+	if purchaseOrder.Tax > 0 {
+		tax = subTotal * int64(purchaseOrder.Tax) / 100
+	}
 	grandTotal = subTotal + tax
 
 	return res

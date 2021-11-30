@@ -37,17 +37,29 @@ func (s *ReportPaymentCashController) DownloadReportPayment(c *gin.Context) {
 		return
 	}
 
-	filename := reportPaymentService.GenerateReportPaymentCash(req)
+	filename, success := reportPaymentService.GenerateReportPaymentCash(req)
+	if success {
+		fmt.Println("download PDF ")
+		header := c.Writer.Header()
+		header["Content-type"] = []string{"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"}
+		header["Content-Disposition"] = []string{"attachment; filename=" + filename}
 
-	header := c.Writer.Header()
-	header["Content-type"] = []string{"text/csv"}
-	header["Content-Disposition"] = []string{"attachment; filename=report.csv"}
+		file, _ := os.Open(filename)
 
-	file, _ := os.Open(filename)
+		io.Copy(c.Writer, file)
+		os.Remove(filename)
+	}
+	c.JSON(http.StatusOK, "Success !")
 
-	io.Copy(c.Writer, file)
+	// header := c.Writer.Header()
+	// header["Content-type"] = []string{"text/csv"}
+	// header["Content-Disposition"] = []string{"attachment; filename=report.csv"}
 
-	os.Remove(filename)
+	// file, _ := os.Open(filename)
+
+	// io.Copy(c.Writer, file)
+
+	// os.Remove(filename)
 	return
 }
 
@@ -65,16 +77,28 @@ func (s *ReportPaymentCashController) DownloadReportSales(c *gin.Context) {
 		return
 	}
 
-	filename := reportSalesService.GenerateReport(req)
+	filename, success := reportSalesService.GenerateReport(req)
 
-	header := c.Writer.Header()
-	header["Content-type"] = []string{"text/csv"}
-	header["Content-Disposition"] = []string{"attachment; filename=report.csv"}
+	if success {
+		fmt.Println("download ")
+		header := c.Writer.Header()
+		header["Content-type"] = []string{"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"}
+		header["Content-Disposition"] = []string{"attachment; filename=" + filename}
 
-	file, _ := os.Open(filename)
+		file, _ := os.Open(filename)
 
-	io.Copy(c.Writer, file)
+		io.Copy(c.Writer, file)
+	}
+	c.JSON(http.StatusOK, "Success !")
 
-	os.Remove(filename)
+	// header := c.Writer.Header()
+	// header["Content-type"] = []string{"text/csv"}
+	// header["Content-Disposition"] = []string{"attachment; filename=report.csv"}
+
+	// file, _ := os.Open(filename)
+
+	// io.Copy(c.Writer, file)
+
+	// os.Remove(filename)
 	return
 }

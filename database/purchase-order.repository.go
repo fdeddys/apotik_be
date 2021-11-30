@@ -37,7 +37,7 @@ func ApprovePurchaseOrder(purchaseOrder *dbmodels.PurchaseOrder) (errCode string
 	fmt.Println(" Reject Purchase Order numb ------------------------------------------ ")
 	db := GetDbCon()
 	db.Debug().LogMode(true)
-	totalPO := countTotalPO(purchaseOrder.PurchaserNo)
+	totalPO := CountTotalPO(purchaseOrder.PurchaserNo)
 	tax := float32(0)
 
 	if purchaseOrder.IsTax {
@@ -74,14 +74,16 @@ func getTaxValue() float32 {
 	return tax
 }
 
-func countTotalPO(poNo string) (total float32) {
+func CountTotalPO(poNo string) (total float32) {
 
 	poDetails := GetAllDataDetailPurchaseOrderByPoNo(poNo)
-
+	total = 0
 	for _, poDetail := range poDetails {
-		total = poDetail.Price * float32(poDetail.Qty)
-		total -= (total * poDetail.Disc1 / 100)
-		total -= (total * poDetail.Disc2 / 100)
+		subTotal := poDetail.Price * float32(poDetail.Qty)
+		subTotal -= (subTotal * poDetail.Disc1 / 100)
+		subTotal -= (subTotal * poDetail.Disc2 / 100)
+		fmt.Println("total ", poDetail.ID, "   => ", total)
+		total += subTotal
 	}
 	return
 }
@@ -197,6 +199,11 @@ func getParamPurchaseOrder(param dto.FilterPurchaseOrder, status int) (purchaseO
 		bySupplierID = false
 	}
 
+	// byDate = true
+	// if param.StartDate == "" || param.EndDate == "" {
+	// 	byDate = false
+	// }
+
 	return
 }
 
@@ -213,7 +220,7 @@ func GetPurchaseOrderByPurchaseOrderID(purchaseOrderID int64) (dbmodels.Purchase
 }
 
 //RejectPurchaseOrder ...
-func RejectPurchaseOrder(purchaseOrder *dbmodels.PurchaseOrder) (errCode string, errDesc string) {
+func RejectPurchaseOrder(purchaseOrder dbmodels.PurchaseOrder) (errCode string, errDesc string) {
 
 	fmt.Println(" Reject PurchaseOrder numb ------------------------------------------ ")
 	db := GetDbCon()
@@ -247,4 +254,38 @@ func UpdatePoPaid(poNo string) (errCode string, errDesc string) {
 	}
 
 	return constants.ERR_CODE_00, constants.ERR_CODE_00_MSG
+}
+
+func UpdateTotal(poID int64, totalPO, tax, grandTotal float32) {
+
+	fmt.Println(" Update Total ------------------------------------------ ")
+	db := GetDbCon()
+	db.Debug().LogMode(true)
+
+	r := db.Model(&dbmodels.PurchaseOrder{}).Where("id =?", poID).Update(dbmodels.PurchaseOrder{
+		Total:      totalPO,
+		Tax:        tax,
+		GrandTotal: grandTotal,
+	},
+	)
+
+	if r.Error != nil {
+		fmt.Println("err PO Paid ", r.Error)
+	}
+
+}
+
+// GetPurchaseOrderByPurchaseOrderID ...
+func GetPurchaseOrderByPurchaseOrderDetailID(purchaseOrderDetailID int64) (dbmodels.PurchaseOrder, error) {
+	db := GetDbCon()
+	db.Debug().LogMode(true)
+	purchaseOrder := dbmodels.PurchaseOrder{}
+
+	purchaseDetail := dbmodels.PurchaseOrderDetail{}
+	db.Where("id = ? ", purchaseOrderDetailID).First(&purchaseDetail)
+
+	err := db.Preload("Supplier").Where(" id = ?  ", purchaseDetail.PurchaseOrderID).First(&purchaseOrder).Error
+
+	return purchaseOrder, err
+
 }

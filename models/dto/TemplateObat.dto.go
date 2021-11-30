@@ -1,10 +1,12 @@
 package dto
 
 type TemplateObat struct {
-	Plu       string
-	Name      string
-	Satuan    string
-	Qty       int64
-	Hargabeli int64
-	Hargajual float64
+	Plu         string
+	Name        string
+	Satuan      string
+	Qty         int64
+	Hargabeli   float64
+	Hargajual   int64
+	SatuanBesar string
+	Kadar       string
 }

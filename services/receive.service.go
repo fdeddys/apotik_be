@@ -6,6 +6,7 @@ import (
 	"distribution-system-be/models"
 	dbmodels "distribution-system-be/models/dbModels"
 	dto "distribution-system-be/models/dto"
+	"distribution-system-be/utils/excel"
 	"fmt"
 	"time"
 )
@@ -128,7 +129,7 @@ func (r ReceiveService) ApproveReceive(order *dbmodels.Receive) (errCode, errDes
 }
 
 // RejectReceive ...
-func (o OrderService) RejectReceive(receive *dbmodels.Receive) (errCode, errDesc string) {
+func (o ReceiveService) RejectReceive(receive *dbmodels.Receive) (errCode, errDesc string) {
 
 	// cek qty
 	// validateQty()
@@ -168,4 +169,17 @@ func (r ReceiveService) RemovePO(order *dbmodels.Receive) (errCode, errDesc stri
 		return err, errDesc
 	}
 	return constants.ERR_CODE_00, constants.ERR_CODE_00_MSG
+}
+
+func (r ReceiveService) ExportReceive(param dto.FilterReceive, status int) (bool, string) {
+	res := false
+	namaFile := "receive_per.xlsx"
+	data, _, err := database.GetReceivePage(param, 0, 1000000, status)
+
+	if err != nil {
+		return res, ""
+	}
+	res = excel.ExportToExcelReceive(data, namaFile)
+
+	return res, namaFile
 }
