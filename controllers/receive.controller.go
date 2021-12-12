@@ -212,7 +212,7 @@ func (r *ReceiveController) PrintPreview(c *gin.Context) {
 	return
 }
 
-// Approve ...
+// RemovePO ...
 func (r *ReceiveController) RemovePO(c *gin.Context) {
 
 	req := dbmodels.Receive{}
@@ -229,7 +229,32 @@ func (r *ReceiveController) RemovePO(c *gin.Context) {
 		return
 	}
 
-	errCode, errMsg := receiveService.RemovePO(&req)
+	errCode, errMsg := receiveService.RemovePO(&req, false)
+	res.ErrDesc = errMsg
+	res.ErrCode = errCode
+	// res.OrderNo = newNumb
+	c.JSON(http.StatusOK, res)
+
+	return
+}
+
+func (r *ReceiveController) RemovePOAllItem(c *gin.Context) {
+
+	req := dbmodels.Receive{}
+	body := c.Request.Body
+	res := dto.OrderSaveResult{}
+	dataBodyReq, _ := ioutil.ReadAll(body)
+
+	if err := json.Unmarshal(dataBodyReq, &req); err != nil {
+		fmt.Println("Error, unmarshal body Request to Receive stuct ", dataBodyReq)
+		res.ErrDesc = constants.ERR_CODE_03_MSG
+		res.ErrCode = constants.ERR_CODE_03
+		c.JSON(http.StatusBadRequest, res)
+		c.Abort()
+		return
+	}
+
+	errCode, errMsg := receiveService.RemovePO(&req, true)
 	res.ErrDesc = errMsg
 	res.ErrCode = errCode
 	// res.OrderNo = newNumb

@@ -208,6 +208,7 @@ func InitRouter() *gin.Engine {
 	api.POST("/byPO", cekToken, ReceiveController.SaveByPO)
 	api.POST("/reject", cekToken, ReceiveController.Reject)
 	api.POST("/remove-PO", cekToken, ReceiveController.RemovePO)
+	api.POST("/remove-PO-all", cekToken, ReceiveController.RemovePOAllItem)
 	api.POST("/approve", cekToken, ReceiveController.Approve)
 	api.POST("/print/:id", cekToken, ReceiveController.PrintPreview)
 	api.POST("/export", cekToken, ReceiveController.Export)

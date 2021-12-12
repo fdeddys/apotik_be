@@ -36,7 +36,7 @@ func (r AdjustmentDetailService) GetDataAdjustmentDetailPage(param dto.FilterAdj
 // SaveAdjustmentDetail ...
 func (r AdjustmentDetailService) SaveAdjustmentDetail(adjustmentDetail *dbmodels.AdjustmentDetail) (errCode string, errDesc string) {
 
-	if _, err := database.GetReceiveByReceiveID(adjustmentDetail.AdjustmentID); err != nil {
+	if _, err := database.GetAdjustmentByAdjustmentID(adjustmentDetail.AdjustmentID); err != nil {
 		return "99", err.Error()
 	}
 

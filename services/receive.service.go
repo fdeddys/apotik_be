@@ -161,10 +161,10 @@ func generateNewReceiveNo() (newNumber string, errCode string, errMsg string) {
 }
 
 // ApproveReceive ...
-func (r ReceiveService) RemovePO(order *dbmodels.Receive) (errCode, errDesc string) {
+func (r ReceiveService) RemovePO(order *dbmodels.Receive, removeItem bool) (errCode, errDesc string) {
 
 	// fmt.Println("isi order ", order)
-	err, errDesc := database.RemovePO(order)
+	err, errDesc := database.RemovePO(order, removeItem)
 	if err != constants.ERR_CODE_00 {
 		return err, errDesc
 	}

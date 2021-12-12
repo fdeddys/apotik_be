@@ -283,7 +283,7 @@ func RejectReceive(receive *dbmodels.Receive) (errCode string, errDesc string) {
 }
 
 // RemovePO ...
-func RemovePO(receive *dbmodels.Receive) (errCode string, errDesc string) {
+func RemovePO(receive *dbmodels.Receive, removeItem bool) (errCode string, errDesc string) {
 
 	fmt.Println("Remove PO Receiving ------------------------------------------ ")
 	db := GetDbCon()
@@ -305,6 +305,10 @@ func RemovePO(receive *dbmodels.Receive) (errCode string, errDesc string) {
 	currReceive := dbmodels.Receive{}
 	tx.Find(&currReceive, " id = ?  ", receive.ID)
 	currReceive.PoNo = ""
+
+	if removeItem {
+		tx.Where("receive_id = ? ", currReceive.ID).Delete(dbmodels.ReceiveDetail{})
+	}
 
 	r := tx.Save(currReceive)
 	if r.Error != nil {
