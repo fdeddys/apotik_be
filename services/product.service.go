@@ -18,7 +18,27 @@ func (h ProductService) GetProductFilterPaging(param dto.FilterProduct, page int
 	var res models.ResponsePagination
 
 	offset := (page - 1) * limit
-	data, totalData, err := repository.GetProductListPaging(param, offset, limit)
+	data, totalData, err := repository.GetProductListPaging(param, offset, limit, false)
+
+	if err != nil {
+		res.Error = err.Error()
+		return res
+	}
+
+	res.Contents = data
+	res.TotalRow = totalData
+	res.Page = page
+	res.Count = len(data)
+
+	return res
+}
+
+// GetProductFilterPagingAllStatus ...
+func (h ProductService) GetProductFilterPagingAllStatus(param dto.FilterProduct, page int, limit int) models.ResponsePagination {
+	var res models.ResponsePagination
+
+	offset := (page - 1) * limit
+	data, totalData, err := repository.GetProductListPaging(param, offset, limit, true)
 
 	if err != nil {
 		res.Error = err.Error()

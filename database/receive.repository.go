@@ -188,15 +188,15 @@ func GetReceivePage(param dto.FilterReceive, offset, limit, internalStatus int) 
 // AsyncQueryCountsReceives ...
 func AsyncQueryCountsReceives(db *gorm.DB, total *int, status int, orders *[]dbmodels.Receive, param dto.FilterReceive, resChan chan error) {
 
-	receiveNumber, byStatus := getParamReceive(param, status)
+	receiveNumber, byStatus, suppName := getParamReceive(param, status)
 
 	fmt.Println(" Rec Number ", receiveNumber, "  status ", status, " fill status ", byStatus)
 
 	var err error
 	if strings.TrimSpace(param.StartDate) != "" && strings.TrimSpace(param.EndDate) != "" {
-		err = db.Model(&orders).Where(" ( (status = ?) or ( not ?) ) AND  COALESCE(receive_no, '') ilike ? AND receive_date between ? and ?  ", status, byStatus, receiveNumber, param.StartDate, param.EndDate).Count(&*total).Error
+		err = db.Model(&orders).Preload("Supplier", " name ilike ? ", suppName).Where(" ( (status = ?) or ( not ?) ) AND  COALESCE(receive_no, '') ilike ? AND receive_date between ? and ?  ", status, byStatus, receiveNumber, param.StartDate, param.EndDate).Count(&*total).Error
 	} else {
-		err = db.Model(&orders).Where(" ( (status = ?) or ( not ?) ) AND COALESCE(receive_no,'') ilike ? ", status, byStatus, receiveNumber).Count(&*total).Error
+		err = db.Model(&orders).Preload("Supplier", " name ilike ? ", suppName).Where(" ( (status = ?) or ( not ?) ) AND COALESCE(receive_no,'') ilike ? ", status, byStatus, receiveNumber).Count(&*total).Error
 	}
 
 	if err != nil {
@@ -210,17 +210,17 @@ func AsyncQuerysReceives(db *gorm.DB, offset int, limit int, status int, receive
 
 	var err error
 
-	receiveNumber, byStatus := getParamReceive(param, status)
+	receiveNumber, byStatus, suppName := getParamReceive(param, status)
 
 	fmt.Println(" Receive no ", receiveNumber, "  status ", status, " fill status ", byStatus)
 
-	fmt.Println("isi dari filter [", param, "] ")
+	fmt.Println("isi dari filter => receive [", param, "] ")
 	if strings.TrimSpace(param.StartDate) != "" && strings.TrimSpace(param.EndDate) != "" {
-		fmt.Println("isi dari filter [", param.StartDate, '-', param.EndDate, "] ")
-		err = db.Preload("Supplier").Order("receive_date DESC, id DESC").Offset(offset).Limit(limit).Find(&receives, " ( ( status = ?) or ( not ?) ) AND COALESCE(receive_no, '') ilike ? AND receive_date between ? and ?   ", status, byStatus, receiveNumber, param.StartDate, param.EndDate).Error
+		fmt.Println("isi dari filter =>masuk [", param.StartDate, '-', param.EndDate, "] ")
+		err = db.Order("receive_date DESC, id DESC").Offset(offset).Limit(limit).Preload("Supplier", " name ilike ? ", suppName).Find(&receives, " ( ( status = ?) or ( not ?) ) AND COALESCE(receive_no, '') ilike ? AND receive_date between ? and ?   ", status, byStatus, receiveNumber, param.StartDate, param.EndDate).Error
 	} else {
 		fmt.Println("isi dari kosong ")
-		err = db.Order("receive_date DESC, id DESC").Offset(offset).Limit(limit).Preload("Supplier").Find(&receives, " ( ( status = ?) or ( not ?) ) AND COALESCE(receive_no,'') ilike ?  ", status, byStatus, receiveNumber).Error
+		err = db.Order("receive_date DESC, id DESC").Offset(offset).Limit(limit).Preload("Supplier", " name ilike ? ", suppName).Find(&receives, " ( ( status = ?) or ( not ?) ) AND COALESCE(receive_no,'') ilike ?  ", status, byStatus, receiveNumber).Error
 		if err != nil {
 			fmt.Println("receive --> ", err)
 		}
@@ -234,7 +234,7 @@ func AsyncQuerysReceives(db *gorm.DB, offset int, limit int, status int, receive
 	resChan <- nil
 }
 
-func getParamReceive(param dto.FilterReceive, status int) (receiveNumber string, byStatus bool) {
+func getParamReceive(param dto.FilterReceive, status int) (receiveNumber string, byStatus bool, supplierName string) {
 
 	receiveNumber = param.ReceiveNumber
 	if receiveNumber == "" {
@@ -246,6 +246,13 @@ func getParamReceive(param dto.FilterReceive, status int) (receiveNumber string,
 	byStatus = true
 	if status == -1 {
 		byStatus = false
+	}
+
+	supplierName = param.SupplierName
+	if supplierName == "" {
+		supplierName = "%"
+	} else {
+		supplierName = "%" + param.SupplierName + "%"
 	}
 
 	return

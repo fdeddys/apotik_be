@@ -141,3 +141,29 @@ func (r *PurchaseOrderDetailController) GetLastPrice(c *gin.Context) {
 
 	return
 }
+
+// Save ...
+func (r *PurchaseOrderDetailController) UpdateDetail(c *gin.Context) {
+
+	req := dbmodels.PurchaseOrderDetail{}
+	body := c.Request.Body
+	res := dto.PurchaseOrderDetailSaveResult{}
+	dataBodyReq, _ := ioutil.ReadAll(body)
+
+	if err := json.Unmarshal(dataBodyReq, &req); err != nil {
+		fmt.Println("Error, unmarshal body Request to Sales Order stuct ", dataBodyReq)
+		res.ErrDesc = constants.ERR_CODE_03_MSG
+		res.ErrCode = constants.ERR_CODE_03
+		c.JSON(http.StatusBadRequest, res)
+		c.Abort()
+		return
+	}
+
+	errCode, errMsg := purchaseOrderDetailService.UpdateDetail(&req)
+	res.ErrDesc = errMsg
+	res.ErrCode = errCode
+	// res.OrderNo = newNumb
+	c.JSON(http.StatusOK, res)
+
+	return
+}

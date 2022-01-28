@@ -167,3 +167,26 @@ func CalculateTotalPO(poID int64) {
 
 	database.UpdateTotal(po.ID, totalPO, tax, grandTotal)
 }
+
+// GetDataPurchaseOrderByID ...
+func (r PurchaseOrderService) CancelSubmitPO(poID int64) dto.NoContentResponse {
+
+	var res dto.NoContentResponse
+	po, err := database.GetPurchaseOrderByPurchaseOrderID(poID)
+
+	if err != nil {
+		res.ErrCode = constants.ERR_CODE_40
+		res.ErrDesc = err.Error()
+		return res
+	}
+	if po.Status != 20 {
+		res.ErrCode = constants.ERR_CODE_99
+		res.ErrDesc = "Status yang diizinkan hanya PO yang sudah submit !"
+		return res
+	}
+
+	code, desc := database.CancelSubmitPurchaseOrder(po)
+	res.ErrCode = code
+	res.ErrDesc = desc
+	return res
+}

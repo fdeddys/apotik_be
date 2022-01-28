@@ -379,6 +379,7 @@ func setDetail(pdf *gopdf.GoPdf, data []DataDetail, param ...string) {
 	// 2. set header
 	// 3. rekursif
 	if totalRec > number {
+		setSign(pdf, "", "", "Apoteker")
 		fmt.Println("NEW page")
 		curPage++
 		pdf.AddPage()

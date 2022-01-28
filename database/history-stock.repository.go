@@ -54,7 +54,7 @@ func GetHistoryPage(param dto.FilterHistoryStock, offset, limit int) ([]dbmodels
 	errCount := make(chan error)
 
 	go AsyncQuerysHistoryStock(db, offset, limit, &historyStocks, param, errQuery)
-	go AsyncQueryCountsHistoryStocks(db, &total, &historyStocks, param, errCount)
+	go AsyncQueryCountsHistoryStocks(db, &total, param, errCount)
 
 	resErrQuery := <-errQuery
 	resErrCount := <-errCount
@@ -69,13 +69,16 @@ func GetHistoryPage(param dto.FilterHistoryStock, offset, limit int) ([]dbmodels
 		log.Println("errr-->", resErrCount)
 		return historyStocks, 0, resErrCount
 	}
+	fmt.Println("Total Rec search = ", total)
 	return historyStocks, total, nil
 }
 
-func AsyncQueryCountsHistoryStocks(db *gorm.DB, total *int, historyStocks *[]dbmodels.HistoryStock, param dto.FilterHistoryStock, resChan chan error) {
+func AsyncQueryCountsHistoryStocks(db *gorm.DB, total *int, param dto.FilterHistoryStock, resChan chan error) {
+	// func AsyncQueryCountsHistoryStocks(db *gorm.DB, total *int, historyStocks *[]dbmodels.HistoryStock, param dto.FilterHistoryStock, resChan chan error) {
 
 	var err error
-	err = db.Model(&historyStocks).Where(" DATE(trans_date)  between DATE(?)  and DATE(?)  and warehouse_id = ? and code = ?  ", param.StartDate, param.EndDate, param.WarehouseID, param.ProductCode).Count(&*total).Error
+	// err = db.Model(&historyStocks).Where(" DATE(trans_date)  between DATE(?)  and DATE(?)  and warehouse_id = ? and code = ?  ", param.StartDate, param.EndDate, param.WarehouseID, param.ProductCode).Count(&*total).Error
+	err = db.Model(dbmodels.HistoryStock{}).Where(" DATE(trans_date)  between DATE(?)  and DATE(?)  and warehouse_id = ? and code = ?  ", param.StartDate, param.EndDate, param.WarehouseID, param.ProductCode).Count(&*total).Error
 
 	if err != nil {
 		resChan <- err

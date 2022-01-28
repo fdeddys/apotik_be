@@ -209,3 +209,52 @@ func ExportToExcelReportPaymentCash(reportPayements []dto.ReportPaymentCash, dat
 	success = true
 	return
 }
+
+func ExportToExcelReportPaymentSupplier(reportPayements []dto.ReportPaymentSupplier, dateStart, dateEnd, namaFile string) (filename string, success bool) {
+
+	filename = fmt.Sprintf("%v_%v_%v.csv", namaFile, dateStart, dateEnd)
+
+	sheet1Name := "Sheet1"
+	xls := excelize.NewFile()
+	xls.NewSheet(sheet1Name)
+
+	t1, _ := time.Parse("2006-01-02", dateStart)
+	t2, _ := time.Parse("2006-01-02", dateEnd)
+	fmt.Println("Waktu nya adalah", t1.Format("02-January-2006"))
+	no := 1
+	xls.SetCellValue(sheet1Name, fmt.Sprintf("A%d", no), "REPORT PAYMENT")
+
+	no++
+	xls.SetCellValue(sheet1Name, fmt.Sprintf("A%d", no), fmt.Sprintf("%v - %v ", t1.Format("02-January-2006"), t2.Format("02-January-2006")))
+
+	no = no + 2
+	xls.SetCellValue(sheet1Name, fmt.Sprintf("A%d", no), no)
+	xls.SetCellValue(sheet1Name, fmt.Sprintf("B%d", no), "PaymentNo")
+	xls.SetCellValue(sheet1Name, fmt.Sprintf("C%d", no), "PaymentDate")
+	xls.SetCellValue(sheet1Name, fmt.Sprintf("D%d", no), "ReceiveNo")
+	xls.SetCellValue(sheet1Name, fmt.Sprintf("E%d", no), "ReceiveDate")
+	xls.SetCellValue(sheet1Name, fmt.Sprintf("F%d", no), "Supplier")
+	xls.SetCellValue(sheet1Name, fmt.Sprintf("G%d", no), "PaymentReff")
+	xls.SetCellValue(sheet1Name, fmt.Sprintf("H%d", no), "Status")
+	urut := 0
+
+	for _, rs := range reportPayements {
+		no++
+		urut++
+		xls.SetCellValue(sheet1Name, fmt.Sprintf("A%d", no), urut)
+		xls.SetCellValue(sheet1Name, fmt.Sprintf("B%d", no), rs.PaymentNo)
+		xls.SetCellValue(sheet1Name, fmt.Sprintf("C%d", no), rs.PaymentDate)
+		xls.SetCellValue(sheet1Name, fmt.Sprintf("D%d", no), rs.ReceiveNo)
+		xls.SetCellValue(sheet1Name, fmt.Sprintf("E%d", no), rs.ReceiveDate)
+		xls.SetCellValue(sheet1Name, fmt.Sprintf("F%d", no), rs.Supplier)
+		xls.SetCellValue(sheet1Name, fmt.Sprintf("G%d", no), rs.PaymentType)
+		xls.SetCellValue(sheet1Name, fmt.Sprintf("H%d", no), rs.Status)
+	}
+
+	if err := xls.SaveAs(filename); err != nil {
+		success = false
+		return
+	}
+	success = true
+	return
+}

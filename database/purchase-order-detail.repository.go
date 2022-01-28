@@ -107,7 +107,7 @@ func AsyncQuerysPurchaseOrderDetails(db *gorm.DB, offset int, limit int, purchas
 
 	var err error
 
-	err = db.Offset(offset).Limit(limit).Preload("Product").Preload("UOM").Preload("PoUOM").Find(&purchaseOrderDetails, "po_id = ? ", purchaseOrderID).Error
+	err = db.Offset(offset).Limit(limit).Order("id desc").Preload("Product.BigUom").Preload("Product.SmallUom").Preload("UOM").Preload("PoUOM").Find(&purchaseOrderDetails, "po_id = ? ", purchaseOrderID).Error
 	if err != nil {
 		fmt.Println("error --> ", err)
 	}
@@ -167,11 +167,19 @@ func GetLastPricePurchaseOrderDetail(productCode int64) (res dto.ResultLastPrice
 	db := GetDbCon()
 	db.Debug().LogMode(true)
 
-	db.Raw("select "+
-		" price::numeric::integer, disc1 "+
-		" from receive_detail rd inner join receive r on rd.receive_id = r.id and r.status in(20, 40, 50, 60)  "+
-		" where  product_id = ? "+
-		" order by rd.id desc  limit 1 ", productCode).Scan(&res)
+	// db.Raw("select "+
+	// 	" price::numeric::integer, disc1, p.hpp "+
+	// 	" from receive_detail rd "+
+	// 	" left join receive r on rd.receive_id = r.id and r.status in(20, 40, 50, 60)  "+
+	// 	" inner join product p on rd.product_id = p.id   "+
+	// 	" where  rd.product_id = ? "+
+	// 	" order by rd.id desc  limit 1 ", productCode).Scan(&res)
+
+	db.Raw("select  price::numeric::integer, disc1, p.hpp "+
+		" from product p   "+
+		" left  join receive_detail rd  on rd.product_id = p.id "+
+		" left join receive r on rd.receive_id = r.id  and r.status in(20, 40, 50, 60) "+
+		" where  p.id = ?  order by p.id desc  limit 1  ", productCode).Scan(&res)
 
 	return
 

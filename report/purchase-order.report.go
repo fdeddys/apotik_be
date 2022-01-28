@@ -51,6 +51,16 @@ func init() {
 	getParamValue()
 }
 
+func GeneratePurchaseOrderReportByPoNo(pono string) error {
+	po, err := database.GetPurchaseOrderByPurchaseOrderNo(pono)
+	if err != nil {
+
+		return err
+	}
+	GeneratePurchaseOrderReport(po.ID)
+	return nil
+}
+
 func GeneratePurchaseOrderReport(purchaseOrderID int64) {
 
 	title = "Purchase Order"

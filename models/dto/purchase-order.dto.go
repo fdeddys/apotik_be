@@ -40,4 +40,5 @@ type PurchaseOrderDetailSaveResult struct {
 type ResultLastPrice struct {
 	Price int64 `json:"price"`
 	Disc1 int64 `json:"disc1"`
+	Hpp   int64 `json:"hpp"`
 }

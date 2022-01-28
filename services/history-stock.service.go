@@ -35,7 +35,7 @@ func (h HistoryStockService) GetHistoryStockPage(param dto.FilterHistoryStock, p
 	}
 
 	res.Contents = historyStocks
-	res.Count = totalData
+	res.TotalRow = totalData
 	res.Page = page
 	res.Count = limit
 

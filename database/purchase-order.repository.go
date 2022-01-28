@@ -4,6 +4,7 @@ import (
 	"distribution-system-be/constants"
 	dbmodels "distribution-system-be/models/dbModels"
 	"distribution-system-be/models/dto"
+	"distribution-system-be/utils/util"
 	"fmt"
 	"log"
 	"strconv"
@@ -45,10 +46,13 @@ func ApprovePurchaseOrder(purchaseOrder *dbmodels.PurchaseOrder) (errCode string
 		tax = totalPO * (tax / 100)
 	}
 	r := db.Model(&dbmodels.PurchaseOrder{}).Where("id =?", purchaseOrder.ID).Update(dbmodels.PurchaseOrder{
-		Status:     constants.STATUS_APPROVE,
-		Total:      totalPO,
-		Tax:        tax,
-		GrandTotal: totalPO + tax,
+		Status:        constants.STATUS_APPROVE,
+		Total:         totalPO,
+		Tax:           tax,
+		GrandTotal:    totalPO + tax,
+		SupplierID:    purchaseOrder.SupplierID,
+		Note:          purchaseOrder.Note,
+		PurchaserDate: purchaseOrder.PurchaserDate,
 	})
 	if r.Error != nil {
 		fmt.Println("err reject ", r.Error)
@@ -238,6 +242,25 @@ func RejectPurchaseOrder(purchaseOrder dbmodels.PurchaseOrder) (errCode string, 
 	return constants.ERR_CODE_00, constants.ERR_CODE_00_MSG
 }
 
+//RejectPurchaseOrder ...
+func CancelSubmitPurchaseOrder(purchaseOrder dbmodels.PurchaseOrder) (errCode string, errDesc string) {
+
+	fmt.Println(" Reject PurchaseOrder numb ------------------------------------------ ")
+	db := GetDbCon()
+	db.Debug().LogMode(true)
+
+	r := db.Model(&dbmodels.PurchaseOrder{}).Where("id =?", purchaseOrder.ID).Update(dbmodels.PurchaseOrder{Status: 10})
+	if r.Error != nil {
+		fmt.Println("err reject ", r.Error)
+		errCode = constants.ERR_CODE_80
+		errDesc = r.Error.Error()
+		fmt.Println("Error update ", errDesc)
+		return
+	}
+
+	return constants.ERR_CODE_00, constants.ERR_CODE_00_MSG
+}
+
 func UpdatePoPaid(poNo string) (errCode string, errDesc string) {
 
 	fmt.Println(" Update PurchaseOrder numb ------------------------------------------ ")
@@ -287,5 +310,50 @@ func GetPurchaseOrderByPurchaseOrderDetailID(purchaseOrderDetailID int64) (dbmod
 	err := db.Preload("Supplier").Where(" id = ?  ", purchaseDetail.PurchaseOrderID).First(&purchaseOrder).Error
 
 	return purchaseOrder, err
+
+}
+
+// GetPurchaseOrderByPurchaseOrderID ...
+func GetPurchaseOrderByPurchaseOrderNo(pono string) (dbmodels.PurchaseOrder, error) {
+	db := GetDbCon()
+	db.Debug().LogMode(true)
+	purchaseOrder := dbmodels.PurchaseOrder{}
+
+	err := db.Preload("Supplier").Where(" po_no = ?  ", pono).First(&purchaseOrder).Error
+
+	return purchaseOrder, err
+
+}
+
+//UpdateReceiveDetail ...
+// purchaseOrderDetail.ID, purchaseOrderDetail.Qty, purchaseOrderDetail.Price, purchaseOrderDetail.UomID
+func UpdatePODetail(poDetail dbmodels.PurchaseOrderDetail) (errCode string, errDesc string) {
+
+	fmt.Println(" Update Receive Detail  ------------------------------------------ ")
+
+	db := GetDbCon()
+	db.Debug().LogMode(true)
+
+	r := db.Model(dbmodels.PurchaseOrderDetail{}).Where("id = ?", poDetail.ID).Updates(
+		dbmodels.PurchaseOrderDetail{
+			PoUomID:      poDetail.PoUomID,
+			PoQty:        poDetail.PoQty,
+			PoPrice:      poDetail.PoPrice,
+			PoUOMQty:     poDetail.PoUOMQty,
+			Qty:          poDetail.Qty,
+			Price:        poDetail.Price,
+			UomID:        poDetail.UomID,
+			LastUpdate:   util.GetCurrDate(),
+			LastUpdateBy: dto.CurrUser,
+		})
+	if r.Error != nil {
+		errCode = constants.ERR_CODE_30
+		errDesc = r.Error.Error()
+		return
+	}
+
+	errCode = constants.ERR_CODE_00
+	errDesc = fmt.Sprintf("%v", r.RowsAffected)
+	return
 
 }

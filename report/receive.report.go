@@ -24,6 +24,7 @@ type DataRecvDetail struct {
 	Unit     string
 	Price    int64
 	Total    int64
+	UomQty   int64
 }
 
 var (
@@ -169,10 +170,16 @@ func fillDataRecvDetail(receiveId int64) []DataRecvDetail {
 	grandTotal = 0
 	for i, receiveDetail := range receiveDetails {
 		data.Item = receiveDetail.Product.Name
-		data.Quantity = int64(receiveDetail.Qty)
 		data.Unit = receiveDetail.UOM.Name
+		if receiveDetail.UomID == receiveDetail.Product.BigUomID {
+			data.Quantity = int64(receiveDetail.Qty) / int64(receiveDetail.Product.QtyUom)
+			data.UomQty = int64(receiveDetail.Product.QtyUom)
+		} else {
+			data.Quantity = int64(receiveDetail.Qty)
+			data.UomQty = 1
+		}
 		data.Price = int64(receiveDetail.Price)
-		total := data.Price * data.Quantity
+		total := data.Price * data.Quantity * data.UomQty
 		data.Total = int64(receiveDetail.Price) * int64(receiveDetail.Qty)
 		subTotal += total
 		res[i+1] = data

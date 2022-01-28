@@ -73,5 +73,22 @@ func (r PurchaseOrderDetailService) GetLastPricePurchaseOrderDetail(productId in
 	res.ErrDesc = constants.ERR_CODE_00_MSG
 	res.Price = data.Price
 	res.Disc1 = data.Disc1
+	res.Hpp = data.Hpp
 	return res
+}
+
+func (r PurchaseOrderDetailService) UpdateDetail(purchaseOrderDetail *dbmodels.PurchaseOrderDetail) (errCode string, errDesc string) {
+
+	// for _, receiveDetail := range *receiveDetails {
+	// fmt.Println(receiveDetail.ID, "  ", receiveDetail.Qty, " ", receiveDetail.Price, " ", receiveDetail.Disc1)
+	if err, errDesc := database.UpdatePODetail(*purchaseOrderDetail); err != constants.ERR_CODE_00 {
+		return err, errDesc
+	}
+	// }
+
+	// if err, errDesc := database.SaveReceiveDetail(receiveDetail); err != constants.ERR_CODE_00 {
+	// 	return err, errDesc
+	// }
+
+	return constants.ERR_CODE_00, constants.ERR_CODE_00_MSG
 }

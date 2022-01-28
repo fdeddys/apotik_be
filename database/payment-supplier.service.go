@@ -87,7 +87,7 @@ func AsyncQuerysPaymentSuppliers(db *gorm.DB, offset int, limit int, orders *[]d
 	fmt.Println("isi dari filter [", param, "] ")
 	if strings.TrimSpace(param.StartDate) != "" && strings.TrimSpace(param.EndDate) != "" {
 		fmt.Println("isi dari filter [", param.StartDate, '-', param.EndDate, "] ")
-		err = db.Preload("Supplier").Order("payment_date DESC").Offset(offset).Limit(limit).Find(&orders, "  COALESCE(payment_no, '') ilike ? AND ( payment_date between ? and ? ) AND  ( (status = ?) or ( not ?) ) ", paymentNo, param.StartDate, param.EndDate, param.PaymentStatus, byStatus).Error
+		err = db.Preload("Supplier").Preload("Supplier.Bank").Order("payment_date DESC").Offset(offset).Limit(limit).Find(&orders, "  COALESCE(payment_no, '') ilike ? AND ( payment_date between ? and ? ) AND  ( (status = ?) or ( not ?) ) ", paymentNo, param.StartDate, param.EndDate, param.PaymentStatus, byStatus).Error
 	} else {
 		fmt.Println("isi dari kosong ")
 		err = db.Offset(offset).Limit(limit).Preload("Supplier").Order("payment_date DESC").Find(&orders, "  COALESCE(payment_no,'') ilike ?  AND  ( (status = ?) or ( not ?) ) ", paymentNo, param.PaymentStatus, byStatus).Error

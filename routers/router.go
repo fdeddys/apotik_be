@@ -80,6 +80,7 @@ func InitRouter() *gin.Engine {
 	StockOpnameDetailController := new(controllers.StockOpnameDetailController)
 
 	ReportPaymentCashController := new(controllers.ReportPaymentCashController)
+	ReportPaymentSupplierController := new(controllers.ReportPaymentSupplierController)
 
 	ReportMasterController := new(controllers.ReportMasterController)
 
@@ -124,6 +125,7 @@ func InitRouter() *gin.Engine {
 	ProductController := new(controllers.ProductController)
 	product := r.Group("/api/product")
 	product.POST("/page/:page/count/:count", ProductController.GetProductListPaging)
+	product.POST("/all-status/page/:page/count/:count", ProductController.GetProductListPagingAllStatus)
 	product.POST("/search/page/:page/count/:count", ProductController.SearchProduct)
 	product.GET("/id/:id", ProductController.GetProductDetails)
 	product.POST("", ProductController.SaveProduct)
@@ -326,7 +328,9 @@ func InitRouter() *gin.Engine {
 	api.POST("", cekToken, PurchaseOrderController.Save)
 	api.POST("/approve", cekToken, PurchaseOrderController.Approve)
 	api.POST("/reject/:id", cekToken, PurchaseOrderController.Reject)
+	api.POST("/cancel-submit/:id", cekToken, PurchaseOrderController.CancelSubmit)
 	api.POST("/print/:id", cekToken, PurchaseOrderController.PrintPreview)
+	api.POST("/print-by-pono/:pono", cekToken, PurchaseOrderController.PrintPreviewByPoNo)
 	api.POST("/export", PurchaseOrderController.Export)
 
 	api = r.Group("/api/purchase-order-detail")
@@ -334,6 +338,7 @@ func InitRouter() *gin.Engine {
 	api.POST("", cekToken, PurchaseOrderDetailController.Save)
 	api.GET("/last-price/:productId", PurchaseOrderDetailController.GetLastPrice)
 	api.DELETE("/:id", cekToken, PurchaseOrderDetailController.DeleteByID)
+	api.POST("/updateDetail", cekToken, PurchaseOrderDetailController.UpdateDetail)
 
 	// STOCK - OPNAME
 	api = r.Group("/api/stock-opname")
@@ -371,6 +376,7 @@ func InitRouter() *gin.Engine {
 	api.POST("/payment-cash", cekToken, ReportPaymentCashController.DownloadReportPayment)
 	api.POST("/payment-sales", cekToken, ReportPaymentCashController.DownloadReportSales)
 	api.GET("/master-barang", cekToken, ReportMasterController.DownloadReportMasterProduct)
+	api.POST("/payment-supplier", cekToken, ReportPaymentSupplierController.DownloadReporPaymentSupplier)
 
 	// PARAMETER
 	api = r.Group("/api/parameter")

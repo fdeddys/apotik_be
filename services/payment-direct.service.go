@@ -4,6 +4,7 @@ import (
 	"distribution-system-be/constants"
 	"distribution-system-be/database"
 	"distribution-system-be/models"
+	"fmt"
 
 	"distribution-system-be/models/dto"
 )
@@ -19,6 +20,7 @@ func (o DirectPaymentService) GetDataPage(param dto.FilterPaymentDirect, page in
 	offset := (page - 1) * limit
 	data, totalData, err := database.GetPaymentDirectPage(param, offset, limit)
 
+	fmt.Println("Hasil direct =>", data)
 	if err != nil {
 		res.Error = err.Error()
 		return res

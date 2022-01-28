@@ -28,3 +28,14 @@ type ReportSales struct {
 	Price        int64
 	Disc1        int64
 }
+
+type ReportPaymentSupplier struct {
+	PaymentNo   string
+	PaymentDate string
+	Supplier    string
+	PaymentType string
+	PaymentReff string
+	ReceiveNo   string
+	ReceiveDate string
+	Status      string
+}

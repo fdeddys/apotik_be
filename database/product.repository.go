@@ -39,7 +39,7 @@ func GetProductDetails(id int) ([]dbmodels.Product, string, string, error) {
 }
 
 // GetProductListPaging ...
-func GetProductListPaging(param dto.FilterProduct, offset int, limit int) ([]dbmodels.Product, int, error) {
+func GetProductListPaging(param dto.FilterProduct, offset int, limit int, allRecord bool) ([]dbmodels.Product, int, error) {
 	db := GetDbCon()
 	db.Debug().LogMode(true)
 
@@ -62,8 +62,8 @@ func GetProductListPaging(param dto.FilterProduct, offset int, limit int) ([]dbm
 	errQuery := make(chan error)
 	errCount := make(chan error)
 
-	go ProductQuerys(db, offset, limit, &product, param, errQuery)
-	go AsyncProductQuerysCount(db, &total, param, &dbmodels.Product{}, errCount)
+	go ProductQuerys(db, offset, limit, &product, param, errQuery, allRecord)
+	go AsyncProductQuerysCount(db, &total, param, &dbmodels.Product{}, errCount, allRecord)
 
 	resErrQuery := <-errQuery
 	resErrCount := <-errCount
@@ -98,7 +98,7 @@ func SearchProduct(param dto.FilterProduct, offset int, limit int) ([]dto.Produc
 		criteriaName = "%" + param.Name + "%"
 	}
 
-	err := db.Preload("Brand").Preload("ProductGroup").Preload("BigUom").Preload("SmallUom").Order("name ASC").Offset(offset).Limit(limit).Find(&products, "name ilike ?", criteriaName).Error
+	err := db.Preload("Brand").Preload("ProductGroup").Preload("BigUom").Preload("SmallUom").Order("name ASC").Offset(offset).Limit(limit).Find(&products, "name ilike ? and  status = 1 ", criteriaName).Error
 
 	if err != nil {
 		return productSearchs, err
@@ -270,7 +270,7 @@ func SaveProduct(product dbmodels.Product) models.ContentResponse {
 
 // }
 
-func AsyncProductQuerysCount(db *gorm.DB, total *int, param interface{}, models interface{}, resChan chan error) {
+func AsyncProductQuerysCount(db *gorm.DB, total *int, param interface{}, models interface{}, resChan chan error, allRecord bool) {
 	// func AsyncQueryCount(db *gorm.DB, total *int, parameters AsyncQueryParam, resChan chan error) {
 	varInterface := reflect.ValueOf(param)
 	strQuery := varInterface.Field(0).Interface().(string)
@@ -292,7 +292,13 @@ func AsyncProductQuerysCount(db *gorm.DB, total *int, param interface{}, models 
 		criteriaComposition = "%" + strComposition + "%"
 	}
 	// err := db.Model(models).Where(fieldLookup+" ~* ?", criteriaName).Count(&*total).Error
-	err := db.Model(models).Where("COALESCE(name, '') ILIKE ? and  composition ilike ?", criteriaName, criteriaComposition).Count(&*total).Error
+
+	var err error
+	if allRecord {
+		err = db.Model(models).Where("COALESCE(name, '') ILIKE ? and  composition ilike ?", criteriaName, criteriaComposition).Count(&*total).Error
+	} else {
+		err = db.Model(models).Where("COALESCE(name, '') ILIKE ? and  composition ilike ? and status = ? ", criteriaName, criteriaComposition, 1).Count(&*total).Error
+	}
 
 	if err != nil {
 		resChan <- err
@@ -301,7 +307,7 @@ func AsyncProductQuerysCount(db *gorm.DB, total *int, param interface{}, models 
 }
 
 // ProductQuerys ...
-func ProductQuerys(db *gorm.DB, offset int, limit int, product *[]dbmodels.Product, param dto.FilterProduct, resChan chan error) {
+func ProductQuerys(db *gorm.DB, offset int, limit int, product *[]dbmodels.Product, param dto.FilterProduct, resChan chan error, allRecord bool) {
 
 	// var criteriaUserName = "%"
 	// if strings.TrimSpace(param.Name) != "" {
@@ -327,7 +333,13 @@ func ProductQuerys(db *gorm.DB, offset int, limit int, product *[]dbmodels.Produ
 	// }
 
 	// err := db.Set("gorm:auto_preload", true).Order("name ASC").Offset(offset).Limit(limit).Find(&user, "name like ?", criteriaUserName).Error
-	err := db.Preload("Brand").Preload("ProductGroup").Preload("BigUom").Preload("SmallUom").Order("name ASC").Offset(offset).Limit(limit).Find(&product, "name ilike ? and composition ilike ?", criteriaName, criteriaComposition).Error
+
+	var err error
+	if allRecord {
+		err = db.Preload("Brand").Preload("ProductGroup").Preload("BigUom").Preload("SmallUom").Order("name ASC").Offset(offset).Limit(limit).Find(&product, "name ilike ? and composition ilike ?", criteriaName, criteriaComposition).Error
+	} else {
+		err = db.Preload("Brand").Preload("ProductGroup").Preload("BigUom").Preload("SmallUom").Order("name ASC").Offset(offset).Limit(limit).Find(&product, "name ilike ? and composition ilike ? and status = ? ", criteriaName, criteriaComposition, 1).Error
+	}
 	// .Preload("StockLookup", "lookup_group=?", "STOCK_STATUS")
 	if err != nil {
 		resChan <- err

@@ -52,3 +52,33 @@ func ReportSalesByDate(dateStart, dateEnd string) []dto.ReportSales {
 	return datas
 
 }
+
+func ReportPaymentSupplierByDate(dateStart, dateEnd string) []dto.ReportPaymentSupplier {
+	db := GetDbCon()
+	db.Debug().LogMode(true)
+
+	var datas []dto.ReportPaymentSupplier
+
+	db.Raw(
+		" select r.receive_no, "+
+			" 	to_char(r.receive_date , 'DD/Mon/YYYY') as receive_date ,  "+
+			" 	ps.payment_no ,  "+
+			" 	to_char(ps.payment_date , 'DD/Mon/YYYY') as payment_date , s.name as supplier , l.name as payment_type ,ps.payment_reff ,  "+
+			" 	( case  when ps.status = 0 or ps.status = 1 or ps.status = 10   then 'Outstanding'  "+
+			" 		when  ps.status = 20 then 'Submit' "+
+			" 		when  ps.status = 30 then 'Cancel' "+
+			" 		when  ps.status = 40 then 'Receiving' "+
+			" 		when  ps.status = 50 then 'Paid'  "+
+			" 		when  ps.status = 60 then 'Reject Payment'  "+
+			" 	else ps.status::text  end ) as status "+
+			" from payment_supplier ps  "+
+			" inner join payment_supplier_detail psd on psd.payment_supplier_id = ps.id  "+
+			" inner join receive r on psd.receiving_id =r.id  "+
+			" left join supplier s on ps.supplier_id  = s.id  "+
+			" left join lookup l on ps.payment_type_id = l.id  "+
+			" where ps.payment_date between ?  and ? "+
+			" order by ps.payment_date desc, ps.payment_no asc 	 ", dateStart, dateEnd).Scan(&datas)
+
+	return datas
+
+}

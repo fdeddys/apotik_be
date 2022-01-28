@@ -46,6 +46,15 @@ func RejectSalesOrder(order *dbmodels.SalesOrder) (errCode string, errDesc strin
 
 	// r := db.Model(&newOrder).Where("id = ?", order.ID).Update(dbmodels.SalesOrder{OrderNo: order.OrderNo, StatusCode: "001", WarehouseCode: order.WarehouseCode, InternalStatus: 1, OrderDate: order.OrderDate})
 
+	salesOrder, _ := GetOrderByOrderNo(order.SalesOrderNo)
+	salesOrderDetails := GetAllDataDetail(order.ID)
+	for idx, orderDetail := range salesOrderDetails {
+		fmt.Println("idx -> ", idx)
+
+		updateStockInsertHistoryReject(salesOrder, orderDetail)
+
+	}
+
 	r := db.Model(&dbmodels.SalesOrder{}).Where("id =?", order.ID).Update(dbmodels.SalesOrder{Status: 30})
 	// r := db.Save(&order)
 	if r.Error != nil {
@@ -71,6 +80,7 @@ func SaveSalesOrderApprove(order *dbmodels.SalesOrder) (errCode string, errDesc 
 		}
 	}()
 
+	// update stock untuk penjualan tunai dan kredit
 	// update stock -> jika penjualan kredit , klo tunai update saat payment
 	// update history stock
 	// hitung ulang
@@ -82,9 +92,9 @@ func SaveSalesOrderApprove(order *dbmodels.SalesOrder) (errCode string, errDesc 
 	for idx, orderDetail := range salesOrderDetails {
 		fmt.Println("idx -> ", idx)
 
-		if order.IsCash == false {
-			updateStockInsertHistory(*order, orderDetail)
-		}
+		// if order.IsCash == false {
+		updateStockInsertHistory(*order, orderDetail)
+		// }
 		total = total + (orderDetail.Price * float32(orderDetail.QtyOrder))
 	}
 
@@ -158,7 +168,7 @@ func GetOrderByOrderNo(orderNo string) (dbmodels.SalesOrder, error) {
 	db.Debug().LogMode(true)
 	order := dbmodels.SalesOrder{}
 
-	err := db.Preload("Supplier").Preload("Merchant").Where(" sales_order_no = ?  ", orderNo).First(&order).Error
+	err := db.Preload("Customer").Where(" sales_order_no = ?  ", orderNo).First(&order).Error
 
 	return order, err
 

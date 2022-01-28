@@ -179,6 +179,25 @@ func (r *PurchaseOrderController) PrintPreview(c *gin.Context) {
 	return
 }
 
+// PrintPreviewByPoNo ...
+func (r *PurchaseOrderController) PrintPreviewByPoNo(c *gin.Context) {
+
+	pono := c.Param("pono")
+
+	err := report.GeneratePurchaseOrderReportByPoNo(pono)
+	if err != nil {
+		c.JSON(http.StatusOK, err.Error())
+	}
+	header := c.Writer.Header()
+	header["Content-type"] = []string{"application/x-pdf"}
+	header["Content-Disposition"] = []string{"attachment; filename=po.pdf"}
+
+	file, _ := os.Open("purchase-order.pdf")
+
+	io.Copy(c.Writer, file)
+	return
+}
+
 // Approve ...
 func (r *PurchaseOrderController) Reject(c *gin.Context) {
 
@@ -193,6 +212,24 @@ func (r *PurchaseOrderController) Reject(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, purchaseOrderService.RejectPO(poID))
+
+	return
+}
+
+// Approve ...
+func (r *PurchaseOrderController) CancelSubmit(c *gin.Context) {
+
+	res := dbmodels.PurchaseOrder{}
+
+	poID, errPage := strconv.ParseInt(c.Param("id"), 10, 64)
+	if errPage != nil {
+		logs.Info("error", errPage)
+		c.JSON(http.StatusBadRequest, res)
+		c.Abort()
+		return
+	}
+
+	c.JSON(http.StatusOK, purchaseOrderService.CancelSubmitPO(poID))
 
 	return
 }

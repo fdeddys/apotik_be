@@ -32,7 +32,8 @@ func ApprovePaymentDirect(paymentDirect *dto.PaymentDirectModel) (errCode string
 	for idx, orderDetail := range salesOrderDetails {
 		fmt.Println("idx -> ", idx)
 
-		updateStockInsertHistory(order, orderDetail)
+		// update stock pindah saat sales order
+		// updateStockInsertHistory(order, orderDetail)
 
 		total = total + (orderDetail.Price * float32(orderDetail.QtyOrder))
 	}
@@ -134,8 +135,10 @@ func asyncQuerysPaymentDirect(db *gorm.DB, offset int, limit int, paymentDirects
 	salesOrderNo, paymentNo, isSearchPaymentStatus, isSearchPaymentNo := getParamDirectPayment(param)
 	fmt.Println("Search sales order no = ", salesOrderNo, " payment no ", paymentNo, " search pay status", isSearchPaymentStatus)
 
-	dateStart := param.StartDate + " 00:00:00.000"
-	dateEnd := param.EndDate + " 23:59:59.999"
+	dateStart := param.StartDate
+	dateEnd := param.EndDate
+	// dateStart := param.StartDate + " 00:00:00.000"
+	// dateEnd := param.EndDate + " 23:59:59.999"
 
 	db.Raw("select p.status as payment_status , p.payment_no , so.sales_order_no , so.order_date , "+
 		" so.status as so_status , so.grand_total  ,so.is_cash, p.id as payment_id, so.id as sales_order_id "+
@@ -144,7 +147,7 @@ func asyncQuerysPaymentDirect(db *gorm.DB, offset int, limit int, paymentDirects
 		" 	left join payment p on po.payment_id = p.id  "+
 		" where so.status in ('20','40', '50', '60') "+
 		" 	and so.is_cash "+
-		"   and so.order_date between ? and ? "+
+		"   and Date(so.order_date) between ? and ? "+
 		" 	and so.sales_order_no like ?  "+
 		" 	and ( p.payment_no like ? or ( not ? )) "+
 		" 	and ( p.status = ?        or ( not ? )) "+
@@ -180,8 +183,10 @@ func asyncQueryCountsPaymentDirect(db *gorm.DB, total *int, param dto.FilterPaym
 	salesOrderNo, paymentNo, isSearchPaymentStatus, isSearchPaymentNo := getParamDirectPayment(param)
 	fmt.Println("Search sales order no = ", salesOrderNo, " payment no ", paymentNo, " search pay status", isSearchPaymentStatus)
 
-	dateStart := param.StartDate + " 00:00:00.000"
-	dateEnd := param.EndDate + " 23:59:59.999"
+	// dateStart := param.StartDate + " 00:00:00.000"
+	// dateEnd := param.EndDate + " 23:59:59.999"
+	dateStart := param.StartDate
+	dateEnd := param.EndDate
 
 	row := db.Raw("select count(*) "+
 		" 	from sales_order so "+
@@ -189,7 +194,7 @@ func asyncQueryCountsPaymentDirect(db *gorm.DB, total *int, param dto.FilterPaym
 		" 	left join payment p on po.payment_id = p.id  "+
 		" where so.status in ('20','40', '50') "+
 		" 	and so.is_cash "+
-		" 	and so.order_date between ? and ? "+
+		" 	and Date(so.order_date) between ? and ? "+
 		" 	and so.sales_order_no like ?  "+
 		" 	and ( p.payment_no like ? or ( not ? )) "+
 		" 	and ( p.status = ?         or ( not ? )) ", dateStart, dateEnd,
@@ -252,6 +257,8 @@ func RejectPaymentDirect(paymentDirect *dto.PaymentDirectModel) (errCode string,
 }
 
 func updateStockInsertHistoryReject(order dbmodels.SalesOrder, orderDetail dbmodels.SalesOrderDetail) {
+	fmt.Println("Sales order yang di reject =>", order)
+
 	product, _, _ := FindProductByID(orderDetail.ProductID)
 
 	checkStock, _, _ := GetStockByProductAndWarehouse(product.ID, order.WarehouseID)

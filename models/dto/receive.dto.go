@@ -6,6 +6,7 @@ type FilterReceive struct {
 	EndDate       string `json:"endDate"`
 	Status        int    `json:"status"`
 	ReceiveNumber string `json:"receiveNumber"`
+	SupplierName  string `json:"supplierName"`
 }
 
 // FilterReceiveDetail ...
