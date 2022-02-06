@@ -194,9 +194,18 @@ func AsyncQueryCountsReceives(db *gorm.DB, total *int, status int, orders *[]dbm
 
 	var err error
 	if strings.TrimSpace(param.StartDate) != "" && strings.TrimSpace(param.EndDate) != "" {
-		err = db.Model(&orders).Preload("Supplier", " name ilike ? ", suppName).Where(" ( (status = ?) or ( not ?) ) AND  COALESCE(receive_no, '') ilike ? AND receive_date between ? and ?  ", status, byStatus, receiveNumber, param.StartDate, param.EndDate).Count(&*total).Error
+		err = db.
+			Model(&orders).
+			Joins("inner join supplier on supplier.id = receive.supplier_id and supplier.name ilike ? ", suppName).
+			Preload("Supplier", " name ilike ? ", suppName).
+			Where(" ( (receive.status = ?) or ( not ?) ) AND  COALESCE(receive_no, '') ilike ? AND receive_date between ? and ?  ", status, byStatus, receiveNumber, param.StartDate, param.EndDate).Count(&*total).
+			Error
 	} else {
-		err = db.Model(&orders).Preload("Supplier", " name ilike ? ", suppName).Where(" ( (status = ?) or ( not ?) ) AND COALESCE(receive_no,'') ilike ? ", status, byStatus, receiveNumber).Count(&*total).Error
+		err = db.
+			Model(&orders).
+			Joins("inner join supplier on supplier.id = receive.supplier_id and supplier.name ilike ? ", suppName).
+			Preload("Supplier", " name ilike ? ", suppName).Where(" ( (receive.status = ?) or ( not ?) ) AND COALESCE(receive_no,'') ilike ? ", status, byStatus, receiveNumber).Count(&*total).
+			Error
 	}
 
 	if err != nil {
@@ -216,11 +225,30 @@ func AsyncQuerysReceives(db *gorm.DB, offset int, limit int, status int, receive
 
 	fmt.Println("isi dari filter => receive [", param, "] ")
 	if strings.TrimSpace(param.StartDate) != "" && strings.TrimSpace(param.EndDate) != "" {
-		fmt.Println("isi dari filter =>masuk [", param.StartDate, '-', param.EndDate, "] ")
-		err = db.Order("receive_date DESC, id DESC").Offset(offset).Limit(limit).Preload("Supplier", " name ilike ? ", suppName).Find(&receives, " ( ( status = ?) or ( not ?) ) AND COALESCE(receive_no, '') ilike ? AND receive_date between ? and ?   ", status, byStatus, receiveNumber, param.StartDate, param.EndDate).Error
+		fmt.Println("isi dari filter =>masukXX [", param.StartDate, '-', param.EndDate, "] ")
+		// err = db.Order("receive_date DESC, id DESC").Offset(offset).Limit(limit).Preload("Supplier", " name like ? ", suppName).Find(&receives, " ( ( status = ?) or ( not ?) ) AND COALESCE(receive_no, '') ilike ? AND receive_date between ? and ?   ", status, byStatus, receiveNumber, param.StartDate, param.EndDate).Error
+		// err = db.Order("receive_date DESC, id DESC").Offset(offset).Limit(limit).Preload("Supplier", func(db *gorm.DB) *gorm.DB {
+		// 	return db.Where(" name ilike ? ", suppName)
+		// }).Find(&receives, " ( ( status = ?) or ( not ?) ) AND COALESCE(receive_no, '') ilike ? AND receive_date between ? and ?   ", status, byStatus, receiveNumber, param.StartDate, param.EndDate).Error
+		err = db.
+			Joins("inner join supplier on supplier.id = receive.supplier_id and supplier.name ilike ? ", suppName).
+			Order("receive_date DESC, id DESC").
+			Preload("Supplier").
+			Offset(offset).
+			Limit(limit).
+			Find(&receives, " ( ( receive.status = ?) or ( not ?) ) AND COALESCE(receive_no, '') ilike ? AND receive_date between ? and ?   ", status, byStatus, receiveNumber, param.StartDate, param.EndDate).
+			// Find(&receives).
+			Error
+
 	} else {
 		fmt.Println("isi dari kosong ")
-		err = db.Order("receive_date DESC, id DESC").Offset(offset).Limit(limit).Preload("Supplier", " name ilike ? ", suppName).Find(&receives, " ( ( status = ?) or ( not ?) ) AND COALESCE(receive_no,'') ilike ?  ", status, byStatus, receiveNumber).Error
+		err = db.
+			Joins("inner join supplier on supplier.id = receive.supplier_id and supplier.name ilike ? ", suppName).
+			Order("receive_date DESC, id DESC").
+			Offset(offset).Limit(limit).
+			Preload("Supplier", " name ilike ? ", suppName).
+			Find(&receives, " ( ( receive.status = ?) or ( not ?) ) AND COALESCE(receive_no,'') ilike ?  ", status, byStatus, receiveNumber).
+			Error
 		if err != nil {
 			fmt.Println("receive --> ", err)
 		}

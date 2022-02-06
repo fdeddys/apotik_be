@@ -138,15 +138,25 @@ func GetPurchaseOrderPage(param dto.FilterPurchaseOrder, offset, limit, internal
 // AsyncQueryCountsPurchaseOrders ...
 func AsyncQueryCountsPurchaseOrders(db *gorm.DB, total *int, status int, purchaseOrders *[]dbmodels.PurchaseOrder, param dto.FilterPurchaseOrder, resChan chan error) {
 
-	purchaseOrderNumber, byStatus, bySupplierID := getParamPurchaseOrder(param, status)
+	purchaseOrderNumber, byStatus, bySupplierID, suppName := getParamPurchaseOrder(param, status)
 
 	fmt.Println(" Rec Number ", purchaseOrderNumber, "  status ", status, " fill status ", byStatus)
 
 	var err error
 	if strings.TrimSpace(param.StartDate) != "" && strings.TrimSpace(param.EndDate) != "" {
-		err = db.Model(&purchaseOrders).Where(" ( (status = ?) or ( not ?) ) AND COALESCE(po_no, '') ilike ? AND po_date between ? and ?  AND ( ( supplier_id = ? ) or ( not ?) )  ", status, byStatus, purchaseOrderNumber, param.StartDate, param.EndDate, param.SupplierId, bySupplierID).Count(&*total).Error
+		err = db.
+			Model(&purchaseOrders).
+			Joins("inner join supplier on supplier.id = po.supplier_id and supplier.name ilike ? ", suppName).
+			Where(" ( (po.status = ?) or ( not ?) ) AND COALESCE(po_no, '') ilike ? AND po_date between ? and ?  AND ( ( supplier_id = ? ) or ( not ?) )  ", status, byStatus, purchaseOrderNumber, param.StartDate, param.EndDate, param.SupplierId, bySupplierID).
+			Count(&*total).
+			Error
 	} else {
-		err = db.Model(&purchaseOrders).Where(" ( (status = ?) or ( not ?) ) AND COALESCE(po_no,'') ilike ?  AND ( ( supplier_id = ? ) or ( not ?) ) ", status, byStatus, purchaseOrderNumber, param.SupplierId, bySupplierID).Count(&*total).Error
+		err = db.
+			Model(&purchaseOrders).
+			Joins("inner join supplier on supplier.id = po.supplier_id and supplier.name ilike ? ", suppName).
+			Where(" ( (po.status = ?) or ( not ?) ) AND COALESCE(po_no,'') ilike ?  AND ( ( supplier_id = ? ) or ( not ?) ) ", status, byStatus, purchaseOrderNumber, param.SupplierId, bySupplierID).
+			Count(&*total).
+			Error
 	}
 
 	if err != nil {
@@ -160,17 +170,30 @@ func AsyncQuerysPurchaseOrders(db *gorm.DB, offset int, limit int, status int, p
 
 	var err error
 
-	purchaseOrderNumber, byStatus, bySupplierID := getParamPurchaseOrder(param, status)
+	purchaseOrderNumber, byStatus, bySupplierID, suppName := getParamPurchaseOrder(param, status)
 
 	fmt.Println(" PurchaseOrder no ", purchaseOrderNumber, "  status ", status, " fill status ", byStatus)
 
 	fmt.Println("isi dari filter [", param, "] ")
 	if strings.TrimSpace(param.StartDate) != "" && strings.TrimSpace(param.EndDate) != "" {
 		fmt.Println("isi dari filter [", param.StartDate, '-', param.EndDate, "] ")
-		err = db.Preload("Supplier").Order("id DESC").Offset(offset).Limit(limit).Find(&purchaseOrders, " ( ( status = ?) or ( not ?) ) AND COALESCE(po_no, '') ilike ? AND po_date between ? and ?  AND ( ( supplier_id = ? ) or ( not ?) )  ", status, byStatus, purchaseOrderNumber, param.StartDate, param.EndDate, param.SupplierId, bySupplierID).Error
+		err = db.
+			Joins("inner join supplier on supplier.id = po.supplier_id and supplier.name ilike ? ", suppName).
+			Preload("Supplier").
+			Order("id DESC").
+			Offset(offset).
+			Limit(limit).
+			Find(&purchaseOrders, " ( ( po.status = ?) or ( not ?) ) AND COALESCE(po_no, '') ilike ? AND po_date between ? and ?  AND ( ( supplier_id = ? ) or ( not ?) )  ", status, byStatus, purchaseOrderNumber, param.StartDate, param.EndDate, param.SupplierId, bySupplierID).
+			Error
 	} else {
 		fmt.Println("isi dari kosong ")
-		err = db.Offset(offset).Limit(limit).Preload("Supplier").Order("id DESC").Find(&purchaseOrders, " ( ( status = ?) or ( not ?) ) AND COALESCE(po_no,'') ilike ?  AND ( ( supplier_id = ? ) or ( not ?) )  ", status, byStatus, purchaseOrderNumber, param.SupplierId, bySupplierID).Error
+		err = db.
+			Joins("inner join supplier on supplier.id = po.supplier_id and supplier.name ilike ? ", suppName).
+			Offset(offset).
+			Limit(limit).
+			Preload("Supplier").
+			Order("id DESC").Find(&purchaseOrders, " ( ( po.status = ?) or ( not ?) ) AND COALESCE(po_no,'') ilike ?  AND ( ( supplier_id = ? ) or ( not ?) )  ", status, byStatus, purchaseOrderNumber, param.SupplierId, bySupplierID).
+			Error
 		if err != nil {
 			fmt.Println("purchaseOrder --> ", err)
 		}
@@ -184,7 +207,7 @@ func AsyncQuerysPurchaseOrders(db *gorm.DB, offset int, limit int, status int, p
 	resChan <- nil
 }
 
-func getParamPurchaseOrder(param dto.FilterPurchaseOrder, status int) (purchaseOrderNumber string, byStatus, bySupplierID bool) {
+func getParamPurchaseOrder(param dto.FilterPurchaseOrder, status int) (purchaseOrderNumber string, byStatus, bySupplierID bool, supplierName string) {
 
 	purchaseOrderNumber = param.PurchaseOrderNumber
 	if purchaseOrderNumber == "" {
@@ -201,6 +224,13 @@ func getParamPurchaseOrder(param dto.FilterPurchaseOrder, status int) (purchaseO
 	bySupplierID = true
 	if param.SupplierId == 0 {
 		bySupplierID = false
+	}
+
+	supplierName = param.SupplierName
+	if supplierName == "" {
+		supplierName = "%"
+	} else {
+		supplierName = "%" + param.SupplierName + "%"
 	}
 
 	// byDate = true

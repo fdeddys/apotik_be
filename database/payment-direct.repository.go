@@ -147,7 +147,7 @@ func asyncQuerysPaymentDirect(db *gorm.DB, offset int, limit int, paymentDirects
 		" 	left join payment p on po.payment_id = p.id  "+
 		" where so.status in ('20','40', '50', '60') "+
 		" 	and so.is_cash "+
-		"   and Date(so.order_date) between ? and ? "+
+		"   and so.order_date >= ? and so.order_date <= ? "+
 		" 	and so.sales_order_no like ?  "+
 		" 	and ( p.payment_no like ? or ( not ? )) "+
 		" 	and ( p.status = ?        or ( not ? )) "+
@@ -194,7 +194,7 @@ func asyncQueryCountsPaymentDirect(db *gorm.DB, total *int, param dto.FilterPaym
 		" 	left join payment p on po.payment_id = p.id  "+
 		" where so.status in ('20','40', '50') "+
 		" 	and so.is_cash "+
-		" 	and Date(so.order_date) between ? and ? "+
+		" 	and Date(so.order_date) >= ? and Date(so.order_date)<= ? "+
 		" 	and so.sales_order_no like ?  "+
 		" 	and ( p.payment_no like ? or ( not ? )) "+
 		" 	and ( p.status = ?         or ( not ? )) ", dateStart, dateEnd,

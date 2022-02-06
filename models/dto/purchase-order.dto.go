@@ -6,6 +6,7 @@ type FilterPurchaseOrder struct {
 	Status              int    `json:"status"`
 	PurchaseOrderNumber string `json:"purchaseOrderNumber"`
 	SupplierId          int64  `json:"supplierId"`
+	SupplierName        string `json:"supplierName"`
 }
 
 // FilterBatchExpired ...

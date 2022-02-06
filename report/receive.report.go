@@ -158,7 +158,7 @@ func fillDataRecvDetail(receiveId int64) []DataRecvDetail {
 
 	fmt.Println("receive Details : ", receiveDetails)
 
-	go fillDataSupplier(receive)
+	fillDataSupplier(receive)
 	// tdk blh kosong
 	// per halaman max 25 item detail
 	totalRec = len(receiveDetails)
@@ -198,10 +198,13 @@ func fillDataRecvDetail(receiveId int64) []DataRecvDetail {
 }
 
 func fillDataSupplier(receive dbmodels.Receive) {
+	fmt.Println("isi header : supplier ===>", receive)
 	dataHdr.SupplierCode = receive.Supplier.Code
 	dataHdr.SupplierName = receive.Supplier.Name
 	dataHdr.TransAt = receive.ReceiveDate.Format("02-01-2006")
-	dataHdr.SourceDoc = receive.ReceiveNo
+	dataHdr.SourceDoc = receive.PoNo
+
+	fillDataCustomer(dataHdr.SupplierCode, dataHdr.SupplierName, dataHdr.TransAt, dataHdr.SourceDoc, receive.Supplier.Alamat, receive.Supplier.Kota)
 }
 
 func setHeaderReceive(pdf *gopdf.GoPdf) {
