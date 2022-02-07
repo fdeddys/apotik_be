@@ -146,14 +146,14 @@ func AsyncQueryCountsPurchaseOrders(db *gorm.DB, total *int, status int, purchas
 	if strings.TrimSpace(param.StartDate) != "" && strings.TrimSpace(param.EndDate) != "" {
 		err = db.
 			Model(&purchaseOrders).
-			Joins("inner join supplier on supplier.id = po.supplier_id and supplier.name ilike ? ", suppName).
+			Joins("left join supplier on supplier.id = po.supplier_id and supplier.name ilike ? ", suppName).
 			Where(" ( (po.status = ?) or ( not ?) ) AND COALESCE(po_no, '') ilike ? AND po_date between ? and ?  AND ( ( supplier_id = ? ) or ( not ?) )  ", status, byStatus, purchaseOrderNumber, param.StartDate, param.EndDate, param.SupplierId, bySupplierID).
 			Count(&*total).
 			Error
 	} else {
 		err = db.
 			Model(&purchaseOrders).
-			Joins("inner join supplier on supplier.id = po.supplier_id and supplier.name ilike ? ", suppName).
+			Joins("left join supplier on supplier.id = po.supplier_id and supplier.name ilike ? ", suppName).
 			Where(" ( (po.status = ?) or ( not ?) ) AND COALESCE(po_no,'') ilike ?  AND ( ( supplier_id = ? ) or ( not ?) ) ", status, byStatus, purchaseOrderNumber, param.SupplierId, bySupplierID).
 			Count(&*total).
 			Error
@@ -178,7 +178,7 @@ func AsyncQuerysPurchaseOrders(db *gorm.DB, offset int, limit int, status int, p
 	if strings.TrimSpace(param.StartDate) != "" && strings.TrimSpace(param.EndDate) != "" {
 		fmt.Println("isi dari filter [", param.StartDate, '-', param.EndDate, "] ")
 		err = db.
-			Joins("inner join supplier on supplier.id = po.supplier_id and supplier.name ilike ? ", suppName).
+			Joins("left join supplier on supplier.id = po.supplier_id and supplier.name ilike ? ", suppName).
 			Preload("Supplier").
 			Order("id DESC").
 			Offset(offset).
@@ -188,7 +188,7 @@ func AsyncQuerysPurchaseOrders(db *gorm.DB, offset int, limit int, status int, p
 	} else {
 		fmt.Println("isi dari kosong ")
 		err = db.
-			Joins("inner join supplier on supplier.id = po.supplier_id and supplier.name ilike ? ", suppName).
+			Joins("left join supplier on supplier.id = po.supplier_id and supplier.name ilike ? ", suppName).
 			Offset(offset).
 			Limit(limit).
 			Preload("Supplier").
