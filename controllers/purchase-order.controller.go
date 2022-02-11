@@ -57,7 +57,7 @@ func (r *PurchaseOrderController) FilterData(c *gin.Context) {
 	dataBodyReq, _ := ioutil.ReadAll(body)
 
 	if err := json.Unmarshal(dataBodyReq, &req); err != nil {
-		fmt.Println("Error, body Request ")
+		fmt.Println("Error, body Request ", err)
 		res.Error = err.Error()
 		c.JSON(http.StatusBadRequest, res)
 		c.Abort()

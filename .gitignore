@@ -9,3 +9,5 @@ invoice.pdf
 *.zip
 vendor/
 .idea/workspace.xml
+
+apotik_be
