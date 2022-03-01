@@ -228,7 +228,7 @@ func ExportToExcelReportPaymentSupplier(reportPayements []dto.ReportPaymentSuppl
 	xls.SetCellValue(sheet1Name, fmt.Sprintf("A%d", no), fmt.Sprintf("%v - %v ", t1.Format("02-January-2006"), t2.Format("02-January-2006")))
 
 	no = no + 2
-	xls.SetCellValue(sheet1Name, fmt.Sprintf("A%d", no), no)
+	xls.SetCellValue(sheet1Name, fmt.Sprintf("A%d", no), "#")
 	xls.SetCellValue(sheet1Name, fmt.Sprintf("B%d", no), "PaymentNo")
 	xls.SetCellValue(sheet1Name, fmt.Sprintf("C%d", no), "PaymentDate")
 	xls.SetCellValue(sheet1Name, fmt.Sprintf("D%d", no), "ReceiveNo")
@@ -236,6 +236,7 @@ func ExportToExcelReportPaymentSupplier(reportPayements []dto.ReportPaymentSuppl
 	xls.SetCellValue(sheet1Name, fmt.Sprintf("F%d", no), "Supplier")
 	xls.SetCellValue(sheet1Name, fmt.Sprintf("G%d", no), "PaymentReff")
 	xls.SetCellValue(sheet1Name, fmt.Sprintf("H%d", no), "Status")
+	xls.SetCellValue(sheet1Name, fmt.Sprintf("I%d", no), "PaymentMethod")
 	urut := 0
 
 	for _, rs := range reportPayements {
@@ -247,8 +248,9 @@ func ExportToExcelReportPaymentSupplier(reportPayements []dto.ReportPaymentSuppl
 		xls.SetCellValue(sheet1Name, fmt.Sprintf("D%d", no), rs.ReceiveNo)
 		xls.SetCellValue(sheet1Name, fmt.Sprintf("E%d", no), rs.ReceiveDate)
 		xls.SetCellValue(sheet1Name, fmt.Sprintf("F%d", no), rs.Supplier)
-		xls.SetCellValue(sheet1Name, fmt.Sprintf("G%d", no), rs.PaymentType)
+		xls.SetCellValue(sheet1Name, fmt.Sprintf("G%d", no), rs.PaymentReff)
 		xls.SetCellValue(sheet1Name, fmt.Sprintf("H%d", no), rs.Status)
+		xls.SetCellValue(sheet1Name, fmt.Sprintf("I%d", no), rs.PaymentType)
 	}
 
 	if err := xls.SaveAs(filename); err != nil {

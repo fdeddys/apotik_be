@@ -76,6 +76,7 @@ func (r *ReceiveController) FilterData(c *gin.Context) {
 
 	res = receiveService.GetDataPage(req, page, count, status)
 
+	fmt.Println("res page =>", res)
 	c.JSON(http.StatusOK, res)
 
 	return
@@ -140,7 +141,7 @@ func (r *ReceiveController) SaveByPO(c *gin.Context) {
 	dataBodyReq, _ := ioutil.ReadAll(body)
 
 	if err := json.Unmarshal(dataBodyReq, &req); err != nil {
-		fmt.Println("Error, unmarshal body Request to Receive stuct ", dataBodyReq)
+		fmt.Println("Error, unmarshal body Request to Receive stuct ", err.Error())
 		res.ErrDesc = constants.ERR_CODE_03_MSG
 		res.ErrCode = constants.ERR_CODE_03
 		c.JSON(http.StatusBadRequest, res)

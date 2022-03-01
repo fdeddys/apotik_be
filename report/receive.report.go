@@ -5,6 +5,7 @@ import (
 	dbmodels "distribution-system-be/models/dbModels"
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/astaxie/beego"
 	"github.com/leekchan/accounting"
@@ -169,7 +170,12 @@ func fillDataRecvDetail(receiveId int64) []DataRecvDetail {
 	tax = 0
 	grandTotal = 0
 	for i, receiveDetail := range receiveDetails {
-		data.Item = receiveDetail.Product.Name
+
+		if len(receiveDetail.Product.Name) > 40 {
+			data.Item = receiveDetail.Product.Name[0:40]
+		} else {
+			data.Item = receiveDetail.Product.Name
+		}
 		data.Unit = receiveDetail.UOM.Name
 		if receiveDetail.UomID == receiveDetail.Product.BigUomID {
 			data.Quantity = int64(receiveDetail.Qty) / int64(receiveDetail.Product.QtyUom)
@@ -201,7 +207,18 @@ func fillDataSupplier(receive dbmodels.Receive) {
 	fmt.Println("isi header : supplier ===>", receive)
 	dataHdr.SupplierCode = receive.Supplier.Code
 	dataHdr.SupplierName = receive.Supplier.Name
-	dataHdr.TransAt = receive.ReceiveDate.Format("02-01-2006")
+	// dataHdr.TransAt = receive.ReceiveDate.Format("02-01-2006")
+	dataHdr.TransAt = receive.ReceiveDate.Add(time.Hour * time.Duration(7+5)).Format("02-01-2006")
+	// EST -5
+	// total +7 +5
+
+	// var date, _ = time.Parse(time.RFC822, receive.ReceiveDate.String())
+	// fmt.Println("date baru", receive.ReceiveDate.Add(time.Hour*time.Duration(7+5)).Format("02-01-2006"))
+	// dataHdr.TransAt = receive.ReceiveDate.String()
+	// print location and local time
+	// location := receive.ReceiveDate.LoadLocation("Asia/Jakarta")
+	// fmt.Println("Location : ", location, " Time : ", receive.ReceiveDate.In(location))
+
 	dataHdr.SourceDoc = receive.PoNo
 
 	fillDataCustomer(dataHdr.SupplierCode, dataHdr.SupplierName, dataHdr.TransAt, dataHdr.SourceDoc, receive.Supplier.Alamat, receive.Supplier.Kota)
@@ -390,7 +407,7 @@ func showHeaderTableReceive(pdf *gopdf.GoPdf) {
 	pdf.SetX(tblCol1)
 	pdf.Text("#")
 
-	pdf.SetX(tblCol2)
+	pdf.SetX(tblCol2 - 25)
 	pdf.Text("Item")
 
 	pdf.SetX(tblCol3)
@@ -416,7 +433,7 @@ func showDataReceive(pdf *gopdf.GoPdf, no, item, unit string, qty, price, total 
 	pdf.SetX(tblCol1)
 	pdf.Text(no)
 
-	pdf.SetX(tblCol2)
+	pdf.SetX(tblCol2 - 25)
 	pdf.Text(item)
 
 	pdf.SetX(tblCol3)
