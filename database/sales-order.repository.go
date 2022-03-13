@@ -95,7 +95,8 @@ func SaveSalesOrderApprove(order *dbmodels.SalesOrder) (errCode string, errDesc 
 		// if order.IsCash == false {
 		updateStockInsertHistory(*order, orderDetail)
 		// }
-		total = total + (orderDetail.Price * float32(orderDetail.QtyOrder))
+		disc := orderDetail.Price * float32(orderDetail.QtyOrder) * orderDetail.Disc1 / 100
+		total = total + (orderDetail.Price*float32(orderDetail.QtyOrder) - disc)
 	}
 
 	db.Debug().LogMode(true)

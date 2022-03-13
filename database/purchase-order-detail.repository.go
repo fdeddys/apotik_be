@@ -38,7 +38,7 @@ func GetAllDataDetailPurchaseOrderByPoNo(purchaseOrderNo string) []dbmodels.Purc
 		return purchaseOrderDetails
 	}
 
-	err := db.Find(&purchaseOrderDetails, " po_id = ?  and qty > 0 ", purchaseOrder.ID).Error
+	err := db.Order("id asc").Find(&purchaseOrderDetails, " po_id = ?  and qty > 0 ", purchaseOrder.ID).Error
 	if err == gorm.ErrRecordNotFound {
 		return purchaseOrderDetails
 	}

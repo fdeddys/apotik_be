@@ -85,7 +85,16 @@ func AsyncQuerysReceiveDetails(db *gorm.DB, offset int, limit int, receiveDetail
 
 	var err error
 
-	err = db.Offset(offset).Limit(limit).Preload("Product.BigUom").Preload("Product.SmallUom").Preload("UOM").Find(&receiveDetails, "receive_id = ? ", receiveID).Error
+	err = db.Offset(offset).Limit(limit).
+		Preload("Product", func(db *gorm.DB) *gorm.DB {
+			return db.Order("product.name ASC")
+		}).
+		Preload("Product.BigUom").
+		Preload("Product.SmallUom").
+		Preload("UOM").
+		Find(&receiveDetails, "receive_id = ? ", receiveID).
+		Error
+
 	if err != nil {
 		fmt.Println("error --> ", err)
 	}

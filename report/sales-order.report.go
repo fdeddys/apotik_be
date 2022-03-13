@@ -26,6 +26,7 @@ type DataDetail struct {
 	Unit     string
 	Price    int64
 	Total    int64
+	disc     int64
 }
 
 var (
@@ -192,8 +193,10 @@ func fillDataDetail(orderID int64) []DataDetail {
 		data.Quantity = int64(ordDetail.QtyOrder)
 		data.Unit = ordDetail.UOM.Name
 		data.Price = int64(ordDetail.Price)
-		total := data.Price * data.Quantity
-		data.Total = int64(ordDetail.Price) * int64(ordDetail.QtyOrder)
+		data.disc = int64(ordDetail.Disc1)
+		total := (data.Price * data.Quantity) - (data.Price * data.Quantity * data.disc / 100)
+		data.Total = total
+		// int64(ordDetail.Price) * int64(ordDetail.QtyOrder)
 		subTotal += total
 		res[i+1] = data
 		fmt.Println("total sub total", subTotal)
@@ -316,6 +319,7 @@ func showLogo(pdf *gopdf.GoPdf) {
 // ex: SO, MT
 func setDetail(pdf *gopdf.GoPdf, data []DataDetail, param ...string) {
 	isPo := false
+	isInv := false
 	setPageNumb(pdf, curPage)
 	pdf.SetX(20)
 	pdf.SetY(spaceLen * 8)
@@ -332,6 +336,7 @@ func setDetail(pdf *gopdf.GoPdf, data []DataDetail, param ...string) {
 			isPo = true
 		case "invoice":
 			showCustomerInvoice(pdf)
+			isInv = true
 			// isPo = true
 		case "rr":
 			fmt.Println("set supplier rr")
@@ -347,7 +352,11 @@ func setDetail(pdf *gopdf.GoPdf, data []DataDetail, param ...string) {
 	if isPo {
 		showHeaderTablePO(pdf)
 	} else {
-		showHeaderTable(pdf)
+		if isInv {
+			showHeaderTableInv(pdf)
+		} else {
+			showHeaderTable(pdf)
+		}
 	}
 
 	fmt.Println("Panjang array ", len(data), "] ")
@@ -360,8 +369,11 @@ func setDetail(pdf *gopdf.GoPdf, data []DataDetail, param ...string) {
 			space(pdf)
 			if isPo {
 				showDataPO(pdf, fmt.Sprintf("%v", number), data[number].Item, data[number].Unit, data[number].Quantity)
+			} else if isInv {
+				showDataInv(pdf, fmt.Sprintf("%v", number), data[number].Item, data[number].Unit, data[number].Quantity, data[number].Price, data[number].Total, data[number].disc)
 			} else {
 				showData(pdf, fmt.Sprintf("%v", number), data[number].Item, data[number].Unit, data[number].Quantity, data[number].Price, data[number].Total)
+
 			}
 			number++
 			if number >= totalRec {
@@ -500,6 +512,38 @@ func showHeaderTable(pdf *gopdf.GoPdf) {
 	showLine(pdf)
 }
 
+func showDataInv(pdf *gopdf.GoPdf, no, item, unit string, qty, price, total int64, disc int64) {
+
+	ac := accounting.Accounting{Symbol: "", Precision: 0, Thousand: ".", Decimal: ","}
+	setFont(pdf, 10)
+	pdf.SetX(tblCol1)
+	pdf.Text(no)
+
+	pdf.SetX(tblCol2)
+	pdf.Text(item)
+
+	pdf.SetX(tblCol3)
+	pdf.Text(fmt.Sprintf("%v", qty))
+
+	pdf.SetX(tblCol4)
+	pdf.Text(unit)
+
+	pdf.SetX(tblCol5)
+	// pdf.Text(fmt.Sprintf("%v", price))
+	pdf.Text(ac.FormatMoney(price))
+
+	if disc > 0 {
+		pdf.SetX(tblCol5 + 45)
+		// pdf.Text(fmt.Sprintf("%v", price))
+		pdf.Text(fmt.Sprintf("%v", disc))
+		// pdf.Text(ac.FormatMoney(disc))
+	}
+
+	pdf.SetX(tblCol6 + 35)
+	// pdf.Text(fmt.Sprintf("%v", total))
+	pdf.Text(ac.FormatMoney(total))
+}
+
 func showData(pdf *gopdf.GoPdf, no, item, unit string, qty, price, total int64) {
 
 	ac := accounting.Accounting{Symbol: "", Precision: 0, Thousand: ".", Decimal: ","}
@@ -559,6 +603,37 @@ func showDataPO(pdf *gopdf.GoPdf, no, item, unit string, qty int64) {
 
 	pdf.SetX(tblCol4 + 120)
 	pdf.Text(unit)
+
+}
+
+func showHeaderTableInv(pdf *gopdf.GoPdf) {
+
+	showLine(pdf)
+	space(pdf)
+	setFontBold(pdf, 10)
+	pdf.SetX(tblCol1)
+	pdf.Text("#")
+
+	pdf.SetX(tblCol2)
+	pdf.Text("Item")
+
+	pdf.SetX(tblCol3)
+	pdf.Text("Quantity")
+
+	pdf.SetX(tblCol4)
+	pdf.Text("Unit")
+
+	pdf.SetX(tblCol5)
+	pdf.Text("Price")
+
+	pdf.SetX(tblCol5 + 35)
+	pdf.Text("Disc[%]")
+
+	pdf.SetX(tblCol6 + 35)
+	pdf.Text("Total")
+
+	space(pdf)
+	showLine(pdf)
 
 }
 
