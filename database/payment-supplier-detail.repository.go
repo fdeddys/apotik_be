@@ -158,3 +158,26 @@ func DeletePaymentSupplierDetailById(paymentDetailID int64) (errCode string, err
 	return constants.ERR_CODE_00, constants.ERR_CODE_00_MSG
 
 }
+
+func TotalPaymentDetailByPaymentID(paymentSupplierID int64) float32 {
+	total := float32(0)
+
+	var orderDetails []dbmodels.PaymentSupplierDetail
+	db := GetDbCon()
+	db.Debug().LogMode(true)
+
+	err := db.Find(&orderDetails, "  payment_supplier_id =?  ", paymentSupplierID).Error
+	if err != nil {
+		return total
+	}
+	if len(orderDetails) < 1 {
+		return total
+	}
+
+	for _, orderDetail := range orderDetails {
+		total1 := orderDetail.Total
+		total += total1
+	}
+
+	return total
+}

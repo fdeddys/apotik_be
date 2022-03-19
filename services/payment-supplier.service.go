@@ -58,10 +58,10 @@ func (o PaymentSupplierService) Save(paymentSupplier *dbmodels.PaymentSupplier) 
 		// tidak boleh update customer
 		curPayment, _ := database.GetPaymentSupplierById(paymentSupplier.ID)
 		paymentSupplier.SupplierID = curPayment.SupplierID
+		paymentSupplier.Total = database.TotalPaymentDetailByPaymentID(paymentSupplier.ID)
 	}
 	paymentSupplier.LastUpdateBy = dto.CurrUser
 	paymentSupplier.LastUpdate = time.Now()
-
 	err, errDesc, newID := database.SavePaymentSupplier(paymentSupplier)
 	if err != constants.ERR_CODE_00 {
 		return err, errDesc, "", 0, 0
