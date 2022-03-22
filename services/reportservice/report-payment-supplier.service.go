@@ -17,6 +17,7 @@ func (o ReportPaymentSupplierService) GenerateReportPaymentSupplier(filterData d
 	dateEnd := filterData.EndDate + " 23:59:59"
 	datas := generateDataReportPaymentSupplier(dateStart, dateEnd)
 	// filename = ExportToCSV(datas, filterData.StartDate, filterData.EndDate, "report-payment")
+
 	filename, success = excel.ExportToExcelReportPaymentSupplier(datas, filterData.StartDate, filterData.EndDate, "report-sales")
 	return
 }
@@ -24,5 +25,6 @@ func (o ReportPaymentSupplierService) GenerateReportPaymentSupplier(filterData d
 func generateDataReportPaymentSupplier(dateStart, dateEnd string) []dto.ReportPaymentSupplier {
 
 	datas := database.ReportPaymentSupplierByDate(dateStart, dateEnd)
+
 	return datas
 }

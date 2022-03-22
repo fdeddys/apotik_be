@@ -1,6 +1,8 @@
 package database
 
-import "distribution-system-be/models/dto"
+import (
+	"distribution-system-be/models/dto"
+)
 
 func ReportPaymentCashByDate(dateStart, dateEnd string) []dto.ReportPaymentCash {
 	db := GetDbCon()
@@ -59,9 +61,10 @@ func ReportPaymentSupplierByDate(dateStart, dateEnd string) []dto.ReportPaymentS
 
 	var datas []dto.ReportPaymentSupplier
 
+	// " 	to_char(r.receive_date , 'DD/Mon/YYYY') as receive_date ,  "+
 	db.Raw(
 		" select r.receive_no, "+
-			" 	to_char(r.receive_date , 'DD/Mon/YYYY') as receive_date ,  "+
+			" 	to_char(r.receive_date  + interval '1' day , 'DD/Mon/YYYY')  as receive_tgl ,  "+
 			" 	ps.payment_no ,  "+
 			" 	to_char(ps.payment_date , 'DD/Mon/YYYY') as payment_date , s.name as supplier , l.name as payment_type ,ps.payment_reff ,  "+
 			" 	( case  when ps.status = 0 or ps.status = 1 or ps.status = 10   then 'Outstanding'  "+
@@ -70,7 +73,8 @@ func ReportPaymentSupplierByDate(dateStart, dateEnd string) []dto.ReportPaymentS
 			" 		when  ps.status = 40 then 'Receiving' "+
 			" 		when  ps.status = 50 then 'Paid'  "+
 			" 		when  ps.status = 60 then 'Reject Payment'  "+
-			" 	else ps.status::text  end ) as status "+
+			" 	else ps.status::text  end ) as status, "+
+			"  	r.grand_total  "+
 			" from payment_supplier ps  "+
 			" inner join payment_supplier_detail psd on psd.payment_supplier_id = ps.id  "+
 			" inner join receive r on psd.receiving_id =r.id  "+
@@ -79,6 +83,9 @@ func ReportPaymentSupplierByDate(dateStart, dateEnd string) []dto.ReportPaymentS
 			" where ps.payment_date between ?  and ? "+
 			" order by ps.payment_date desc, ps.payment_no asc 	 ", dateStart, dateEnd).Scan(&datas)
 
+	// for _, data := range datas {
+	// 	fmt.Println(data.ReceiveNo, "- ", data.ReceiveTgl)
+	// }
 	return datas
 
 }

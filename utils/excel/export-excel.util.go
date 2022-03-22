@@ -237,20 +237,24 @@ func ExportToExcelReportPaymentSupplier(reportPayements []dto.ReportPaymentSuppl
 	xls.SetCellValue(sheet1Name, fmt.Sprintf("G%d", no), "PaymentReff")
 	xls.SetCellValue(sheet1Name, fmt.Sprintf("H%d", no), "Status")
 	xls.SetCellValue(sheet1Name, fmt.Sprintf("I%d", no), "PaymentMethod")
+	xls.SetCellValue(sheet1Name, fmt.Sprintf("J%d", no), "Total")
 	urut := 0
 
 	for _, rs := range reportPayements {
+
+		// fmt.Println(rs.ReceiveNo, "-", rs.ReceiveTgl)
 		no++
 		urut++
 		xls.SetCellValue(sheet1Name, fmt.Sprintf("A%d", no), urut)
 		xls.SetCellValue(sheet1Name, fmt.Sprintf("B%d", no), rs.PaymentNo)
 		xls.SetCellValue(sheet1Name, fmt.Sprintf("C%d", no), rs.PaymentDate)
 		xls.SetCellValue(sheet1Name, fmt.Sprintf("D%d", no), rs.ReceiveNo)
-		xls.SetCellValue(sheet1Name, fmt.Sprintf("E%d", no), rs.ReceiveDate)
+		xls.SetCellValue(sheet1Name, fmt.Sprintf("E%d", no), rs.ReceiveTgl)
 		xls.SetCellValue(sheet1Name, fmt.Sprintf("F%d", no), rs.Supplier)
 		xls.SetCellValue(sheet1Name, fmt.Sprintf("G%d", no), rs.PaymentReff)
 		xls.SetCellValue(sheet1Name, fmt.Sprintf("H%d", no), rs.Status)
 		xls.SetCellValue(sheet1Name, fmt.Sprintf("I%d", no), rs.PaymentType)
+		xls.SetCellValue(sheet1Name, fmt.Sprintf("J%d", no), rs.GrandTotal)
 	}
 
 	if err := xls.SaveAs(filename); err != nil {

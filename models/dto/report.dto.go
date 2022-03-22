@@ -36,6 +36,7 @@ type ReportPaymentSupplier struct {
 	PaymentType string
 	PaymentReff string
 	ReceiveNo   string
-	ReceiveDate string
+	ReceiveTgl  string
 	Status      string
+	GrandTotal  int64
 }
