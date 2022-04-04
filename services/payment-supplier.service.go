@@ -54,12 +54,13 @@ func (o PaymentSupplierService) Save(paymentSupplier *dbmodels.PaymentSupplier) 
 		}
 		paymentSupplier.PaymentNo = newOrderNo
 		paymentSupplier.Status = constants.STATUS_NEW
-	} else {
-		// tidak boleh update customer
-		curPayment, _ := database.GetPaymentSupplierById(paymentSupplier.ID)
-		paymentSupplier.SupplierID = curPayment.SupplierID
-		paymentSupplier.Total = database.TotalPaymentDetailByPaymentID(paymentSupplier.ID)
 	}
+	// else {
+	// 	// tidak boleh update customer
+	// 	curPayment, _ := database.GetPaymentSupplierById(paymentSupplier.ID)
+	// 	paymentSupplier.SupplierID = curPayment.SupplierID
+	// }
+	paymentSupplier.Total = database.TotalPaymentDetailByPaymentID(paymentSupplier.ID)
 	paymentSupplier.LastUpdateBy = dto.CurrUser
 	paymentSupplier.LastUpdate = time.Now()
 	err, errDesc, newID := database.SavePaymentSupplier(paymentSupplier)

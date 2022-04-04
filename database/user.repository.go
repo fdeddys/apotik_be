@@ -158,17 +158,24 @@ func SaveUser(user dbmodels.User) models.ContentResponse {
 	db := GetDbCon()
 	db.Debug().LogMode(true)
 
-	pass := GeneratePassword(8)
-	fmt.Println("password =>", pass)
-	enc := Encrypt(pass)
-	fmt.Printf("encrypt password =>%s\n", enc)
+	pass := ""
+	if user.ID == 0 {
+		pass = GeneratePassword(8)
+		fmt.Println("password =>", pass)
+		enc := Encrypt(pass)
+		fmt.Printf("encrypt password =>%s\n", enc)
 
-	dec := Decrypt(enc)
-	fmt.Printf("decrypt password =>%s\n", dec)
-	hashPassword := sha256.Sum256([]byte(user.UserName + pass))
-	user.Password = hex.EncodeToString(hashPassword[:])
+		dec := Decrypt(enc)
+		fmt.Printf("decrypt password =>%s\n", dec)
+		hashPassword := sha256.Sum256([]byte(user.UserName + pass))
+		user.Password = hex.EncodeToString(hashPassword[:])
+		fmt.Printf("hash password =>%s\n", hex.EncodeToString(hashPassword[:]))
+	} else {
+		userCur, _ := GetByUsername(user.UserName)
+		pass = userCur.Password
+		user.Password = pass
+	}
 	user.Status = 1
-	fmt.Printf("hash password =>%s\n", hex.EncodeToString(hashPassword[:]))
 
 	if r := db.Save(&user); r.Error != nil {
 		res.ErrCode = constants.ERR_CODE_51
@@ -203,6 +210,7 @@ func SaveUser(user dbmodels.User) models.ContentResponse {
 	// fmt.Println(dat)
 
 	user.Email = pass
+
 	// user.CurPass = enc
 	// user.LastName = pass
 	res.ErrCode = constants.ERR_CODE_00
