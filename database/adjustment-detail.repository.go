@@ -71,7 +71,7 @@ func AsyncQueryCountsAdjustmentDetails(db *gorm.DB, total *int, adjustmentID int
 
 	var err error
 
-	err = db.Model(&dbmodels.AdjustmentDetail{}).Offset(offset).Where("adjustment_id = ?", adjustmentID).Count(total).Error
+	err = db.Model(&dbmodels.AdjustmentDetail{}).Where("adjustment_id = ?", adjustmentID).Count(&*total).Error
 
 	if err != nil {
 		resChan <- err
