@@ -67,3 +67,13 @@ func (o OrderDetailService) UpdateQtyReceive(orderDetailId, qtyReceive int64) (e
 
 	return constants.ERR_CODE_00, constants.ERR_CODE_00_MSG
 }
+
+// UpdateQtyOrder ...
+func (o OrderDetailService) UpdateQtyOrder(orderDetailId, qtyOrder int64) (errCode string, errDesc string) {
+
+	if err, errDesc := database.UpdateQtyOrderSalesOrderDetail(orderDetailId, qtyOrder); err != constants.ERR_CODE_00 {
+		return err, errDesc
+	}
+
+	return constants.ERR_CODE_00, constants.ERR_CODE_00_MSG
+}

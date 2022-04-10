@@ -207,3 +207,31 @@ func UpdateQtyReceiveSalesOrderDetail(orderDetailId int64, qtyReceive int64) (er
 	return
 
 }
+
+// UpdateQtyReceiveSalesOrderDetail ...
+// khusus untuk order SO belom approve
+func UpdateQtyOrderSalesOrderDetail(orderDetailId int64, qtyOrder int64) (errCode string, errDesc string) {
+
+	fmt.Println(" Update Qty receive Sales Order Detail  -- ")
+
+	db := GetDbCon()
+	db.Debug().LogMode(true)
+
+	errCode = constants.ERR_CODE_00
+	errDesc = fmt.Sprintf("id = %v, qty = %v", orderDetailId, qtyOrder)
+
+	if r := db.Model(&dbmodels.SalesOrderDetail{}).
+		Where("id = ?", orderDetailId).
+		Update(dbmodels.SalesOrderDetail{
+			QtyOrder:     qtyOrder,
+			QtyPicking:   qtyOrder,
+			QtyReceive:   qtyOrder,
+			LastUpdateBy: dto.CurrUser,
+			LastUpdate:   util.GetCurrDate(),
+		}); r.Error != nil {
+		errCode = constants.ERR_CODE_30
+		errDesc = constants.ERR_CODE_30_MSG + " " + r.Error.Error()
+	}
+	return
+
+}

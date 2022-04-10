@@ -41,6 +41,7 @@ type FilterOrderDetail struct {
 	EndDate       string `json:"endDate"`
 	OrderDetailId int64  `json:"orderDetailId"`
 	QtyReceive    int64  `json:"qtyReceive"`
+	QtyOrder      int64  `json:"qtyOrder"`
 }
 
 // SalesOrder ...

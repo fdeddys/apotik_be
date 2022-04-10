@@ -28,6 +28,11 @@ func (h HistoryStockService) GetHistoryStockPage(param dto.FilterHistoryStock, p
 	res := models.ResponsePagination{}
 	offset := (page - 1) * limit
 	historyStocks, totalData, err := database.GetHistoryPage(param, offset, limit)
+	for idx, historyStock := range historyStocks {
+		// find uom
+		prod, _, _ := database.FindProductByCode(historyStock.Code)
+		historyStocks[idx].Satuan = prod.SmallUom.Name
+	}
 
 	if err != nil {
 		res.Error = err.Error()

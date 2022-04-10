@@ -184,6 +184,7 @@ func InitRouter() *gin.Engine {
 	api.POST("/page/:page/count/:count", OrderDetailController.GetDetail)
 	api.POST("", cekToken, OrderDetailController.Save)
 	api.POST("/updateItemRecv", cekToken, OrderDetailController.UpdateQtyReceive)
+	api.POST("/updateQtyOrder", cekToken, OrderDetailController.UpdateQtyOrder)
 	api.DELETE("/:id", cekToken, OrderDetailController.DeleteById)
 
 	// RETURN SALES-ORDER

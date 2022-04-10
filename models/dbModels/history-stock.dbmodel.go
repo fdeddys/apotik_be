@@ -22,6 +22,7 @@ type HistoryStock struct {
 	Hpp          float32   `json:"hpp" gorm:"column:hpp"`
 	Disc1        float32   `json:"disc1" gorm:"column:disc1"`
 	Total        float32   `json:"total" gorm:"column:total"`
+	Satuan       string    `json:"satuan" sql:"-"`
 }
 
 // TableName ...

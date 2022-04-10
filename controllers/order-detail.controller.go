@@ -143,3 +143,27 @@ func (s *OrderDetailController) UpdateQtyReceive(c *gin.Context) {
 
 	return
 }
+
+// UpdateQtyOrder ...
+func (s *OrderDetailController) UpdateQtyOrder(c *gin.Context) {
+
+	res := dto.OrderDetailResult{}
+	req := dto.FilterOrderDetail{}
+	body := c.Request.Body
+	dataBodyReq, _ := ioutil.ReadAll(body)
+
+	if err := json.Unmarshal(dataBodyReq, &req); err != nil {
+		fmt.Println("Error, unmarshal body Request to Sales Order stuct ", dataBodyReq)
+		res.ErrDesc = constants.ERR_CODE_03_MSG
+		res.ErrCode = constants.ERR_CODE_03
+		c.JSON(http.StatusBadRequest, res)
+		c.Abort()
+		return
+	}
+
+	res.ErrCode, res.ErrDesc = orderDetailService.UpdateQtyOrder(req.OrderDetailId, req.QtyOrder)
+
+	c.JSON(http.StatusOK, res)
+
+	return
+}

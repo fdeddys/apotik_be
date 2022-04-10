@@ -542,3 +542,16 @@ func AddnewStockAndHppProductByID(prodID, warehouseID int64, qty int64, newHpp f
 
 	return stock, constants.ERR_CODE_00, constants.ERR_CODE_00_MSG
 }
+
+// FindProductByCode ...
+func FindProductByCode(code string) (dbmodels.Product, string, string) {
+	db := GetDbCon()
+	db.Debug().LogMode(true)
+
+	var product dbmodels.Product
+	err := db.Preload("SmallUom").Where("code = ? ", code).First(&product).Error
+	if err != nil {
+		return dbmodels.Product{}, constants.ERR_CODE_40, constants.ERR_CODE_40_MSG
+	}
+	return product, constants.ERR_CODE_00, constants.ERR_CODE_00_MSG
+}

@@ -179,7 +179,7 @@ func GetLastPricePurchaseOrderDetail(productCode int64) (res dto.ResultLastPrice
 		" from product p   "+
 		" left  join receive_detail rd  on rd.product_id = p.id "+
 		" left join receive r on rd.receive_id = r.id  and r.status in(20, 40, 50, 60) "+
-		" where  p.id = ?  order by p.id desc  limit 1  ", productCode).Scan(&res)
+		" where  p.id = ?  order by rd.id desc  limit 1  ", productCode).Scan(&res)
 
 	return
 
