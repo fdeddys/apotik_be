@@ -132,6 +132,7 @@ func InitRouter() *gin.Engine {
 	product.GET("/list", ProductController.ProductList)
 	product.GET("", ProductController.GetProductLike)
 	product.GET("/processCSV", ProductController.ProcessCSV)
+	product.GET("/process-update", ProductController.ProcessUpdateProd)
 
 	ProductGroupController := new(controllers.ProductGroupController)
 	productGroup := r.Group("/api/product-group")

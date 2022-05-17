@@ -75,3 +75,11 @@ func AtoFloat64(s string) float64 {
 	}
 	return f64
 }
+
+func AtoFloat32(s string) float32 {
+	f32, err := strconv.ParseFloat(s, 32)
+	if err != nil {
+		return 0
+	}
+	return float32(f32)
+}

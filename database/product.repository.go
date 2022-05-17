@@ -555,3 +555,43 @@ func FindProductByCode(code string) (dbmodels.Product, string, string) {
 	}
 	return product, constants.ERR_CODE_00, constants.ERR_CODE_00_MSG
 }
+
+// FindProductByPLU ...
+func FindProductByPLU(plu string) (dbmodels.Product, string, string) {
+	db := GetDbCon()
+	db.Debug().LogMode(true)
+
+	var product dbmodels.Product
+	err := db.Where("plu = ? ", plu).First(&product).Error
+	if err != nil {
+		return dbmodels.Product{}, constants.ERR_CODE_40, constants.ERR_CODE_40_MSG
+	}
+	return product, constants.ERR_CODE_00, constants.ERR_CODE_00_MSG
+}
+
+// UpdateProductByPLU ...
+func UpdateProductByPLU(productID int64, hargaBaru float32) models.NoContentResponse {
+	var res models.NoContentResponse
+	db := GetDbCon()
+	db.Debug().LogMode(true)
+
+	var product dbmodels.Product
+	err := db.Model(&dbmodels.Product{}).Where("id=?", productID).First(&product).Error
+	if err != nil {
+		res.ErrCode = "02"
+		res.ErrDesc = "Error select data to DB"
+	}
+	product.SellPrice = hargaBaru
+
+	err2 := db.Save(&product)
+	if err2 != nil {
+		res.ErrCode = "02"
+		res.ErrDesc = "Error update data to DB"
+		return res
+	}
+
+	res.ErrCode = "00"
+	res.ErrDesc = "Success"
+
+	return res
+}

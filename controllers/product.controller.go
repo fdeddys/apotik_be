@@ -322,3 +322,59 @@ func (h *ProductController) ProcessCSV(c *gin.Context) {
 	c.Abort()
 	return
 }
+
+func (h *ProductController) ProcessUpdateProd(c *gin.Context) {
+
+	fmt.Println("Process")
+	fileObat, err := os.Open("update-product.csv")
+	if err != nil {
+		fmt.Println("Error ==>", err)
+		panic(err)
+	}
+	defer fileObat.Close()
+
+	fmt.Println("reader")
+	csvReader := csv.NewReader(fileObat)
+	csvReader.Comma = ';'
+	records, err2 := csvReader.ReadAll()
+	if err2 != nil {
+		fmt.Println("Error err2 ==>", err2)
+		return
+	}
+
+	var datas []dto.TemplateObat
+	i := 0
+	for _, value := range records {
+		fmt.Println("data ", value)
+		var template dto.TemplateObat
+		template.Plu = value[0]
+		template.Name = value[1]
+		template.Satuan = value[2]
+		template.HargaJualBaru = util.AtoFloat32(value[3])
+
+		datas = append(datas, template)
+		i++
+		if i > 10 {
+			continue
+		}
+	}
+
+	for _, templateObat := range datas {
+		fmt.Println(templateObat)
+		// var produk dbmodels.Product
+		if templateObat.Plu == "" {
+			continue
+		}
+
+		produk, errCode, _ := database.FindProductByPLU(templateObat.Plu)
+		if errCode != constants.ERR_CODE_00 {
+			continue
+		}
+		fmt.Println("Product ", produk)
+		database.UpdateProductByPLU(produk.ID, templateObat.HargaJualBaru)
+	}
+
+	c.JSON(http.StatusOK, "ok")
+	c.Abort()
+	return
+}

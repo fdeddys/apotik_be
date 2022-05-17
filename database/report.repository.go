@@ -61,10 +61,10 @@ func ReportPaymentSupplierByDate(dateStart, dateEnd string) []dto.ReportPaymentS
 
 	var datas []dto.ReportPaymentSupplier
 
-	// " 	to_char(r.receive_date , 'DD/Mon/YYYY') as receive_date ,  "+
+	// " 	to_char(r.receive_date + interval '1' day, 'DD/Mon/YYYY') as receive_date ,  "+
 	db.Raw(
 		" select r.receive_no, "+
-			" 	to_char(r.receive_date  + interval '1' day , 'DD/Mon/YYYY')  as receive_tgl ,  "+
+			" 	to_char(r.receive_date   , 'DD/Mon/YYYY')  as receive_tgl ,  "+
 			" 	ps.payment_no ,  "+
 			" 	to_char(ps.payment_date , 'DD/Mon/YYYY') as payment_date , s.name as supplier , l.name as payment_type ,ps.payment_reff ,  "+
 			" 	( case  when ps.status = 0 or ps.status = 1 or ps.status = 10   then 'Outstanding'  "+
