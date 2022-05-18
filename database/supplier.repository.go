@@ -3,7 +3,7 @@ package database
 import (
 	"distribution-system-be/constants"
 	"distribution-system-be/models"
-	"distribution-system-be/models/dbModels"
+	dbmodels "distribution-system-be/models/dbModels"
 	dto "distribution-system-be/models/dto"
 	"fmt"
 	"log"
@@ -70,7 +70,7 @@ func AsyncQueryCountsSupplier(db *gorm.DB, total *int, param dto.FilterPaging, r
 		searchCode += param.Code + "%"
 	}
 
-	err := db.Model(&dbmodels.Supplier{}).Where("name ilike ? AND code ilike ?", searchName,searchCode).Count(&*total).Error
+	err := db.Model(&dbmodels.Supplier{}).Where("name ilike ? AND code ilike ?", searchName, searchCode).Count(&*total).Error
 
 	if err != nil {
 		resChan <- err
@@ -90,7 +90,7 @@ func AsyncQuerysSupplier(db *gorm.DB, offset int, limit int, supplier *[]dbmodel
 		searchCode += param.Code + "%"
 	}
 
-	err := db.Preload("Bank").Order("id asc").Offset(offset).Limit(limit).Find(&supplier, "name ilike ? AND code ilike ?", searchName,searchCode).Error
+	err := db.Preload("Bank").Order("id asc").Offset(offset).Limit(limit).Find(&supplier, "name ilike ? AND code ilike ?", searchName, searchCode).Error
 	if err != nil {
 		resChan <- err
 	}
@@ -163,4 +163,20 @@ func GetListSupplier() []dbmodels.Supplier {
 
 	return supplier
 
+}
+
+// GetSupplierByID ...
+func GetSupplierByID(id int) (dbmodels.Supplier, string, string, error) {
+	db := GetDbCon()
+	db.Debug().LogMode(true)
+
+	var supplier dbmodels.Supplier
+	err := db.Preload("Bank").Model(&dbmodels.Supplier{}).Where("id = ?", &id).First(&supplier).Error
+
+	if err != nil {
+		return supplier, "02", "Error query data to DB", err
+	}
+	// else {
+	return supplier, "00", "success", nil
+	// }
 }

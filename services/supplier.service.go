@@ -3,7 +3,7 @@ package services
 import (
 	"distribution-system-be/database"
 	"distribution-system-be/models"
-	"distribution-system-be/models/dbModels"
+	dbmodels "distribution-system-be/models/dbModels"
 	dto "distribution-system-be/models/dto"
 	"fmt"
 	"strconv"
@@ -100,6 +100,27 @@ func (s SupplierService) GetDataSupplierPaging(param dto.FilterPaging, page int,
 	res.TotalRow = totalData
 	res.Page = page
 	res.Count = limit
+
+	return res
+}
+
+// GetBrandFilter ...
+func (h SupplierService) GetSupplierByID(id int) models.ContentResponse {
+
+	var res models.ContentResponse
+
+	data, errCode, errDesc, err := database.GetSupplierByID(id)
+
+	if err != nil {
+		res.Contents = nil
+		res.ErrCode = "02"
+		res.ErrDesc = "Error query data to DB"
+		return res
+	}
+
+	res.Contents = data
+	res.ErrCode = errCode
+	res.ErrDesc = errDesc
 
 	return res
 }

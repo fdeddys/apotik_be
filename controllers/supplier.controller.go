@@ -11,7 +11,7 @@ import (
 	"strconv"
 
 	"distribution-system-be/constants"
-	"distribution-system-be/models/dbModels"
+	dbmodels "distribution-system-be/models/dbModels"
 
 	"github.com/astaxie/beego/logs"
 	"github.com/gin-gonic/gin"
@@ -175,5 +175,25 @@ func (s *SupplierController) FilterDataSupplierMerchant(c *gin.Context) {
 
 	c.JSON(http.StatusOK, res)
 
+	return
+}
+
+// GetFilterBrand ...
+func (s *SupplierController) FilterByID(c *gin.Context) {
+	res := models.ContentResponse{}
+
+	id, errID := strconv.Atoi(c.Param("id"))
+	if errID != nil {
+		logs.Info("error", errID)
+		// res.Error = errID.Error()
+		c.JSON(http.StatusBadRequest, res)
+		c.Abort()
+		return
+	}
+
+	res = SupplierService.GetSupplierByID(id)
+
+	c.JSON(http.StatusOK, res)
+	c.Abort()
 	return
 }

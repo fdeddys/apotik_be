@@ -111,6 +111,7 @@ func InitRouter() *gin.Engine {
 
 	api = r.Group("/api/supplier")
 	api.POST("/page/:page/count/:count", SupplierController.FilterDataSupplier)
+	api.GET("/id/:id", SupplierController.FilterByID)
 	api.POST("", SupplierController.SaveDataSupplier)
 	api.PUT("", SupplierController.EditDataSupplier)
 
