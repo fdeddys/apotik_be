@@ -104,7 +104,7 @@ func SaveSalesOrderApprove(order *dbmodels.SalesOrder) (errCode string, errDesc 
 
 	grandTotal = total
 	if order.Tax != 0 {
-		grandTotal = total * 1.1
+		grandTotal = total + total*order.Tax/100
 	}
 	order.GrandTotal = grandTotal
 	order.Total = total

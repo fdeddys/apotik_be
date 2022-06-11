@@ -128,7 +128,7 @@ func SaveReceiveDetail(receiveDetail *dbmodels.ReceiveDetail) (errCode string, e
 }
 
 //UpdateReceiveDetail ...
-func UpdateReceiveDetail(idDetail, qty int64, price, disc1 float32, batchNo, ed string) (errCode string, errDesc string) {
+func UpdateReceiveDetail(idDetail, qty int64, price, disc1, disc2 float32, batchNo, ed string) (errCode string, errDesc string) {
 
 	fmt.Println(" Update Receive Detail  ------------------------------------------ ")
 
@@ -140,6 +140,7 @@ func UpdateReceiveDetail(idDetail, qty int64, price, disc1 float32, batchNo, ed 
 			Qty:          qty,
 			Price:        price,
 			Disc1:        disc1,
+			Disc2:        disc2,
 			LastUpdate:   util.GetCurrDate(),
 			LastUpdateBy: dto.CurrUser,
 			BatchNo:      batchNo,

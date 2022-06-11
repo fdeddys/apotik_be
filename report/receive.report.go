@@ -24,6 +24,8 @@ type DataRecvDetail struct {
 	Quantity int64
 	Unit     string
 	Price    int64
+	Disc1    int64
+	Disc2    int64
 	Total    int64
 	UomQty   int64
 }
@@ -185,8 +187,19 @@ func fillDataRecvDetail(receiveId int64) []DataRecvDetail {
 			data.UomQty = 1
 		}
 		data.Price = int64(receiveDetail.Price)
+		data.Disc1 = int64(receiveDetail.Disc1)
+		data.Disc2 = int64(receiveDetail.Disc2)
 		total := data.Price * data.Quantity * data.UomQty
+
 		data.Total = int64(receiveDetail.Price) * int64(receiveDetail.Qty)
+		disc1 := data.Total * int64(receiveDetail.Disc1) / 100
+		data.Total -= disc1
+		total -= disc1
+
+		disc2 := data.Total * int64(receiveDetail.Disc2) / 100
+		data.Total -= disc2
+		total -= disc2
+
 		subTotal += total
 		res[i+1] = data
 		fmt.Println("total sub total", subTotal)
@@ -196,7 +209,7 @@ func fillDataRecvDetail(receiveId int64) []DataRecvDetail {
 
 	tax = 0
 	if receive.Tax > 0 {
-		tax = int64(receive.Tax)
+		tax = subTotal * int64(receive.Tax) / 100
 	}
 	grandTotal = subTotal + tax
 
@@ -321,7 +334,7 @@ func setReceiveDetail(pdf *gopdf.GoPdf, data []DataRecvDetail) {
 		for i := 1; i <= 25; i++ {
 			fmt.Println("idx ke [", i, "]", data[number])
 			space(pdf)
-			showDataReceive(pdf, fmt.Sprintf("%v", number), data[number].Item, data[number].Unit, data[number].Quantity, data[number].Price, data[number].Total)
+			showDataReceive(pdf, fmt.Sprintf("%v", number), data[number].Item, data[number].Unit, data[number].Quantity, data[number].Price, data[number].Disc1, data[number].Disc2, data[number].Total)
 			number++
 			if number >= totalRec {
 				break
@@ -410,23 +423,29 @@ func showHeaderTableReceive(pdf *gopdf.GoPdf) {
 	pdf.SetX(tblCol2 - 25)
 	pdf.Text("Item")
 
-	pdf.SetX(tblCol3)
+	pdf.SetX(tblCol3 - 10)
 	pdf.Text("Quantity")
 
-	pdf.SetX(tblCol4)
+	pdf.SetX(tblCol4 - 10)
 	pdf.Text("Unit")
 
-	pdf.SetX(tblCol5)
+	pdf.SetX(tblCol5 - 40)
 	pdf.Text("Price")
 
-	pdf.SetX(tblCol6)
+	pdf.SetX(tblCol5 + 10)
+	pdf.Text("Disc1")
+
+	pdf.SetX(tblCol5 + 45)
+	pdf.Text("Disc2")
+
+	pdf.SetX(tblCol6 + 20)
 	pdf.Text("Total")
 
 	space(pdf)
 	showLine(pdf)
 }
 
-func showDataReceive(pdf *gopdf.GoPdf, no, item, unit string, qty, price, total int64) {
+func showDataReceive(pdf *gopdf.GoPdf, no, item, unit string, qty, price, disc1, disc2, total int64) {
 
 	ac := accounting.Accounting{Symbol: "", Precision: 0, Thousand: ".", Decimal: ","}
 	setFont(pdf, 10)
@@ -439,14 +458,20 @@ func showDataReceive(pdf *gopdf.GoPdf, no, item, unit string, qty, price, total 
 	pdf.SetX(tblCol3)
 	pdf.Text(fmt.Sprintf("%v", qty))
 
-	pdf.SetX(tblCol4)
+	pdf.SetX(tblCol4 - 10)
 	pdf.Text(unit)
 
-	pdf.SetX(tblCol5)
+	pdf.SetX(tblCol5 - 40)
 	// pdf.Text(fmt.Sprintf("%v", price))
 	pdf.Text(ac.FormatMoney(price))
 
-	pdf.SetX(tblCol6)
+	pdf.SetX(tblCol5 + 15)
+	pdf.Text(ac.FormatMoney(disc1))
+
+	pdf.SetX(tblCol5 + 50)
+	pdf.Text(ac.FormatMoney(disc2))
+
+	pdf.SetX(tblCol6 + 25)
 	// pdf.Text(fmt.Sprintf("%v", total))
 	pdf.Text(ac.FormatMoney(total))
 }

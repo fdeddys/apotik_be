@@ -37,7 +37,9 @@ func ApprovePaymentDirect(paymentDirect *dto.PaymentDirectModel) (errCode string
 
 		total = total + (orderDetail.Price * float32(orderDetail.QtyOrder))
 	}
-
+	if order.Tax > 0 {
+		total += total * order.Tax / 100
+	}
 	tx.Debug().LogMode(true)
 	// r := db.Model(&newOrder).Where("id = ?", order.ID).Update(dbmodels.SalesOrder{OrderNo: order.OrderNo, StatusCode: "001", WarehouseCode: order.WarehouseCode, InternalStatus: 1, OrderDate: order.OrderDate})
 

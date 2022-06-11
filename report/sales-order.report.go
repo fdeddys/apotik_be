@@ -206,7 +206,7 @@ func fillDataDetail(orderID int64) []DataDetail {
 
 	// tax = subTotal / 10
 	if order.Tax > 0 {
-		tax = int64(order.Tax)
+		tax = int64(order.Tax * float32(subTotal) / 100)
 	}
 
 	grandTotal = subTotal + tax

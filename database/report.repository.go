@@ -11,7 +11,7 @@ func ReportPaymentCashByDate(dateStart, dateEnd string) []dto.ReportPaymentCash 
 	var datas []dto.ReportPaymentCash
 
 	db.Raw("select l.name payment_type_name, p.payment_no , to_char(p.payment_date, 'DD-MON-YYYY') payment_date1, "+
-		" so.sales_order_no , to_char(so.order_date , 'DD/Mon/YYYY') order_date, p.total_order::integer , pd.total::integer as total_payment , "+
+		" so.sales_order_no , to_char(so.order_date , 'DD/Mon/YYYY') order_date, pd.total::integer total_order, so.tax total_ppn , p.total_payment::integer as total_payment , "+
 		" to_char(p.last_update, 'DD/Mon/YYYY') last_update, p.last_update_by "+
 		" from payment p "+
 		" inner join payment_detail pd on pd.payment_id = p.id and p.is_cash = true and p.status = 20 "+
@@ -20,6 +20,17 @@ func ReportPaymentCashByDate(dateStart, dateEnd string) []dto.ReportPaymentCash 
 		" inner join sales_order so on po.sales_order_id = so.id  "+
 		" where payment_date between ?  and ? "+
 		" order by payment_date desc, payment_no asc ", dateStart, dateEnd).Scan(&datas)
+
+	// db.Raw("select l.name payment_type_name, p.payment_no , to_char(p.payment_date, 'DD-MON-YYYY') payment_date1, "+
+	// 	" so.sales_order_no , to_char(so.order_date , 'DD/Mon/YYYY') order_date, p.total_order::integer, pd.total::integer as total_payment , "+
+	// 	" to_char(p.last_update, 'DD/Mon/YYYY') last_update, p.last_update_by "+
+	// 	" from payment p "+
+	// 	" inner join payment_detail pd on pd.payment_id = p.id and p.is_cash = true and p.status = 20 "+
+	// 	" left join lookup l on l.id = pd.payment_type_id  "+
+	// 	" inner join payment_order po on po.payment_id  = p.id "+
+	// 	" inner join sales_order so on po.sales_order_id = so.id  "+
+	// 	" where payment_date between ?  and ? "+
+	// 	" order by payment_date desc, payment_no asc ", dateStart, dateEnd).Scan(&datas)
 
 	return datas
 

@@ -51,7 +51,7 @@ func (r ReceiveDetailService) UpdateReceiveDetail(receiveDetails *[]dbmodels.Rec
 
 	for _, receiveDetail := range *receiveDetails {
 		// fmt.Println(receiveDetail.ID, "  ", receiveDetail.Qty, " ", receiveDetail.Price, " ", receiveDetail.Disc1)
-		if err, errDesc := database.UpdateReceiveDetail(receiveDetail.ID, receiveDetail.Qty, receiveDetail.Price, receiveDetail.Disc1, receiveDetail.BatchNo, receiveDetail.Ed); err != constants.ERR_CODE_00 {
+		if err, errDesc := database.UpdateReceiveDetail(receiveDetail.ID, receiveDetail.Qty, receiveDetail.Price, receiveDetail.Disc1, receiveDetail.Disc2, receiveDetail.BatchNo, receiveDetail.Ed); err != constants.ERR_CODE_00 {
 			return err, errDesc
 		}
 	}

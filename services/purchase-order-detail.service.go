@@ -73,6 +73,7 @@ func (r PurchaseOrderDetailService) GetLastPricePurchaseOrderDetail(productId in
 	res.ErrDesc = constants.ERR_CODE_00_MSG
 	res.Price = data.Price
 	res.Disc1 = data.Disc1
+	res.Disc2 = data.Disc2
 	res.Hpp = data.Hpp
 	return res
 }

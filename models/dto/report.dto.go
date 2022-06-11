@@ -7,6 +7,7 @@ type ReportPaymentCash struct {
 	SalesOrderNo    string
 	OrderDate       string
 	TotalOrder      int64
+	TotalPpn        int64
 	TotalPayment    int64
 	LastUpdate      string
 	LastUpdateBy    string

@@ -175,7 +175,7 @@ func GetLastPricePurchaseOrderDetail(productCode int64) (res dto.ResultLastPrice
 	// 	" where  rd.product_id = ? "+
 	// 	" order by rd.id desc  limit 1 ", productCode).Scan(&res)
 
-	db.Raw("select  price::numeric::integer, disc1, p.hpp "+
+	db.Raw("select  price::numeric::integer, disc1, disc2, p.hpp "+
 		" from product p   "+
 		" left  join receive_detail rd  on rd.product_id = p.id "+
 		" left join receive r on rd.receive_id = r.id  and r.status in(20, 40, 50, 60) "+

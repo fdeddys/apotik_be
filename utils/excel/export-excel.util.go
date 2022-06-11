@@ -178,9 +178,10 @@ func ExportToExcelReportPaymentCash(reportPayements []dto.ReportPaymentCash, dat
 	xls.SetCellValue(sheet1Name, fmt.Sprintf("E%d", no), "SalesOrderNo")
 	xls.SetCellValue(sheet1Name, fmt.Sprintf("F%d", no), "OrderDate")
 	xls.SetCellValue(sheet1Name, fmt.Sprintf("G%d", no), "TotalOrder")
-	xls.SetCellValue(sheet1Name, fmt.Sprintf("H%d", no), "TotalPayment")
-	xls.SetCellValue(sheet1Name, fmt.Sprintf("I%d", no), "LastUpdate")
-	xls.SetCellValue(sheet1Name, fmt.Sprintf("J%d", no), "LastUpdateBy")
+	xls.SetCellValue(sheet1Name, fmt.Sprintf("H%d", no), "TotalPPn")
+	xls.SetCellValue(sheet1Name, fmt.Sprintf("I%d", no), "TotalPayment")
+	xls.SetCellValue(sheet1Name, fmt.Sprintf("J%d", no), "LastUpdate")
+	xls.SetCellValue(sheet1Name, fmt.Sprintf("K%d", no), "LastUpdateBy")
 	urut := 0
 
 	// sort.SliceStable(reportPayements, func(i, j int) bool {
@@ -196,10 +197,26 @@ func ExportToExcelReportPaymentCash(reportPayements []dto.ReportPaymentCash, dat
 		xls.SetCellValue(sheet1Name, fmt.Sprintf("D%d", no), rs.PaymentDate1)
 		xls.SetCellValue(sheet1Name, fmt.Sprintf("E%d", no), rs.SalesOrderNo)
 		xls.SetCellValue(sheet1Name, fmt.Sprintf("F%d", no), rs.OrderDate)
-		xls.SetCellValue(sheet1Name, fmt.Sprintf("G%d", no), rs.TotalOrder)
-		xls.SetCellValue(sheet1Name, fmt.Sprintf("H%d", no), rs.TotalPayment)
-		xls.SetCellValue(sheet1Name, fmt.Sprintf("I%d", no), rs.LastUpdate)
-		xls.SetCellValue(sheet1Name, fmt.Sprintf("J%d", no), rs.LastUpdateBy)
+		ppnRp := int64(0)
+		sebelumPPn := rs.TotalOrder
+		if rs.TotalPpn > 0 {
+			fmt.Println("hitung PPN ", rs.PaymentNo)
+			fmt.Println("total pay ", rs.TotalPayment)
+			fmt.Println("total ppn ", rs.TotalPpn)
+			ppnPersen := (100 + (float32(rs.TotalPpn))) / 100
+			fmt.Println("total ppn persen ", ppnPersen)
+			totalord := float32(rs.TotalPayment) / (ppnPersen)
+			fmt.Println("total ord ", totalord)
+			sebelumPPn = int64(totalord)
+			fmt.Println("total sblm ppn ", sebelumPPn)
+			ppnRp = sebelumPPn * rs.TotalPpn / 100
+			fmt.Println("total  ppn ", ppnRp)
+		}
+		xls.SetCellValue(sheet1Name, fmt.Sprintf("G%d", no), sebelumPPn)
+		xls.SetCellValue(sheet1Name, fmt.Sprintf("H%d", no), ppnRp)
+		xls.SetCellValue(sheet1Name, fmt.Sprintf("I%d", no), rs.TotalPayment)
+		xls.SetCellValue(sheet1Name, fmt.Sprintf("J%d", no), rs.LastUpdate)
+		xls.SetCellValue(sheet1Name, fmt.Sprintf("K%d", no), rs.LastUpdateBy)
 	}
 
 	if err := xls.SaveAs(filename); err != nil {

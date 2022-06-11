@@ -76,7 +76,7 @@ func SaveReceiveApprove(receive *dbmodels.Receive) (errCode string, errDesc stri
 		} else {
 			curQty = checkStock.Qty
 			updateQty = curQty + receiveDetail.Qty
-			newHpp = reCalculateHpp(product.Hpp, checkStock.Qty, receiveDetail.Price, receiveDetail.Qty)
+			newHpp = reCalculateHpp(product.Hpp, checkStock.Qty, receiveDetail.Price, receiveDetail.Qty, receiveDetail.Disc1, receiveDetail.Disc2)
 		}
 		// curQty := checkStock.Qty
 
@@ -94,9 +94,13 @@ func SaveReceiveApprove(receive *dbmodels.Receive) (errCode string, errDesc stri
 		historyStock.LastUpdate = time.Now()
 		historyStock.LastUpdateBy = dto.CurrUser
 		historyStock.Disc1 = receiveDetail.Disc1
+		historyStock.Disc2 = receiveDetail.Disc2
 		historyStock.WarehouseID = receive.WarehouseID
 
-		total = total + (receiveDetail.Price * float32(receiveDetail.Qty) * ((100 - receiveDetail.Disc1) / 100))
+		//total -= (receiveDetail.Price * float32(receiveDetail.Qty) * ((100 - receiveDetail.Disc1) / 100))
+		total = receiveDetail.Price * float32(receiveDetail.Qty)
+		total = total * ((100 - receiveDetail.Disc1) / 100)
+		total = total * ((100 - receiveDetail.Disc2) / 100)
 		historyStock.Total = total
 		fmt.Println("total -> ", total)
 
@@ -135,7 +139,11 @@ func SaveReceiveApprove(receive *dbmodels.Receive) (errCode string, errDesc stri
 	return constants.ERR_CODE_00, constants.ERR_CODE_00_MSG
 }
 
-func reCalculateHpp(hpp1 float32, qty1 int64, price2 float32, qty2 int64) float32 {
+func reCalculateHpp(hpp1 float32, qty1 int64, price2 float32, qty2 int64, disc1, disc2 float32) float32 {
+
+	newHpp := price2
+	newHpp = newHpp * ((100 - disc1) / 100)
+	newHpp = newHpp * ((100 - disc2) / 100)
 
 	totalRp := (hpp1 * float32(qty1)) + (price2 * float32(qty2))
 	totalQty := qty1 + qty2
