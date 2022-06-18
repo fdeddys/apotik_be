@@ -6,6 +6,7 @@ import (
 	dto "distribution-system-be/models/dto"
 	"fmt"
 	"log"
+	"math"
 	"strings"
 	"sync"
 	"time"
@@ -48,9 +49,11 @@ func SaveReceiveApprove(receive *dbmodels.Receive) (errCode string, errDesc stri
 	// update history stock
 	// hitung ulang
 	var total float32
+	var subtotal float32
 	var grandTotal float32
 	total = 0
 	grandTotal = 0
+	subtotal = 0
 	receiveDetails := GetAllDataDetailReceive(receive.ID)
 	for idx, receiveDetail := range receiveDetails {
 		fmt.Println("idx -> ", idx)
@@ -110,18 +113,20 @@ func SaveReceiveApprove(receive *dbmodels.Receive) (errCode string, errDesc stri
 			UpdateStockAndHppProductByID(receiveDetail.ProductID, receive.WarehouseID, updateQty, newHpp)
 		}
 		db.Save(&historyStock)
-
+		subtotal += total
 	}
 
 	db.Debug().LogMode(true)
 	// r := db.Model(&newOrder).Where("id = ?", order.ID).Update(dbmodels.SalesOrder{OrderNo: order.OrderNo, StatusCode: "001", WarehouseCode: order.WarehouseCode, InternalStatus: 1, OrderDate: order.OrderDate})
 
-	grandTotal = total
+	grandTotal = subtotal
+	curTax := float32(0)
 	if receive.Tax != 0 {
-		grandTotal *= 1.1
+		curTax = float32(math.Round(float64(grandTotal) * float64(receive.Tax) / 100))
 	}
+	grandTotal += curTax
 	receive.GrandTotal = grandTotal
-	receive.Total = total
+	receive.Total = subtotal
 	receive.LastUpdateBy = dto.CurrUser
 	receive.LastUpdate = time.Now()
 	receive.Status = 20

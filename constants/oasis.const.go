@@ -3,7 +3,7 @@ package constants
 const (
 	TokenSecretKey        = "OasI$_sEcrET_key$"
 	TokenExpiredInMinutes = 8 * 60 * 60
-	VERSION               = "B060622"
+	VERSION               = "B180622"
 	VERSION_DATE          = "28OKT2021"
 )
 
