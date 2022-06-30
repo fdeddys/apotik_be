@@ -30,7 +30,7 @@ func init() {
 	dbaddres = beego.AppConfig.DefaultString("db.postgres.addres", "")
 	dbport = beego.AppConfig.DefaultString("db.postgres.port", "8086")
 	sslmode = beego.AppConfig.DefaultString("db.postgres.sslmode", "disable")
-	dbdebug = beego.AppConfig.DefaultBool("db.postgres.debug", true)
+	dbdebug = beego.AppConfig.DefaultBool("db.postgres.debug", false)
 	if DbOpen() != nil {
 		fmt.Println("Can Open db Postgres")
 	}

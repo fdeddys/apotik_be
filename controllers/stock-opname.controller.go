@@ -287,3 +287,13 @@ func convertCSVtoData(file multipart.File) ([]dto.TemplateReportStockOpname, str
 
 	return datas, constants.ERR_CODE_00, constants.ERR_CODE_00_MSG, "ok"
 }
+
+func (s *StockOpnameController) RecalculateTotal(c *gin.Context) {
+
+	res := dto.StockOpnameSaveResult{}
+	errCode, errMsg := StockOpnameService.RecalculateTotal()
+	res.ErrDesc = errMsg
+	res.ErrCode = errCode
+	c.JSON(http.StatusOK, res)
+	return
+}

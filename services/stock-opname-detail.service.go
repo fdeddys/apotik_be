@@ -3,6 +3,7 @@ package services
 import (
 	"distribution-system-be/constants"
 	"distribution-system-be/database"
+	repository "distribution-system-be/database"
 	"distribution-system-be/models"
 	dbmodels "distribution-system-be/models/dbModels"
 	"distribution-system-be/models/dto"
@@ -52,6 +53,14 @@ func (o StockOpnameDetailService) SaveByUploadaData(stockOpnameId int64, stockUp
 
 	for _, stockUpload := range stockUploads {
 
+		curStock := int64(0)
+		stockOpname, _ := repository.GetStockOpnameById(stockOpnameId)
+
+		stock, errCode, _ := repository.GetStockByProductAndWarehouse(stockUpload.ProductID, stockOpname.WarehouseID)
+		if errCode == constants.ERR_CODE_00 {
+			curStock = stock.Qty
+		}
+
 		var stockOpnameDetail dbmodels.StockOpnameDetail
 		stockOpnameDetail.LastUpdate = time.Now()
 		stockOpnameDetail.LastUpdateBy = dto.CurrUser
@@ -59,6 +68,7 @@ func (o StockOpnameDetailService) SaveByUploadaData(stockOpnameId int64, stockUp
 		stockOpnameDetail.Qty = stockUpload.Qty
 		stockOpnameDetail.StockOpnameID = stockOpnameId
 		stockOpnameDetail.UomID = stockUpload.UomID
+		stockOpnameDetail.QtyOnSystem = curStock
 
 		errcode, errdesc := database.SaveStockOpnameDetail(&stockOpnameDetail)
 		if errcode != constants.ERR_CODE_00 {

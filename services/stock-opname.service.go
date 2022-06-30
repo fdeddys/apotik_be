@@ -134,3 +134,13 @@ func generateData(warehouseID int64) []dto.TemplateReportStockOpname {
 	datas := database.FindDataStockByWarehouseID(warehouseID)
 	return datas
 }
+
+// Approve ...
+func (o StockOpnameService) RecalculateTotal() (errCode, errDesc string) {
+
+	err, errDesc := database.RecalculateTotal()
+	if err != constants.ERR_CODE_00 {
+		return err, errDesc
+	}
+	return constants.ERR_CODE_00, constants.ERR_CODE_00_MSG
+}

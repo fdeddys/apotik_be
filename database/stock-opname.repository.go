@@ -55,7 +55,8 @@ func SaveStockOpnameApprove(stockOpname *dbmodels.StockOpname) (errCode string, 
 	// -    - update stock di warenouse -> 0
 	// -    - insert history stock  = 0
 	products := ProductList()
-
+	total := float32(0)
+	curStock := int64(0)
 	for _, product := range products {
 
 		stockFound := true
@@ -68,6 +69,8 @@ func SaveStockOpnameApprove(stockOpname *dbmodels.StockOpname) (errCode string, 
 			stock.WarehouseID = stockOpname.WarehouseID
 			tx.Save(&stock)
 			stockFound = false
+		} else {
+			curStock = stock.Qty
 		}
 
 		var stockOpnameDetail dbmodels.StockOpnameDetail
@@ -92,6 +95,13 @@ func SaveStockOpnameApprove(stockOpname *dbmodels.StockOpname) (errCode string, 
 				stock.LastUpdate = time.Now()
 				stock.LastUpdateBy = dto.CurrUser
 				tx.Save(&stock)
+				total += float32(stockOpnameDetail.Qty-curStock) * product.Hpp
+				fmt.Println("1.name = ", product.Name, ":total=", total, ":so qty", stockOpnameDetail.Qty, "- product qty:", curStock, ":hpp-", product.Hpp)
+
+			} else {
+				total += float32(stockOpnameDetail.Qty) * product.Hpp
+				fmt.Println("2.name = ", product.Name, ":total=", total, ":so qty", stockOpnameDetail.Qty, "- product qty:", curStock, ":hpp-", product.Hpp)
+
 			}
 
 			var history dbmodels.HistoryStock
@@ -143,13 +153,19 @@ func SaveStockOpnameApprove(stockOpname *dbmodels.StockOpname) (errCode string, 
 		history.Total = 0
 		history.WarehouseID = stockOpname.WarehouseID
 		tx.Save(&history)
+
+		total += float32(stockOpnameDetail.Qty-curStock) * (stockOpnameDetail.Hpp)
+		fmt.Println("3.name = ", product.Name, ":total=", total, ":so qty", stockOpnameDetail.Qty, "- product qty:", curStock, ":hpp-", product.Hpp)
+
 	}
 
-	db.Debug().LogMode(true)
+	db.Debug().LogMode(false)
 
+	fmt.Println("Sebelom save total = ", total)
 	stockOpname.LastUpdateBy = dto.CurrUser
 	stockOpname.LastUpdate = util.GetCurrDate()
 	stockOpname.Status = 20
+	stockOpname.Total = total
 	r := db.Save(&stockOpname)
 	if r.Error != nil {
 		errCode = constants.ERR_CODE_80
@@ -314,4 +330,77 @@ func FindDataStockByWarehouseID(warehousID int64) []dto.TemplateReportStockOpnam
 
 	return datas
 
+}
+
+func RecalculateTotal() (errCode string, errDesc string) {
+
+	fmt.Println(" Recalculate StockOpname ------------------------------------------ ")
+	db := GetDbCon()
+	tx := db.Begin()
+	// defer func() {
+	// 	if r := recover(); r != nil {
+	// 		tx.Rollback()
+	// 	}
+	// }()
+
+	var stockOpnames []dbmodels.StockOpname
+	err := db.Where("total = 0   ").Find(&stockOpnames).Error
+	if err != nil {
+		return
+	}
+
+	products := ProductList()
+	for _, stockOpname := range stockOpnames {
+		fmt.Println("stockopname ", stockOpname.StockOpnameNo)
+
+		total := float32(0)
+		curStock := int64(0)
+		for _, product := range products {
+
+			stockFound := true
+			stock, errCode, _ := GetStockByProductAndWarehouse(product.ID, stockOpname.WarehouseID)
+			if errCode != constants.ERR_CODE_00 {
+				stockFound = false
+			} else {
+				curStock = stock.Qty
+			}
+
+			var stockOpnameDetail dbmodels.StockOpnameDetail
+
+			r := tx.Where(" stock_opname_id = ? and product_id = ? ", stockOpname.ID, product.ID).Find(&stockOpnameDetail).Error
+
+			// opname tidak ditemukan
+			if r != nil {
+
+				if stockFound {
+					total += float32(stockOpnameDetail.Qty-curStock) * product.Hpp
+				} else {
+					total += float32(stockOpnameDetail.Qty) * product.Hpp
+				}
+				fmt.Println("Update detail =", total)
+				continue
+			}
+			if stockOpnameDetail.Qty > 0 || curStock > 0 {
+				fmt.Println("stockopname = ", stockOpnameDetail.Qty, " : ", stock.Qty)
+			}
+
+			total += float32(stockOpnameDetail.Qty-curStock) * (stockOpnameDetail.Hpp)
+			fmt.Println("Update detail =", total)
+
+		}
+
+		db.Debug().LogMode(true)
+
+		stockOpname.Total = total
+		r := db.Save(&stockOpname)
+		if r.Error != nil {
+			errCode = constants.ERR_CODE_80
+			errDesc = r.Error.Error()
+			fmt.Println("Error update stock  ", errDesc)
+			return
+		}
+	}
+	tx.Commit()
+
+	return constants.ERR_CODE_00, constants.ERR_CODE_00_MSG
 }

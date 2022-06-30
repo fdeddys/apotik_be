@@ -351,6 +351,9 @@ func InitRouter() *gin.Engine {
 	api.POST("/approve", cekToken, StockOpnameController.Approve)
 	api.POST("/download-template/:warehouseId", StockOpnameController.DownloadTemplate)
 	api.POST("/upload-template/:stockOpnameId", StockOpnameController.UploadTemplate)
+
+	api = r.Group("/api/stock-opnames")
+	api.GET("/recalulate-total/", StockOpnameController.RecalculateTotal)
 	// api.POST("/reject", cekToken, StockOpnameController.Reject)
 	// api.POST("/print/:id", StockOpnameController.PrintStockOpnameForm)
 
