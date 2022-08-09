@@ -51,10 +51,12 @@ func (o StockOpnameDetailService) Save(stockMutationDetail *dbmodels.StockOpname
 
 func (o StockOpnameDetailService) SaveByUploadaData(stockOpnameId int64, stockUploads []dto.TemplateReportStockOpname) (errCode string, errDesc string) {
 
+	total := 0
+	hpp := 0
+	stockOpname, _ := repository.GetStockOpnameById(stockOpnameId)
 	for _, stockUpload := range stockUploads {
 
 		curStock := int64(0)
-		stockOpname, _ := repository.GetStockOpnameById(stockOpnameId)
 
 		stock, errCode, _ := repository.GetStockByProductAndWarehouse(stockUpload.ProductID, stockOpname.WarehouseID)
 		if errCode == constants.ERR_CODE_00 {
@@ -74,8 +76,13 @@ func (o StockOpnameDetailService) SaveByUploadaData(stockOpnameId int64, stockUp
 		if errcode != constants.ERR_CODE_00 {
 			fmt.Println("Error ", stockUpload.ProductName, " ==? ", errdesc)
 		}
-	}
 
+		hpp = int(stockOpnameDetail.Hpp)
+		total += ((int(stockOpnameDetail.Qty)) - int(curStock)) * hpp
+	}
+	fmt.Println("Update total Stock Opname ", total)
+	stockOpname.Total = float32(total)
+	database.SaveStockOpname(&stockOpname)
 	fmt.Println("Finish add detail ")
 	return constants.ERR_CODE_00, constants.ERR_CODE_00_MSG
 }

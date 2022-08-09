@@ -31,12 +31,12 @@ type Response struct {
 }
 
 type ResponseCheckPrice struct {
-	ErrCode string `json:"errCode"`
-	ErrDesc string `json:"errDesc"`
-	Price   int64  `json:"price"`
-	Disc1   int64  `json:"disc1"`
-	Disc2   int64  `json:"disc2"`
-	Hpp     int64  `json:"hpp"`
+	ErrCode string  `json:"errCode"`
+	ErrDesc string  `json:"errDesc"`
+	Price   int64   `json:"price"`
+	Disc1   int64   `json:"disc1"`
+	Disc2   int64   `json:"disc2"`
+	Hpp     float32 `json:"hpp"`
 }
 
 // Merchant ...

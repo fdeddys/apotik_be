@@ -39,5 +39,5 @@ type ReportPaymentSupplier struct {
 	ReceiveNo   string
 	ReceiveTgl  string
 	Status      string
-	GrandTotal  int64
+	GrandTotal  float32
 }
