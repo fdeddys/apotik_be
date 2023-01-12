@@ -25,6 +25,26 @@ func (o OrderService) GetDataOrderById(orderID int64) dbmodels.SalesOrder {
 	return res
 }
 
+// GetDataOrderById ...
+func (o OrderService) GetTotalOrderById(orderID int64) float32 {
+
+	// var err error
+	grandTotal := float32(0)
+	totalDetails := database.GetAllDataDetail(orderID)
+
+	for _, detail := range totalDetails {
+		total := float32(0)
+
+		total = detail.Price * float32(detail.QtyOrder)
+		total = total - (total * detail.Disc1 / 100)
+		total = total - (total * detail.Disc2 / 100)
+
+		grandTotal += total
+	}
+
+	return grandTotal
+}
+
 // GetDataPage ...
 func (o OrderService) GetDataPage(param dto.FilterOrder, page int, limit int, internalStatus int) models.ResponsePagination {
 	var res models.ResponsePagination

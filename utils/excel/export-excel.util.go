@@ -205,7 +205,8 @@ func ExportToExcelReportPaymentCash(reportPayements []dto.ReportPaymentCash, dat
 			fmt.Println("total ppn ", rs.TotalPpn)
 			ppnPersen := (100 + (float32(rs.TotalPpn))) / 100
 			fmt.Println("total ppn persen ", ppnPersen)
-			totalord := float32(rs.TotalPayment) / (ppnPersen)
+			//totalord := float32(rs.TotalPayment) / (ppnPersen)
+			totalord := float32(rs.TotalOrder) / (ppnPersen)
 			fmt.Println("total ord ", totalord)
 			sebelumPPn = int64(totalord)
 			fmt.Println("total sblm ppn ", sebelumPPn)
@@ -214,7 +215,8 @@ func ExportToExcelReportPaymentCash(reportPayements []dto.ReportPaymentCash, dat
 		}
 		xls.SetCellValue(sheet1Name, fmt.Sprintf("G%d", no), sebelumPPn)
 		xls.SetCellValue(sheet1Name, fmt.Sprintf("H%d", no), ppnRp)
-		xls.SetCellValue(sheet1Name, fmt.Sprintf("I%d", no), rs.TotalPayment)
+		// xls.SetCellValue(sheet1Name, fmt.Sprintf("I%d", no), rs.TotalPayment)
+		xls.SetCellValue(sheet1Name, fmt.Sprintf("I%d", no), rs.TotalOrder)
 		xls.SetCellValue(sheet1Name, fmt.Sprintf("J%d", no), rs.LastUpdate)
 		xls.SetCellValue(sheet1Name, fmt.Sprintf("K%d", no), rs.LastUpdateBy)
 	}

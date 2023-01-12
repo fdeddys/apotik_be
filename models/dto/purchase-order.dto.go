@@ -44,3 +44,10 @@ type ResultLastPrice struct {
 	Disc2 int64   `json:"disc2"`
 	Hpp   float32 `json:"hpp"`
 }
+
+type ResultLastPrice2 struct {
+	Price float32 `json:"price"`
+	// Disc1 int64   `json:"disc1"`
+	// Disc2 int64   `json:"disc2"`
+	Hpp float32 `json:"hpp"`
+}

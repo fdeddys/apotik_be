@@ -189,3 +189,22 @@ func (r *ReceiveDetailController) SearchBatchExpired(c *gin.Context) {
 
 	return
 }
+
+// GetDetail ...
+func (r *ReceiveDetailController) GetLastPrice(c *gin.Context) {
+
+	res := models.ResponseReceiveCheckPrice{}
+	productId, err := strconv.ParseInt(c.Param("productId"), 10, 64)
+	if err != nil {
+		logs.Info("error", err)
+		res.Price = 0
+		c.JSON(http.StatusBadRequest, res)
+		c.Abort()
+		return
+	}
+	res = receiveDetailService.GetDataPriceProduct(productId)
+
+	c.JSON(http.StatusOK, res)
+
+	return
+}

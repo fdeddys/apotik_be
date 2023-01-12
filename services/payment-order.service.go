@@ -54,6 +54,11 @@ func (r PaymentOrderService) SavePaymentOrder(paymentOrder *dbmodels.PaymentOrde
 
 	// tx.Commit()
 
+	order, _ := database.GetSalesOrderByOrderId(paymentOrder.SalesOrderID)
+	if !(order.Status == 0 || order.Status == 10 || order.Status == 20) {
+		return constants.ERR_CODE_41, constants.ERR_CODE_41_MSG
+	}
+
 	if err, errDesc := database.SavePaymentOrder(paymentOrder); err != constants.ERR_CODE_00 {
 		return err, errDesc
 	}

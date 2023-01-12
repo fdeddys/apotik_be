@@ -6,6 +6,7 @@ import (
 	"distribution-system-be/models"
 	dbmodels "distribution-system-be/models/dbModels"
 	"distribution-system-be/models/dto"
+	"fmt"
 )
 
 // ReceiveDetailService ...
@@ -89,6 +90,18 @@ func (r ReceiveDetailService) GetDataBatchExpired(param dto.FilterBatchExpired, 
 	res.TotalRow = totalData
 	res.Page = page
 	res.Count = limit
+
+	return res
+}
+
+// GetDataPriceProductlPage ...
+func (r ReceiveDetailService) GetDataPriceProduct(productId int64) models.ResponseReceiveCheckPrice {
+
+	var res models.ResponseReceiveCheckPrice
+	data := database.GetDataPriceProduct(productId)
+
+	fmt.Println("service : ", data)
+	res.Price = data.Price
 
 	return res
 }

@@ -173,6 +173,7 @@ func InitRouter() *gin.Engine {
 
 	api = r.Group("/api/sales-order")
 	api.GET("/:id", OrderController.GetByOrderId)
+	api.GET("/:id/total", cekToken, OrderController.CekTotal)
 	api.POST("/page/:page/count/:count", cekToken, OrderController.FilterData)
 	api.POST("", cekToken, OrderController.Save)
 	api.POST("/approve", cekToken, OrderController.Approve)
@@ -220,6 +221,7 @@ func InitRouter() *gin.Engine {
 
 	api = r.Group("/api/receive-detail")
 	api.POST("/page/:page/count/:count", ReceiveDetailController.GetDetail)
+	api.GET("/last-price/:productId", ReceiveDetailController.GetLastPrice)
 	api.POST("", cekToken, ReceiveDetailController.Save)
 	api.POST("/updateDetail", cekToken, ReceiveDetailController.UpdateDetail)
 	api.DELETE("/:id", cekToken, ReceiveDetailController.DeleteByID)

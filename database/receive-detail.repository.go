@@ -1,6 +1,7 @@
 package database
 
 import (
+	"distribution-system-be/models"
 	dbmodels "distribution-system-be/models/dbModels"
 	"distribution-system-be/models/dto"
 	"distribution-system-be/utils/util"
@@ -254,4 +255,78 @@ func AsyncQueryCountsReceiveOrderDetailsBatchExpired(db *gorm.DB, total *int, pa
 		resChan <- err
 	}
 	resChan <- nil
+}
+
+type Result struct {
+	Harga int64
+}
+
+// GetReceiveDetailPage ...
+func GetDataPriceProduct(productId int64) (res models.ResponseReceiveCheckPrice) {
+	db := GetDbCon()
+	db.Debug().LogMode(true)
+
+	// recDetail := dbmodels.ReceiveDetail{}
+
+	fmt.Println(" product Receive Detail  ---- ", productId)
+
+	// success
+	// var receiveDetails []dbmodels.ReceiveDetail
+	// db.Preload("Product", "id = ?", productId).Find(&receiveDetails)
+
+	// var result Result
+	// db.Raw(` select price
+	// 	 from "public"."receive_detail"
+	// 	 where  product_id = 7361 `).Scan(&result)
+
+	// var result string
+	// row := db.Raw(`select *  from receive_detail r
+	// inner join product p on p.id = r.product_id
+	// where p."name"  = 'ABBOTIC 125 MG/  5ML GRANUL 30ML SYR'
+	//  `).Row()
+	// row.Scan(&recDetail)
+	// " (  SELECT max(id) FROM receive_detail where product_id = ? ) ", productId).Scan(&result)
+
+	// var result Result
+	// db.Raw("select  price::numeric::integer harga " +
+	// 	" from  receive_detail r  " +
+	// 	" inner join product p on p.id = r.product_id  " +
+	// 	" where p.name  = 'ABBOTIC 125 MG/  5ML GRANUL 30ML SYR'   ").Scan(&result)
+
+	// err := db.Find(&recDetail, "product_id = ?", productId).Error
+	// err := db.Where("product_id = ?", productId).Find(&recDetail).Error
+
+	// if err != nil {
+	// 	fmt.Println("err " + err.Error())
+	// }
+	// row := db.Table("receive_detail").Where("product_id = ?", 7361).Select("price").Row()
+	// row.Scan(&price)
+
+	// var receiveDetails []dbmodels.ReceiveDetail
+	// db.Find(&receiveDetails).Preload("Product", "id = ?", productId)
+
+	// db := GetDbCon()
+	// db.Debug().LogMode(true)
+
+	// db.Raw("select "+
+	// 	" price::numeric::integer, disc1, p.hpp "+
+	// 	" from receive_detail rd "+
+	// 	" left join receive r on rd.receive_id = r.id and r.status in(20, 40, 50, 60)  "+
+	// 	" inner join product p on rd.product_id = p.id   "+
+	// 	" where  rd.product_id = ? "+
+	// 	" order by rd.id desc  limit 1 ", productCode).Scan(&res)
+
+	resp := dto.ResultLastPrice2{}
+	db.Raw("select  rd.price , p.hpp  "+
+		" from product p   "+
+		" left  join receive_detail rd  on rd.product_id = p.id "+
+		" left join receive r on rd.receive_id = r.id  and r.status in(20, 40, 50, 60) "+
+		" where  p.id = ?  order by rd.id desc  limit 1  ", productId).Scan(&resp)
+
+	fmt.Println("isi +", (resp))
+	// , " hpp ", resp[0].Hpp)
+	fmt.Println("err db", db.GetErrors())
+	res.Price = int64(resp.Price)
+	// int64(resp.Price)
+	return
 }

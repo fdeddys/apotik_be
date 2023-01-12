@@ -12,6 +12,8 @@ type FilterAdjustment struct {
 type FilterAdjustmentDetail struct {
 	AdjustmentNo string `json:"adjustmentNo"`
 	AdjustmentID int64  `json:"adjustmentId"`
+	StartDate    string `json:"startDate"`
+	EndDate      string `json:"endDate"`
 }
 
 // AdjustmentSaveResult ...

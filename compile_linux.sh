@@ -2,3 +2,4 @@
 
 env GOOS=linux GOARCH=amd64 go build -o apotik_be
 
+# pg_restore -U username -d dbname -1 filename.dump

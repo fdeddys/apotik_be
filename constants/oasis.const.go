@@ -93,6 +93,9 @@ const (
 const (
 	ERR_CODE_40     = "40"
 	ERR_CODE_40_MSG = "Data not found"
+
+	ERR_CODE_41     = "41"
+	ERR_CODE_41_MSG = "STATUS NOT VALID, PLEASE REFRESH YOUR DATA !"
 )
 
 // STATUS Sales Order

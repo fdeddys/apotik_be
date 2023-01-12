@@ -185,3 +185,7 @@ type ResponseStatus struct {
 	ErrDesc        string `json:"errDesc"`
 	ApprovalStatus bool   `json:"approvalStatus"`
 }
+
+type ResponseReceiveCheckPrice struct {
+	Price int64 `json:"price"`
+}

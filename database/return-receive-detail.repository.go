@@ -73,8 +73,8 @@ func AsyncQueryCountsReceiveReturnDetails(db *gorm.DB, total *int, returnReceive
 
 	var err error
 
-	err = db.Model(&dbmodels.ReturnReceiveDetail{}).Offset(offset).Where("return_receive_id = ?", returnReceiveID).Count(total).Error
-
+	err = db.Model(&dbmodels.ReturnReceiveDetail{}).Where("return_receive_id = ?", returnReceiveID).Count(total).Error
+	// Offset(offset).
 	if err != nil {
 		resChan <- err
 	}

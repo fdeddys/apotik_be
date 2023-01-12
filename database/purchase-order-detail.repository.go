@@ -160,9 +160,7 @@ func DeletePurchaseOrderDetailById(id int64) (errCode string, errDesc string) {
 
 }
 
-func GetLastPricePurchaseOrderDetail(productCode int64) (res dto.ResultLastPrice) {
-
-	fmt.Println(" Get last price  ---- ", productCode)
+func GetLastPricePurchaseOrderDetail(productId int64) (res dto.ResultLastPrice) {
 
 	db := GetDbCon()
 	db.Debug().LogMode(true)
@@ -179,7 +177,7 @@ func GetLastPricePurchaseOrderDetail(productCode int64) (res dto.ResultLastPrice
 		" from product p   "+
 		" left  join receive_detail rd  on rd.product_id = p.id "+
 		" left join receive r on rd.receive_id = r.id  and r.status in(20, 40, 50, 60) "+
-		" where  p.id = ?  order by rd.id desc  limit 1  ", productCode).Scan(&res)
+		" where  p.id = ?  order by rd.id desc  limit 1  ", productId).Scan(&res)
 
 	return
 

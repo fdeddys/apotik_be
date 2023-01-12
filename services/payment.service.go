@@ -90,8 +90,14 @@ func (o PaymentService) Approve(payment *dbmodels.Payment) (errCode, errDesc str
 
 	// fmt.Println("isi order ", order)
 
-	paymentUpdate, _ := database.GetPaymentById(payment.ID)
+	// orderData := database.GetOrderByOrderNo(payment.)
+	// if !(payment.Status == 0 || payment.Status == 10) {
+	// 	errCode = constants.ERR_CODE_41
+	// 	errDesc = constants.ERR_CODE_41_MSG
+	// 	return
+	// }
 
+	paymentUpdate, _ := database.GetPaymentById(payment.ID)
 	if payment.TotalOrder <= 0 {
 		errCode = constants.ERR_CODE_95
 		errDesc = constants.ERR_CODE_95_MSG

@@ -51,6 +51,25 @@ func (s *OrderController) GetByOrderId(c *gin.Context) {
 
 }
 
+// GetByOrderId ...
+func (s *OrderController) CekTotal(c *gin.Context) {
+
+	orderID, errPage := strconv.ParseInt(c.Param("id"), 10, 64)
+	if errPage != nil {
+		logs.Info("error", errPage)
+		c.JSON(http.StatusBadRequest, 0)
+		c.Abort()
+		return
+	}
+
+	res := OrderService.GetTotalOrderById(orderID)
+
+	c.JSON(http.StatusOK, res)
+	c.Abort()
+	return
+
+}
+
 // FilterData ...
 func (s *OrderController) FilterData(c *gin.Context) {
 	req := dto.FilterOrder{}
