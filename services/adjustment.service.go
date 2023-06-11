@@ -8,6 +8,7 @@ import (
 	dto "distribution-system-be/models/dto"
 	"fmt"
 	"time"
+	util "distribution-system-be/utils/util"
 )
 
 // AdjustmentService ...
@@ -70,6 +71,8 @@ func (a AdjustmentService) Save(adjustment *dbmodels.Adjustment) (errCode, errDe
 func (a AdjustmentService) ApproveAdjustment(order *dbmodels.Adjustment) (errCode, errDesc string) {
 
 	// fmt.Println("isi order ", order)
+	order.LastUpdate = util.GetCurrFormatDate()
+	order.LastUpdateBy= dto.CurrUser
 	err, errDesc := database.SaveAdjustmentApprove(order)
 	if err != constants.ERR_CODE_00 {
 		return err, errDesc

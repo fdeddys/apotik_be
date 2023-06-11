@@ -46,14 +46,14 @@ func RejectSalesOrder(order *dbmodels.SalesOrder) (errCode string, errDesc strin
 
 	// r := db.Model(&newOrder).Where("id = ?", order.ID).Update(dbmodels.SalesOrder{OrderNo: order.OrderNo, StatusCode: "001", WarehouseCode: order.WarehouseCode, InternalStatus: 1, OrderDate: order.OrderDate})
 
-	salesOrder, _ := GetOrderByOrderNo(order.SalesOrderNo)
-	salesOrderDetails := GetAllDataDetail(order.ID)
-	for idx, orderDetail := range salesOrderDetails {
-		fmt.Println("idx -> ", idx)
+	// salesOrder, _ := GetOrderByOrderNo(order.SalesOrderNo)
+	// salesOrderDetails := GetAllDataDetail(order.ID)
+	// for idx, orderDetail := range salesOrderDetails {
+	// 	fmt.Println("idx -> ", idx)
 
-		updateStockInsertHistoryReject(salesOrder, orderDetail)
+	// 	updateStockInsertHistoryReject(salesOrder, orderDetail)
 
-	}
+	// }
 
 	r := db.Model(&dbmodels.SalesOrder{}).Where("id =?", order.ID).Update(dbmodels.SalesOrder{Status: 30})
 	// r := db.Save(&order)
