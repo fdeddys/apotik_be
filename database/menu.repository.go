@@ -110,3 +110,37 @@ func GetUserMenus(user string) ([]dbmodels.Menu, error) {
 	}
 	return menus, nil
 }
+
+func ValidateMenuByUserName(username string, menuname string) (bool){
+
+	found := false;
+
+	db := GetDbCon()
+	db.Debug().LogMode(true)
+
+	var templates []dto.TemplateValidateMenu
+
+
+	err := db.Raw(`
+	select users.user_name username, roles.name rolename
+	from m_menus menu
+	inner join m_role_menu rolemenus on menu.id = menu_id 
+	inner join m_roles roles on roles.id = rolemenus.role_id
+	inner join m_role_user roleusers on roleusers.role_id = roles.id
+	inner join m_users users on users.id = roleusers.user_id
+	where menu.name =  ? and rolemenus.status = 1 and users.user_name= ?
+	`, menuname, username).Scan(&templates).Error
+
+	if err != nil {
+		return found
+	}
+
+	fmt.Println("list => ", templates)
+	if len(templates)>0 {
+		found = true
+	}
+
+
+	
+	return found
+}

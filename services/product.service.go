@@ -7,6 +7,7 @@ import (
 	dbmodels "distribution-system-be/models/dbModels"
 	dto "distribution-system-be/models/dto"
 	"time"
+	"fmt"
 )
 
 // ProductService ...
@@ -17,6 +18,10 @@ type ProductService struct {
 func (h ProductService) GetProductFilterPaging(param dto.FilterProduct, page int, limit int) models.ResponsePagination {
 	var res models.ResponsePagination
 
+	// if validateMenu()==false{
+	// 	res.Contents = nil
+	// 	return res
+	// }
 	offset := (page - 1) * limit
 	data, totalData, err := repository.GetProductListPaging(param, offset, limit, false)
 
@@ -37,6 +42,10 @@ func (h ProductService) GetProductFilterPaging(param dto.FilterProduct, page int
 func (h ProductService) GetProductFilterPagingAllStatus(param dto.FilterProduct, page int, limit int) models.ResponsePagination {
 	var res models.ResponsePagination
 
+	// if validateMenu()==false{
+	// 	res.Contents = nil
+	// 	return res
+	// }
 	offset := (page - 1) * limit
 	data, totalData, err := repository.GetProductListPaging(param, offset, limit, true)
 
@@ -95,6 +104,14 @@ func (h ProductService) GetProductDetails(id int) models.ContentResponse {
 
 // SaveProduct ...
 func (h ProductService) SaveProduct(product *dbmodels.Product) models.ContentResponse {
+	if validateMenu()==false{
+		var resInvalid models.ContentResponse
+		resInvalid.ErrCode="99"
+		resInvalid.ErrDesc="Anauthorized, please relogin !!"
+		resInvalid.Contents = nil
+		return resInvalid
+	}
+	
 	product.LastUpdate = time.Now()
 	product.LastUpdateBy = dto.CurrUser
 
@@ -106,6 +123,13 @@ func (h ProductService) SaveProduct(product *dbmodels.Product) models.ContentRes
 
 // UpdateProduct ...
 func (h ProductService) UpdateProduct(product *dbmodels.Product) models.NoContentResponse {
+	if validateMenu()==false{
+		var resInvalid models.NoContentResponse
+		resInvalid.ErrCode="99"
+		resInvalid.ErrDesc="Anauthorized, please relogin !!"
+		return resInvalid
+	}
+	
 	product.LastUpdate = time.Now()
 	product.LastUpdateBy = dto.CurrUser
 
@@ -137,4 +161,13 @@ func (h ProductService) GetProductLike(productterms string) models.ContentRespon
 	res.ErrDesc = errDesc
 
 	return res
+}
+
+func validateMenu() bool {
+
+	fmt.Println("Username : " + dto.CurrUser)
+	result:= repository.ValidateMenuByUserName(dto.CurrUser, "product")
+
+	return result
+
 }

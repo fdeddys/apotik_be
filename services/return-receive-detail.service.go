@@ -42,7 +42,7 @@ func (o ReturnReceiveDetailService) Save(returnReceiveDetail *dbmodels.ReturnRec
 	if err, errDesc := database.SaveReturnReceiveDetail(returnReceiveDetail); err != constants.ERR_CODE_00 {
 		return err, errDesc
 	}
-
+	calculateTotalReturnReceive(returnReceiveDetail.ReturnReceiveID)
 	return constants.ERR_CODE_00, constants.ERR_CODE_00_MSG
 }
 

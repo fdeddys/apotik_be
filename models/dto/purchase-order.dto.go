@@ -14,6 +14,7 @@ type FilterBatchExpired struct {
 	ExpiredStart string `json:"expiredStart"`
 	ExpiredEnd   string `json:"expiredEnd"`
 	Batch        string `json:"batch"`
+	ProductName string `json:"productName"`
 }
 
 // FilterReceiveDetail ...

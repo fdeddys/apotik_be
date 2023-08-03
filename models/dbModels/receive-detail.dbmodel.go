@@ -23,6 +23,8 @@ type ReceiveDetail struct {
 
 	LastUpdateBy string    `json:"lastUpdateBy" gorm:"column:last_update_by"`
 	LastUpdate   time.Time `json:"lastUpdate" gorm:"column:last_update"`
+
+	QtyWh int64 `json:"qtyWh" gorm:"-" sql:"-"`
 }
 
 // TableName ...

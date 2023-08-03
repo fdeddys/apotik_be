@@ -11,3 +11,5 @@ vendor/
 .idea/workspace.xml
 
 apotik_be
+*.exe
+*.DS_Store

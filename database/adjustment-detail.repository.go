@@ -84,7 +84,7 @@ func AsyncQuerysAdjustmentDetails(db *gorm.DB, offset int, limit int, adjustment
 
 	var err error
 
-	err = db.Offset(offset).Limit(limit).Preload("Product").Preload("UOM").Find(&adjustmentDetails, "adjustment_id = ? ", adjustmentID).Error
+	err = db.Offset(offset).Limit(limit).Preload("Product").Preload("UOM").Order("id desc").Find(&adjustmentDetails, "adjustment_id = ? ", adjustmentID).Error
 	if err != nil {
 		fmt.Println("error --> ", err)
 	}

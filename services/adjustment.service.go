@@ -111,3 +111,56 @@ func generateNewAdjustmentNo() (newNumber string, errCode string, errMsg string)
 	return newNumber, constants.ERR_CODE_00, constants.ERR_CODE_00_MSG
 
 }
+
+func calculateTotalAdjustment(adjID int64){
+	
+	fmt.Println("Calculate Total adj....")
+	db := database.GetDbCon()
+	tx := db.Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Println("defar, roll back ")
+			tx.Rollback()
+		}
+	}()
+
+
+	adjDetails := database.GetAllDataDetailAdjustment(adjID)
+
+	var total float32
+	total = 0
+
+	
+	for _, adjDetail := range adjDetails {
+		total = total + (float32(adjDetail.Hpp) * float32(adjDetail.Qty))
+	}
+	
+	// updateProduct := make(map[string]interface{})
+	// updateProduct["Total"] = total
+	// updateProduct["LastUpdateBy"] = dto.CurrUser
+	// updateProduct["LastUpdate"] = util.GetCurrDate()
+
+	// updateData = map[string]interface{}{
+	// 	 "Total": total, 
+	// 	 "LastUpdateBy": dto.CurrUser,
+	// 	 "LastUpdate": util.GetCurrDate(),
+	// }
+	// tx.Model(&dbmodels.Adjustment{}).Where("id = ?", adjID).Update(&updateProduct)
+
+	fmt.Println("END Calculate Total adj....[" , total , "]")
+	tx.Model(&dbmodels.Adjustment{}).
+		Where("id = ?", adjID).
+		Updates(map[string]interface{}{"Total": total, "LastUpdateBy": dto.CurrUser, "LastUpdate": util.GetCurrDate()})
+	
+
+	// tx.Model(&dbmodels.Adjustment{}).
+	// 	Where("id = ?", adjID).
+	// 	Update(dbmodels.Adjustment{
+	// 		Total:        total,
+	// 		LastUpdateBy: dto.CurrUser,
+	// 		LastUpdate:   util.GetCurrDate(),
+	// 	})
+
+	tx.Commit()
+	fmt.Println("END Calculate Total adj....")
+}

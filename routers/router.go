@@ -125,11 +125,11 @@ func InitRouter() *gin.Engine {
 
 	ProductController := new(controllers.ProductController)
 	product := r.Group("/api/product")
-	product.POST("/page/:page/count/:count", ProductController.GetProductListPaging)
-	product.POST("/all-status/page/:page/count/:count", ProductController.GetProductListPagingAllStatus)
-	product.POST("/search/page/:page/count/:count", ProductController.SearchProduct)
+	product.POST("/page/:page/count/:count", cekToken, ProductController.GetProductListPaging)
+	product.POST("/all-status/page/:page/count/:count", cekToken, ProductController.GetProductListPagingAllStatus)
+	product.POST("/search/page/:page/count/:count", cekToken, ProductController.SearchProduct)
 	product.GET("/id/:id", ProductController.GetProductDetails)
-	product.POST("", ProductController.SaveProduct)
+	product.POST("", cekToken, ProductController.SaveProduct)
 	product.GET("/list", ProductController.ProductList)
 	product.GET("", ProductController.GetProductLike)
 	product.GET("/processCSV", ProductController.ProcessCSV)
@@ -253,7 +253,8 @@ func InitRouter() *gin.Engine {
 	api = r.Group("/api/adjustment-detail")
 	api.POST("/page/:page/count/:count", AdjustmentDetailController.GetDetail)
 	api.POST("", cekToken, AdjustmentDetailController.Save)
-	api.DELETE("/:id", cekToken, AdjustmentDetailController.DeleteByID)
+	api.POST("/updateqty", cekToken, AdjustmentDetailController.UpdatQty)
+	api.DELETE("/:id/:idAdj", cekToken, AdjustmentDetailController.DeleteByID)
 
 	// PAYMENT
 	api = r.Group("/api/payment")
@@ -389,6 +390,8 @@ func InitRouter() *gin.Engine {
 	// PARAMETER
 	api = r.Group("/api/parameter")
 	api.GET("/byname/:param-name", ParameterController.GetByName)
+	api.GET("/all", ParameterController.GetAll)
+	api.POST("", cekToken, ParameterController.UpdateParam)
 
 	// -- END REPORT
 

@@ -86,6 +86,21 @@ func (r ReceiveDetailService) GetDataBatchExpired(param dto.FilterBatchExpired, 
 		return res
 	}
 
+	// add stock
+	for idx, receiveDetail := range data {
+		
+		// res := models.ResponsePagination{}
+		// offset := (page - 1) * limit
+		stocks, _, _ := database.GetStockByProductPage(receiveDetail.ProductID, 0, 5)
+		if len(stocks)>0 {
+			data[idx].QtyWh = stocks[0].Qty
+			// fmt.Println("QtyWh = ", receiveDetail.QtyWh )
+		}
+
+		
+	}
+	// fmt.Println("data = ", data )
+
 	res.Contents = data
 	res.TotalRow = totalData
 	res.Page = page

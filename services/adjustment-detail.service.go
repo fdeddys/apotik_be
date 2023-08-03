@@ -7,6 +7,7 @@ import (
 	dbmodels "distribution-system-be/models/dbModels"
 	"distribution-system-be/models/dto"
 	"distribution-system-be/utils/util"
+	"fmt"
 )
 
 // AdjustmentDetailService ...
@@ -45,16 +46,46 @@ func (r AdjustmentDetailService) SaveAdjustmentDetail(adjustmentDetail *dbmodels
 	if err, errDesc := database.SaveAdjustmentDetail(adjustmentDetail); err != constants.ERR_CODE_00 {
 		return err, errDesc
 	}
+	calculateTotalAdjustment(adjustmentDetail.AdjustmentID)
 
 	return constants.ERR_CODE_00, constants.ERR_CODE_00_MSG
 }
 
 // DeleteAdjustmentDetailByID ...
-func (r AdjustmentDetailService) DeleteAdjustmentDetailByID(adjustmentDetailID int64) (errCode string, errDesc string) {
+func (r AdjustmentDetailService) DeleteAdjustmentDetailByID(adjustmentDetailID int64, adjustmentID int64) (errCode string, errDesc string) {
 
 	if err, errDesc := database.DeleteAdjustmentDetailById(adjustmentDetailID); err != constants.ERR_CODE_00 {
 		return err, errDesc
 	}
+	calculateTotalAdjustment(adjustmentID)
 
+	return constants.ERR_CODE_00, constants.ERR_CODE_00_MSG
+}
+
+
+// DeleteAdjustmentDetailByID ...
+func (r AdjustmentDetailService) UpdateQtyByID(adjustmentDetailID int64, qty int64, adjustmentID int64) (errCode string, errDesc string) {
+
+	fmt.Println("Update qty  ....")
+	db := database.GetDbCon()
+	tx := db.Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Println("defar, roll back ")
+			tx.Rollback()
+		}
+	}()
+	
+
+	tx.Model(&dbmodels.AdjustmentDetail{}).
+		Where("id = ?", adjustmentDetailID).
+		Update(dbmodels.AdjustmentDetail{
+			Qty:        qty,
+			LastUpdateBy: dto.CurrUser,
+			LastUpdate:   util.GetCurrDate(),
+		})
+
+	tx.Commit()
+	calculateTotalAdjustment(adjustmentID)
 	return constants.ERR_CODE_00, constants.ERR_CODE_00_MSG
 }

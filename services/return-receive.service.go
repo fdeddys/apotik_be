@@ -67,6 +67,49 @@ func (o ReturnReceiveService) Save(receiveReturn *dbmodels.ReturnReceive) (errCo
 	return constants.ERR_CODE_00, constants.ERR_CODE_00_MSG, receiveReturn.ReturnReceiveNo, newID, status
 }
 
+func calculateTotalReturnReceive(returnReceiveID int64){
+	
+	fmt.Println("Calculate Total receive....")
+	db := database.GetDbCon()
+	tx := db.Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Println("defar, roll back ")
+			tx.Rollback()
+		}
+	}()
+
+	var grandTotal float32
+	grandTotal=0
+
+	returnReceive,_ :=database.GetReceiveByReceiveID(returnReceiveID)
+	returnReceiveDetails := database.GetAllReceiveReturnDetail(returnReceiveID)
+
+	var total float32
+	for _, returnReceiveDetail := range returnReceiveDetails {
+
+		total = total + (returnReceiveDetail.Price * float32(returnReceiveDetail.Qty))
+
+	}
+	grandTotal = total
+
+	if returnReceive.Tax != 0 {
+		grandTotal = total * 1.1
+	}
+
+	tx.Model(&dbmodels.ReturnReceive{}).
+		Where("id = ?", returnReceiveID).
+		Update(dbmodels.ReturnReceive{
+			GrandTotal:   grandTotal,
+			Total:        total,
+			LastUpdateBy: dto.CurrUser,
+			LastUpdate:   util.GetCurrDate(),
+		})
+
+	tx.Commit()
+
+}
+
 func generateReceiveReturnNo() (newOrderNo string, errCode string, errMsg string) {
 
 	t := time.Now()
@@ -98,6 +141,7 @@ func (o ReturnReceiveService) Approve(returnReceiveID int64) (errCode, errDesc s
 	tx := db.Begin()
 	defer func() {
 		if r := recover(); r != nil {
+			fmt.Println("defar, roll back ")
 			tx.Rollback()
 		}
 	}()
@@ -117,13 +161,19 @@ func (o ReturnReceiveService) Approve(returnReceiveID int64) (errCode, errDesc s
 		product, _, _ := database.FindProductByID(returnReceiveDetail.ProductID)
 		stock, _, _ := database.GetStockByProductAndWarehouse(returnReceiveDetail.ProductID, returnReceive.WarehouseID)
 
+		var newStock int64
 		curStock := stock.Qty
-		newStock := curStock - returnReceiveDetail.Qty
+		newStock = curStock - returnReceiveDetail.Qty
+		fmt.Println("cur Stock = " , curStock)
+		fmt.Println("new Stock = " , newStock)
+
+		// db.Model(&stock).Select("Qty","LastUpdateBy","LastUpdate").Updates(map[string]interface{}{"Qty": curStock - returnReceiveDetail.Qty, "LastUpdateBy": dto.CurrUser, "LastUpdate": util.GetCurrDate()})
 
 		db.Model(&dbmodels.Stock{}).
 			Where("id = ?", stock.ID).
-			Update(dbmodels.Stock{
-				Qty:          newStock,
+			Select("Qty","LastUpdateBy","LastUpdate").
+			Updates(dbmodels.Stock{
+				Qty: curStock - returnReceiveDetail.Qty,
 				LastUpdateBy: dto.CurrUser,
 				LastUpdate:   util.GetCurrDate(),
 			})

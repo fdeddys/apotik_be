@@ -93,6 +93,7 @@ func AsyncQuerysReceiveDetails(db *gorm.DB, offset int, limit int, receiveDetail
 		Preload("Product.BigUom").
 		Preload("Product.SmallUom").
 		Preload("UOM").
+		Order("id desc").
 		Find(&receiveDetails, "receive_id = ? ", receiveID).
 		Error
 
@@ -221,10 +222,18 @@ func AsyncQuerysReceiveOrderDetailsBatchExpired(db *gorm.DB, offset int, limit i
 		byDate = false
 	}
 	batch := "%" + param.Batch + "%"
+	productName := "%" + param.ProductName + "%"
 
 	// err = db.Offset(offset).Limit(limit).Preload("Product.SmallUom").Preload("UOM").Find(&ReceiveOrderDetails, " ( batch_no ilike ? ) and ( (TO_DATE(ed,'YYYY-MM-DD') between TO_DATE(?, 'YYYY-MM-DD') and TO_DATE(?, 'YYYY-MM-DD') ) or ( not ?))  ", batch, param.ExpiredStart, param.ExpiredEnd, byDate).Error
 
-	err = db.Offset(offset).Limit(limit).Preload("Product.SmallUom").Preload("UOM").Find(&ReceiveOrderDetails, " ( batch_no ilike ? ) and ( ( ed between ? and ? ) or ( not ?))  ", batch, param.ExpiredStart, param.ExpiredEnd, byDate).Error
+	err = db.Offset(offset).
+		Limit(limit).
+		// Preload("Product", "Name ilike ? ", productName).
+		Preload("Product.SmallUom").
+		Preload("UOM").
+		Joins("Join product on product.id = receive_detail.product_id ").
+		Where("product.name ilike ? ", productName).
+		Find(&ReceiveOrderDetails, " ( batch_no ilike ? ) and ( ( ed between ? and ? ) or ( not ?))  ", batch, param.ExpiredStart, param.ExpiredEnd, byDate).Error
 	if err != nil {
 		fmt.Println("error --> ", err)
 	}
@@ -245,11 +254,13 @@ func AsyncQueryCountsReceiveOrderDetailsBatchExpired(db *gorm.DB, total *int, pa
 		byDate = false
 	}
 	batch := "%" + param.Batch + "%"
-
+	productName := "%" + param.ProductName + "%"
 	var err error
 	// err = db.Model(&ReceiveOrderDetails).Where(" ( batch_no ilike ? ) and ( (TO_DATE(ed,'YYYY-MM-DD') between TO_DATE(?,'YYYY-MM-DD' ) and TO_DATE(?, 'YYYY-MM-DD') ) or ( not ?))  ", batch, param.ExpiredStart, param.ExpiredEnd, byDate).Count(&*total).Error
 
-	err = db.Model(&ReceiveOrderDetails).Where(" ( batch_no ilike ? ) and ( (ed  between ? and ? ) or ( not ?))  ", batch, param.ExpiredStart, param.ExpiredEnd, byDate).Count(&*total).Error
+	err = db.Model(&ReceiveOrderDetails).
+		Joins("Join product on product.id = receive_detail.product_id ").Where("product.name ilike ? ", productName).
+		Where(" ( batch_no ilike ? ) and ( (ed  between ? and ? ) or ( not ?))  ", batch, param.ExpiredStart, param.ExpiredEnd, byDate).Count(&*total).Error
 
 	if err != nil {
 		resChan <- err

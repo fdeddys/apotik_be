@@ -110,10 +110,38 @@ func (r *AdjustmentDetailController) DeleteByID(c *gin.Context) {
 		c.Abort()
 		return
 	}
+	adjustmentID, errAdjustmentID := strconv.ParseInt(c.Param("idAdj"), 10, 64)
 
 	log.Println("adjustment id => ", adjustmentDetailID)
 
-	res.ErrCode, res.ErrDesc = adjustmentDetailService.DeleteAdjustmentDetailByID(adjustmentDetailID)
+	res.ErrCode, res.ErrDesc = adjustmentDetailService.DeleteAdjustmentDetailByID(adjustmentDetailID,adjustmentID)
+
+	c.JSON(http.StatusOK, res)
+
+	return
+}
+
+
+
+// UpdatQty ...
+func (r *AdjustmentDetailController) UpdatQty(c *gin.Context) {
+
+	res := dto.AdjustmentDetailResult{}
+
+	req := dbmodels.AdjustmentDetail{}
+	body := c.Request.Body
+	dataBodyReq, _ := ioutil.ReadAll(body)
+
+	if err := json.Unmarshal(dataBodyReq, &req); err != nil {
+		fmt.Println("Error, unmarshal body Request to Adj stuct ", dataBodyReq)
+		res.ErrDesc = constants.ERR_CODE_03_MSG
+		res.ErrCode = constants.ERR_CODE_03
+		c.JSON(http.StatusBadRequest, res)
+		c.Abort()
+		return
+	}
+
+	res.ErrCode, res.ErrDesc = adjustmentDetailService.UpdateQtyByID(req.ID, req.Qty, req.AdjustmentID)
 
 	c.JSON(http.StatusOK, res)
 
