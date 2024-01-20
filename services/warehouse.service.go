@@ -24,6 +24,18 @@ func (m WarehouseService) GetAllWarehouse() models.ContentResponse {
 	return res
 }
 
+// Get Data Customer Paging
+func (m WarehouseService) GetWarehouseByFunc(warehouseIn bool) models.ContentResponse {
+	var res models.ContentResponse
+
+	data, code, msg := database.GetWarehouseByFunc(warehouseIn)
+	
+	res.ErrCode = code
+	res.ErrDesc = msg
+	res.Contents = data
+	return res
+}
+
 // GetWarehouseFilter ...
 func (s WarehouseService) GetWarehouseFilter(id int) models.ContentResponse {
 

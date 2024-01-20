@@ -225,6 +225,7 @@ func InitRouter() *gin.Engine {
 	api.POST("", cekToken, ReceiveDetailController.Save)
 	api.POST("/updateDetail", cekToken, ReceiveDetailController.UpdateDetail)
 	api.DELETE("/:id", cekToken, ReceiveDetailController.DeleteByID)
+	api.POST("/deleteMulti", cekToken, ReceiveDetailController.DeleteByIDMultiple)
 	api.POST("/search-batch-expired/page/:page/count/:count", ReceiveDetailController.SearchBatchExpired)
 
 	// RETURN RECEIVE
@@ -290,6 +291,8 @@ func InitRouter() *gin.Engine {
 	// Warehouse
 	api = r.Group("/api/warehouse")
 	api.GET("", WarehouseController.GetWarehouse)
+	api.GET("/in", WarehouseController.GetWarehouseIn)
+	api.GET("/out", WarehouseController.GetWarehouseOut)
 	api.POST("/page/:page/count/:count", cekToken, WarehouseController.GetWarehouseFilter)
 	api.GET("/id/:id", cekToken, WarehouseController.GetFilterWarehouse)
 	api.POST("", cekToken, WarehouseController.SaveWarehouse)

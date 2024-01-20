@@ -34,6 +34,26 @@ func (h *WarehouseController) GetWarehouse(c *gin.Context) {
 	return
 }
 
+// GetWarehouse IN ...
+func (h *WarehouseController) GetWarehouseIn(c *gin.Context) {
+
+	res := WarehouseService.GetWarehouseByFunc(true)
+
+	c.JSON(http.StatusOK, res)
+	c.Abort()
+	return
+}
+
+// GetWarehouse IN ...
+func (h *WarehouseController) GetWarehouseOut(c *gin.Context) {
+
+	res := WarehouseService.GetWarehouseByFunc(false)
+
+	c.JSON(http.StatusOK, res)
+	c.Abort()
+	return
+}
+
 // GetWarehouseFilter ...
 func (h *WarehouseController) GetWarehouseFilter(c *gin.Context) {
 	req := dto.FilterPaging{}

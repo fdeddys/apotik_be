@@ -168,15 +168,23 @@ func (o ReturnReceiveService) Approve(returnReceiveID int64) (errCode, errDesc s
 		fmt.Println("new Stock = " , newStock)
 
 		// db.Model(&stock).Select("Qty","LastUpdateBy","LastUpdate").Updates(map[string]interface{}{"Qty": curStock - returnReceiveDetail.Qty, "LastUpdateBy": dto.CurrUser, "LastUpdate": util.GetCurrDate()})
+		
 
-		db.Model(&dbmodels.Stock{}).
-			Where("id = ?", stock.ID).
-			Select("Qty","LastUpdateBy","LastUpdate").
-			Updates(dbmodels.Stock{
-				Qty: curStock - returnReceiveDetail.Qty,
-				LastUpdateBy: dto.CurrUser,
-				LastUpdate:   util.GetCurrDate(),
-			})
+		// tx.Model(&dbmodels.Stock{}).
+		// Where("id = ?", stock.ID).
+		// Select("Qty","LastUpdateBy","LastUpdate").
+		// Update(dbmodels.Stock{
+		// 	Qty: newStock,
+		// 	LastUpdateBy: dto.CurrUser,
+		// 	LastUpdate:   util.GetCurrDate(),
+		// })
+		
+		
+		stock.LastUpdateBy = dto.CurrUser
+		stock.LastUpdate = util.GetCurrDate()
+		stock.Qty = newStock
+		db.Save(&stock)
+		
 
 		// TODO hitung disc
 		// hpp := (float32(curStock * stock.Qty)) + (float32(returnReceiveDetail.Qty)*returnReceiveDetail.Price)/float32(stock.Qty+returnReceiveDetail.Qty)

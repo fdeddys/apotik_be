@@ -30,6 +30,31 @@ func GetAllWarehouse() ([]dbmodels.Warehouse, string, string) {
 	// }
 }
 
+// GetAllWarehouse ...
+func GetWarehouseByFunc(warehouseIn bool) ([]dbmodels.Warehouse, string, string) {
+	db := GetDbCon()
+	db.Debug().LogMode(true)
+
+	var warehouse []dbmodels.Warehouse
+	// err := db.Model(&dbmodels.Warehouse{}).Find(&warehouse).Error
+
+	var err error
+	if (warehouseIn) {
+		err = db.Where("status = ? and wh_in = 1 ", 1).Find(&warehouse).Error
+	} else {
+		err = db.Where("status = ? and wh_out = 1 ", 1).Find(&warehouse).Error
+
+	}
+
+	if err != nil {
+		return nil, constants.ERR_CODE_51, constants.ERR_CODE_51_MSG + "  " + err.Error()
+	}
+	// else {
+	return warehouse, constants.ERR_CODE_00, constants.ERR_CODE_00_MSG
+	// }
+}
+
+
 // UpdateWarehouse ...
 func UpdateWarehouse(updatedWarehouse dbmodels.Warehouse) models.NoContentResponse {
 	var res models.NoContentResponse

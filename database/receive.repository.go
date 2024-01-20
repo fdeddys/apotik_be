@@ -201,7 +201,7 @@ func GetReceivePage(param dto.FilterReceive, offset, limit, internalStatus int) 
 // AsyncQueryCountsReceives ...
 func AsyncQueryCountsReceives(db *gorm.DB, total *int, status int, orders *[]dbmodels.Receive, param dto.FilterReceive, resChan chan error) {
 
-	receiveNumber, byStatus, suppName := getParamReceive(param, status)
+	receiveNumber, byStatus, suppName, pono := getParamReceive(param, status)
 
 	fmt.Println(" Rec Number ", receiveNumber, "  status ", status, " fill status ", byStatus)
 
@@ -211,13 +211,13 @@ func AsyncQueryCountsReceives(db *gorm.DB, total *int, status int, orders *[]dbm
 			Model(&orders).
 			Joins("inner join supplier on supplier.id = receive.supplier_id and supplier.name ilike ? ", suppName).
 			Preload("Supplier", " name ilike ? ", suppName).
-			Where(" ( (receive.status = ?) or ( not ?) ) AND  COALESCE(receive_no, '') ilike ? AND receive_date between ? and ?  ", status, byStatus, receiveNumber, param.StartDate, param.EndDate).Count(&*total).
+			Where(" ( (receive.status = ?) or ( not ?) ) AND  COALESCE(receive_no, '') ilike ? AND receive_date between ? and ?  AND COALESCE(po_no, '') ilike ?  ", status, byStatus, receiveNumber, param.StartDate, param.EndDate, pono).Count(&*total).
 			Error
 	} else {
 		err = db.
 			Model(&orders).
 			Joins("inner join supplier on supplier.id = receive.supplier_id and supplier.name ilike ? ", suppName).
-			Preload("Supplier", " name ilike ? ", suppName).Where(" ( (receive.status = ?) or ( not ?) ) AND COALESCE(receive_no,'') ilike ? ", status, byStatus, receiveNumber).Count(&*total).
+			Preload("Supplier", " name ilike ? ", suppName).Where(" ( (receive.status = ?) or ( not ?) ) AND COALESCE(receive_no,'') ilike ? AND COALESCE(po_no, '') ilike ?  ", status, byStatus, receiveNumber, pono).Count(&*total).
 			Error
 	}
 
@@ -232,7 +232,7 @@ func AsyncQuerysReceives(db *gorm.DB, offset int, limit int, status int, receive
 
 	var err error
 
-	receiveNumber, byStatus, suppName := getParamReceive(param, status)
+	receiveNumber, byStatus, suppName, pono := getParamReceive(param, status)
 
 	fmt.Println(" Receive no ", receiveNumber, "  status ", status, " fill status ", byStatus)
 
@@ -249,7 +249,7 @@ func AsyncQuerysReceives(db *gorm.DB, offset int, limit int, status int, receive
 			Preload("Supplier").
 			Offset(offset).
 			Limit(limit).
-			Find(&receives, " ( ( receive.status = ?) or ( not ?) ) AND COALESCE(receive_no, '') ilike ? AND receive_date between ? and ?   ", status, byStatus, receiveNumber, param.StartDate, param.EndDate).
+			Find(&receives, " ( ( receive.status = ?) or ( not ?) ) AND COALESCE(receive_no, '') ilike ? AND receive_date between ? and ?  AND COALESCE(po_no, '') ilike ? ", status, byStatus, receiveNumber, param.StartDate, param.EndDate, pono).
 			// Find(&receives).
 			Error
 
@@ -260,7 +260,7 @@ func AsyncQuerysReceives(db *gorm.DB, offset int, limit int, status int, receive
 			Order("receive_date DESC, id DESC").
 			Offset(offset).Limit(limit).
 			Preload("Supplier", " name ilike ? ", suppName).
-			Find(&receives, " ( ( receive.status = ?) or ( not ?) ) AND COALESCE(receive_no,'') ilike ?  ", status, byStatus, receiveNumber).
+			Find(&receives, " ( ( receive.status = ?) or ( not ?) ) AND COALESCE(receive_no,'') ilike ? AND COALESCE(po_no, '') ilike ?  ", status, byStatus, receiveNumber, pono).
 			Error
 		if err != nil {
 			fmt.Println("receive --> ", err)
@@ -275,7 +275,7 @@ func AsyncQuerysReceives(db *gorm.DB, offset int, limit int, status int, receive
 	resChan <- nil
 }
 
-func getParamReceive(param dto.FilterReceive, status int) (receiveNumber string, byStatus bool, supplierName string) {
+func getParamReceive(param dto.FilterReceive, status int) (receiveNumber string, byStatus bool, supplierName string, pono string) {
 
 	receiveNumber = param.ReceiveNumber
 	if receiveNumber == "" {
@@ -294,6 +294,13 @@ func getParamReceive(param dto.FilterReceive, status int) (receiveNumber string,
 		supplierName = "%"
 	} else {
 		supplierName = "%" + param.SupplierName + "%"
+	}
+
+	pono = param.PurchaseOrderNo
+	if pono == "" {
+		pono = "%"
+	} else {
+		pono = "%" + param.PurchaseOrderNo + "%"
 	}
 
 	return

@@ -74,6 +74,21 @@ func (r ReceiveDetailService) DeleteReceiveDetailByID(receiveDetailID int64) (er
 	return constants.ERR_CODE_00, constants.ERR_CODE_00_MSG
 }
 
+func (r ReceiveDetailService) DeleteReceiveDetailByIDMultiple(receiveDetailIDs []int64) (errCode string, errDesc string) {
+
+	for _, id := range receiveDetailIDs {
+		fmt.Println("delete by id " , id)
+		database.DeleteReceiveDetailById(id)
+	}
+
+
+	// if err, errDesc := database.DeleteReceiveDetailById(receiveDetailID); err != constants.ERR_CODE_00 {
+	// 	return err, errDesc
+	// }
+
+	return constants.ERR_CODE_00, constants.ERR_CODE_00_MSG
+}
+
 // GetDataPurchaseOrderDetailPage ...
 func (r ReceiveDetailService) GetDataBatchExpired(param dto.FilterBatchExpired, page int, limit int) models.ResponsePagination {
 	var res models.ResponsePagination

@@ -123,6 +123,34 @@ func (r *ReceiveDetailController) UpdateDetail(c *gin.Context) {
 	return
 }
 
+// DeleteByID Multiple ...
+func (r *ReceiveDetailController) DeleteByIDMultiple(c *gin.Context) {
+
+	req := []int64{}
+	body := c.Request.Body
+	res := dto.ReceiveDetailSaveResult{}
+	dataBodyReq, _ := ioutil.ReadAll(body)
+
+	 err := json.Unmarshal(dataBodyReq, &req)
+	 if err != nil {
+		fmt.Println("Error, unmarshal body Request  ", dataBodyReq)
+		res.ErrDesc = constants.ERR_CODE_03_MSG
+		res.ErrCode = constants.ERR_CODE_03
+		c.JSON(http.StatusBadRequest, res)
+		c.Abort()
+		return
+	}
+
+	fmt.Println("ISI " , req)
+
+	res.ErrCode, res.ErrDesc = receiveDetailService.DeleteReceiveDetailByIDMultiple(req)
+
+	c.JSON(http.StatusOK, res)
+
+	return
+}
+
+
 // DeleteByID ...
 func (r *ReceiveDetailController) DeleteByID(c *gin.Context) {
 
