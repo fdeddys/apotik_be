@@ -24,7 +24,7 @@ func GetReturnReceiveById(returnID int64) (dbmodels.ReturnReceive, error) {
 
 }
 
-//SaveReceiveReturn ...
+// SaveReceiveReturn ...
 func SaveReturnReceive(orderReturn *dbmodels.ReturnReceive) (errCode string, errDesc string, id int64, status int8) {
 
 	fmt.Println("Update Return - ")
@@ -90,15 +90,15 @@ func GetReturnReceivePage(param dto.FilterReturnReceive, offset, limit int) ([]d
 // AsyncQueryCountsOrders ...
 func AsyncQueryCountsReturnReceives(db *gorm.DB, total *int, orders *[]dbmodels.ReturnReceive, param dto.FilterReturnReceive, resChan chan error) {
 
-	supplierCode, returnNumber := getParamReturnReceive(param)
+	supplierCode, returnNumber, byStatus := getParamReturnReceive(param)
 
 	fmt.Println("ISI Supplier ", supplierCode, " ReturnNumber ", returnNumber)
 
 	var err error
 	if strings.TrimSpace(param.StartDate) != "" && strings.TrimSpace(param.EndDate) != "" {
-		err = db.Model(&orders).Where(" COALESCE(return_receive_no, '') ilike ? AND return_date between ? and ?  ", returnNumber, param.StartDate, param.EndDate).Count(&*total).Error
+		err = db.Model(&orders).Where(" COALESCE(return_receive_no, '') ilike ? AND return_date between ? and ?  AND  ( (status = ?) or ( not ?) ) ", returnNumber, param.StartDate, param.EndDate, param.Status, byStatus).Count(&*total).Error
 	} else {
-		err = db.Model(&orders).Where(" COALESCE(return_receive_no,'') ilike ? ", returnNumber).Count(&*total).Error
+		err = db.Model(&orders).Where(" COALESCE(return_receive_no,'') ilike ?  AND  ( (status = ?) or ( not ?) )", returnNumber, param.Status, byStatus).Count(&*total).Error
 	}
 
 	if err != nil {
@@ -112,17 +112,17 @@ func AsyncQuerysReturnReceives(db *gorm.DB, offset int, limit int, orders *[]dbm
 
 	var err error
 
-	supplierCode, returnNumber := getParamReturnReceive(param)
+	supplierCode, returnNumber, byStatus := getParamReturnReceive(param)
 
 	fmt.Println("ISI Supplier ", supplierCode, " order no ", returnNumber)
 
 	fmt.Println("isi dari filter [", param, "] ")
 	if strings.TrimSpace(param.StartDate) != "" && strings.TrimSpace(param.EndDate) != "" {
 		fmt.Println("isi dari filter [", param.StartDate, '-', param.EndDate, "] ")
-		err = db.Preload("Supplier").Order("return_date DESC").Offset(offset).Limit(limit).Find(&orders, "  COALESCE(return_receive_no, '') ilike ? AND return_date between ? and ?   ", returnNumber, param.StartDate, param.EndDate).Error
+		err = db.Preload("Supplier").Order("return_date DESC").Offset(offset).Limit(limit).Find(&orders, "  COALESCE(return_receive_no, '') ilike ? AND ( return_date between ? and ? ) AND  ( (status = ?) or ( not ?) )  ", returnNumber, param.StartDate, param.EndDate, param.Status, byStatus).Error
 	} else {
 		fmt.Println("isi dari kosong ")
-		err = db.Offset(offset).Limit(limit).Preload("Supplier").Order("return_date DESC").Find(&orders, "  COALESCE(return_receive_no,'') ilike ?  ", returnNumber).Error
+		err = db.Offset(offset).Limit(limit).Preload("Supplier").Order("return_date DESC").Find(&orders, "  COALESCE(return_receive_no,'') ilike ?   AND  ( (status = ?) or ( not ?) ) ", returnNumber, param.Status, byStatus).Error
 		if err != nil {
 			fmt.Println("error --> ", err)
 		}
@@ -135,7 +135,7 @@ func AsyncQuerysReturnReceives(db *gorm.DB, offset int, limit int, orders *[]dbm
 	resChan <- nil
 }
 
-func getParamReturnReceive(param dto.FilterReturnReceive) (supplierCode, returnNumber string) {
+func getParamReturnReceive(param dto.FilterReturnReceive) (supplierCode, returnNumber string, byStatus bool) {
 
 	supplierCode = "%"
 
@@ -146,10 +146,15 @@ func getParamReturnReceive(param dto.FilterReturnReceive) (supplierCode, returnN
 		returnNumber = "%" + param.ReturnNo + "%"
 	}
 
+	byStatus = true
+	if param.Status == 0 {
+		byStatus = false
+	}
+
 	return
 }
 
-//RejectReturnReceive ...
+// RejectReturnReceive ...
 func RejectReturnReceive(salesOrderReturnId int64) (errCode string, errDesc string) {
 
 	fmt.Println(" Reject Return-Sales-Order numb ------------------------------------------ ")

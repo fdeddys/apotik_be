@@ -119,7 +119,7 @@ func getParamDirectPayment(param dto.FilterPaymentDirect) (salesOrderNo, payment
 	// paymentNo = param.PaymentNo
 	if param.PaymentNo != "" {
 		paymentNo = "%" + param.PaymentNo + "%"
-		isSearchPaymentStatus = true
+		isSearchPaymentNo = true
 	}
 	if param.SalesOrderNo != "" {
 		salesOrderNo = "%" + param.SalesOrderNo + "%"
