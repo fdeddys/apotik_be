@@ -184,7 +184,20 @@ func GetSalesOrderByOrderId(orderID int64) (dbmodels.SalesOrder, error) {
 	err := db.Preload("Customer").Preload("Salesman").Where(" id = ?  ", orderID).First(&order).Error
 
 	return order, err
+}
 
+// GetSalesOrderByOrderIdLockForUpdate ...
+func GetSalesOrderByOrderIdLockForUpdate(tx *gorm.DB, orderID int64) (dbmodels.SalesOrder, error) {
+	order := dbmodels.SalesOrder{}
+
+	err := tx.Debug().LogMode(true).
+		Set("gorm:query_option", "FOR UPDATE"). // ← kunci di sini
+		Preload("Customer").
+		Preload("Salesman").
+		Where("id = ?", orderID).
+		First(&order).Error
+
+	return order, err
 }
 
 // GetOrderPage ...

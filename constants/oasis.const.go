@@ -57,7 +57,7 @@ const (
 	ERR_CODE_63_MSG = "Failed Update password !"
 )
 
-//nDeskKey ...
+// nDeskKey ...
 const (
 	DesKey = "abcdefghijklmnopqrstuvwxyz012345"
 )
@@ -79,6 +79,9 @@ const (
 const (
 	ERR_CODE_90     = "90"
 	ERR_CODE_90_MSG = "Failed get from Body Request"
+
+	ERR_CODE_93     = "93"
+	ERR_CODE_93_MSG = "NO Order already procced !"
 
 	ERR_CODE_95     = "95"
 	ERR_CODE_95_MSG = "NO Order found for payment !"

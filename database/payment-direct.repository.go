@@ -22,7 +22,16 @@ func ApprovePaymentDirect(paymentDirect *dto.PaymentDirectModel) (errCode string
 		}
 	}()
 
-	order, _ := GetSalesOrderByOrderId(paymentDirect.SalesOrderID)
+	order, err := GetSalesOrderByOrderIdLockForUpdate(tx, paymentDirect.SalesOrderID)
+	if err != nil {
+		tx.Rollback()
+		return constants.ERR_CODE_80, err.Error()
+	}
+
+	if !(order.Status == constants.STATUS_PAID) {
+		tx.Rollback()
+		return constants.ERR_CODE_93, constants.ERR_CODE_93_MSG
+	}
 	// update stock -> jika penjualan kredit , klo tunai update saat payment
 	// update history stock
 	// hitung ulang
@@ -43,13 +52,18 @@ func ApprovePaymentDirect(paymentDirect *dto.PaymentDirectModel) (errCode string
 	tx.Debug().LogMode(true)
 	// r := db.Model(&newOrder).Where("id = ?", order.ID).Update(dbmodels.SalesOrder{OrderNo: order.OrderNo, StatusCode: "001", WarehouseCode: order.WarehouseCode, InternalStatus: 1, OrderDate: order.OrderDate})
 
-	payment, _ := GetPaymentById(paymentDirect.PaymentID)
+	payment, err := GetPaymentByIdTrx(tx, paymentDirect.PaymentID)
+	if err != nil {
+		tx.Rollback()
+		return constants.ERR_CODE_80, err.Error()
+	}
 	payment.Status = constants.STATUS_APPROVE
 	payment.LastUpdate = time.Now()
 	payment.LastUpdateBy = dto.CurrUser
 	payment.TotalPayment = total
 	r := tx.Save(&payment)
 	if r.Error != nil {
+		tx.Rollback()
 		errCode = constants.ERR_CODE_80
 		errDesc = r.Error.Error()
 		fmt.Println("Error update ", errDesc)
@@ -58,7 +72,9 @@ func ApprovePaymentDirect(paymentDirect *dto.PaymentDirectModel) (errCode string
 	order.InvoiceNo = payment.PaymentNo
 	o := tx.Save((&order))
 	if o.Error != nil {
+		tx.Rollback()
 		fmt.Println("Error save inv no in order => ", o.Error.Error())
+		return constants.ERR_CODE_80, o.Error.Error()
 	}
 	// fmt.Println("Order [database]=> order id", order.OrderNo)
 
@@ -217,7 +233,15 @@ func RejectPaymentDirect(paymentDirect *dto.PaymentDirectModel) (errCode string,
 		}
 	}()
 
-	order, _ := GetSalesOrderByOrderId(paymentDirect.SalesOrderID)
+	order, err := GetSalesOrderByOrderIdLockForUpdate(tx, paymentDirect.SalesOrderID)
+	if err != nil {
+		tx.Rollback()
+		return constants.ERR_CODE_80, err.Error()
+	}
+	if !(order.Status == constants.STATUS_PAID) {
+		tx.Rollback()
+		return constants.ERR_CODE_93, constants.ERR_CODE_93_MSG
+	}
 	// update stock -> jika penjualan kredit , klo tunai update saat payment
 	// update history stock
 	// hitung ulang
@@ -235,13 +259,18 @@ func RejectPaymentDirect(paymentDirect *dto.PaymentDirectModel) (errCode string,
 	tx.Debug().LogMode(true)
 	// r := db.Model(&newOrder).Where("id = ?", order.ID).Update(dbmodels.SalesOrder{OrderNo: order.OrderNo, StatusCode: "001", WarehouseCode: order.WarehouseCode, InternalStatus: 1, OrderDate: order.OrderDate})
 
-	payment, _ := GetPaymentById(paymentDirect.PaymentID)
+	payment, err := GetPaymentById(paymentDirect.PaymentID)
+	if err != nil {
+		tx.Rollback()
+		return constants.ERR_CODE_80, err.Error()
+	}
 	payment.Status = constants.STATUS_REJECT
 	payment.LastUpdate = time.Now()
 	payment.LastUpdateBy = dto.CurrUser
 	payment.TotalPayment = total
 	r := tx.Save(&payment)
 	if r.Error != nil {
+		tx.Rollback()
 		errCode = constants.ERR_CODE_80
 		errDesc = r.Error.Error()
 		fmt.Println("Error update ", errDesc)
@@ -250,7 +279,9 @@ func RejectPaymentDirect(paymentDirect *dto.PaymentDirectModel) (errCode string,
 	order.Status = constants.STATUS_REJECT_PAYMENT
 	o := tx.Save(&order)
 	if o.Error != nil {
+		tx.Rollback()
 		fmt.Println("Error save inv no in order => ", o.Error.Error())
+		return constants.ERR_CODE_80, o.Error.Error()
 	}
 	// fmt.Println("Order [database]=> order id", order.OrderNo)
 
