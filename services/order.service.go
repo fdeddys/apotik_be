@@ -101,6 +101,7 @@ func (o OrderService) Approve(order *dbmodels.SalesOrder) (errCode, errDesc stri
 	// cek qty
 	valid, errCode, errDesc := validateQty(order.ID, order.WarehouseID)
 	if !valid {
+
 		return errCode, errDesc
 	}
 
