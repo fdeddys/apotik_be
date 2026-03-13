@@ -7,4 +7,5 @@ type FilterReturnReceive struct {
 	EndDate        string `json:"endDate"`
 	ReturnDetailId int64  `json:"returnDetailId"`
 	Qty            int64  `json:"qty"`
+	Status         int8   `json:"status"`
 }

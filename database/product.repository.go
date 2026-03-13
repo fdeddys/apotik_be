@@ -175,7 +175,7 @@ func UpdateProduct(updatedProduct dbmodels.Product) models.NoContentResponse {
 	return res
 }
 
-//SaveProduct ...
+// SaveProduct ...
 func SaveProduct(product dbmodels.Product) models.ContentResponse {
 	var res models.ContentResponse
 	res.ErrCode = constants.ERR_CODE_00
@@ -429,7 +429,7 @@ func GenerateProductCode(name string) string {
 
 // }
 
-//GetProductLike ...
+// GetProductLike ...
 func GetProductLike(productterms string) ([]dbmodels.Product, string, string, error) {
 	db := GetDbCon()
 	db.Debug().LogMode(true)

@@ -73,7 +73,7 @@ func AsyncQuerysPaymentSupplierDetails(db *gorm.DB, offset int, limit int, order
 
 	var err error
 
-	err = db.Preload("Receive").Offset(offset).Limit(limit).Find(&orders, "  payment_supplier_id =?  ", paymentID).Error
+	err = db.Preload("Receive").Preload("Receive.Supplier").Offset(offset).Limit(limit).Find(&orders, "  payment_supplier_id =?  ", paymentID).Error
 
 	if err != nil {
 		resChan <- err
@@ -81,7 +81,7 @@ func AsyncQuerysPaymentSupplierDetails(db *gorm.DB, offset int, limit int, order
 	resChan <- nil
 }
 
-//SavePaymentDetail ...
+// SavePaymentDetail ...
 func SavePaymentSupplierDetail(paymentDetail *dbmodels.PaymentSupplierDetail) (errCode string, errDesc string) {
 
 	fmt.Println(" Add Payment Order Detail ------------------------------------------ ")

@@ -9,6 +9,8 @@ import (
 	"distribution-system-be/models/dto"
 )
 
+// var approveMu sync.Mutex
+
 // DirectPaymentService ...
 type DirectPaymentService struct {
 }
@@ -38,6 +40,9 @@ func (o DirectPaymentService) GetDataPage(param dto.FilterPaymentDirect, page in
 func (o DirectPaymentService) Approve(paymentDirect *dto.PaymentDirectModel) (errCode, errDesc string) {
 
 	// fmt.Println("isi order ", order)
+
+	// approveMu.Lock()
+	// defer approveMu.Unlock()
 
 	errCode, errDesc = database.ApprovePaymentDirect(paymentDirect)
 	if errCode != constants.ERR_CODE_00 {

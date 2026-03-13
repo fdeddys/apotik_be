@@ -74,7 +74,8 @@ func GetStockByProductPage(productID int64, offset int, limit int) ([]dbmodels.S
 func AsyncQueryStock(db *gorm.DB, offset int, limit int, stocks *[]dbmodels.Stock, productID int64, resChan chan error) {
 
 	var err error
-	err = db.Set("gorm:auto_preload", true).Order("warehouse_id ASC").Offset(offset).Limit(limit).Find(&stocks, " product_id = ?   ", productID).Error
+	// err = db.Set("gorm:auto_preload", true).Order("warehouse_id ASC").Offset(offset).Limit(limit).Find(&stocks, " product_id = ?   ", productID).Error
+	err = db.Preload("Warehouse", "status = 1").Order("warehouse_id ASC").Offset(offset).Limit(limit).Joins("JOIN warehouse ON warehouse.id = stock.warehouse_id AND warehouse.status = 1").Find(&stocks, " product_id = ?   ", productID).Error
 
 	if err != nil {
 		resChan <- err
@@ -85,7 +86,7 @@ func AsyncQueryStock(db *gorm.DB, offset int, limit int, stocks *[]dbmodels.Stoc
 // AsyncQueryCountStock ...
 func AsyncQueryCountStock(db *gorm.DB, total *int, stock *[]dbmodels.Stock, productID int64, resChan chan error) {
 
-	err := db.Model(&stock).Where(" product_id = ?  ", productID).Count(&*total).Error
+	err := db.Model(&stock).Joins("JOIN warehouse ON warehouse.id = stock.warehouse_id AND warehouse.status = 1").Where(" product_id = ?  ", productID).Count(&*total).Error
 
 	if err != nil {
 		resChan <- err

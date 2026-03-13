@@ -22,7 +22,17 @@ func GetPaymentById(paymentID int64) (dbmodels.Payment, error) {
 	err := db.Preload("Customer").Where(" id = ?  ", paymentID).First(&payment).Error
 
 	return payment, err
+}
 
+// GetSalesOrderByOrderIdTrx ...
+func GetPaymentByIdTrx(tx *gorm.DB, paymentID int64) (dbmodels.Payment, error) {
+	//db := GetDbCon()
+	//db.Debug().LogMode(true)
+	payment := dbmodels.Payment{}
+
+	err := tx.Debug().LogMode(true).Preload("Customer").Where(" id = ?  ", paymentID).First(&payment).Error
+
+	return payment, err
 }
 
 func GetPaymentOrderBySalesOrderId(salesOrderID int64) (dbmodels.PaymentOrder, error) {
@@ -36,7 +46,7 @@ func GetPaymentOrderBySalesOrderId(salesOrderID int64) (dbmodels.PaymentOrder, e
 
 }
 
-//SavePayment ...
+// SavePayment ...
 func SavePayment(payment *dbmodels.Payment) (errCode string, errDesc string, id int64) {
 
 	fmt.Println(" Update Payment - ")
@@ -156,7 +166,7 @@ func getParamPayment(param dto.FilterPayment) (merchantCode, paymentNo string) {
 	return
 }
 
-//RejectPayment ...
+// RejectPayment ...
 func RejectPayment(PaymentId int64) (errCode string, errDesc string) {
 
 	fmt.Println(" Reject Payment by no ------------------------------------------ ")

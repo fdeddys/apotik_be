@@ -12,7 +12,7 @@ import (
 	"github.com/jinzhu/gorm"
 )
 
-//SaveHistory ...
+// SaveHistory ...
 func SaveHistory(history dbmodels.HistoryStock) models.NoContentResponse {
 	var res models.NoContentResponse
 	db := GetDbCon()
