@@ -80,6 +80,17 @@ func SaveSalesOrderApprove(order *dbmodels.SalesOrder) (errCode string, errDesc 
 		}
 	}()
 
+	orderCheck, err := GetSalesOrderByOrderIdLockForUpdate(tx, order.ID)
+	if err != nil {
+		tx.Rollback()
+		return constants.ERR_CODE_80, err.Error()
+	}
+
+	if orderCheck.Status != constants.STATUS_NEW {
+		tx.Rollback()
+		return constants.ERR_CODE_93, constants.ERR_CODE_93_MSG
+	}
+
 	// update stock untuk penjualan tunai dan kredit
 	// update stock -> jika penjualan kredit , klo tunai update saat payment
 	// update history stock
@@ -93,7 +104,7 @@ func SaveSalesOrderApprove(order *dbmodels.SalesOrder) (errCode string, errDesc 
 		fmt.Println("idx -> ", idx)
 
 		// if order.IsCash == false {
-		updateStockInsertHistory(*order, orderDetail)
+		updateStockInsertHistory(tx, *order, orderDetail)
 		// }
 		disc := orderDetail.Price * float32(orderDetail.QtyOrder) * orderDetail.Disc1 / 100
 		total = total + (orderDetail.Price*float32(orderDetail.QtyOrder) - disc)
@@ -112,8 +123,9 @@ func SaveSalesOrderApprove(order *dbmodels.SalesOrder) (errCode string, errDesc 
 	order.LastUpdateBy = dto.CurrUser
 	order.LastUpdate = time.Now()
 	order.Status = 20
-	r := db.Save(&order)
+	r := tx.Save(&order)
 	if r.Error != nil {
+		tx.Rollback()
 		errCode = constants.ERR_CODE_80
 		errDesc = r.Error.Error()
 		fmt.Println("Error update ", errDesc)
@@ -126,7 +138,7 @@ func SaveSalesOrderApprove(order *dbmodels.SalesOrder) (errCode string, errDesc 
 	return constants.ERR_CODE_00, constants.ERR_CODE_00_MSG
 }
 
-func updateStockInsertHistory(order dbmodels.SalesOrder, orderDetail dbmodels.SalesOrderDetail) {
+func updateStockInsertHistory(tx *gorm.DB, order dbmodels.SalesOrder, orderDetail dbmodels.SalesOrderDetail) {
 	product, _, _ := FindProductByID(orderDetail.ProductID)
 	// if errCodeProd != constants.ERR_CODE_00 {
 	// 	tx.Rollback()

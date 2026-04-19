@@ -8,8 +8,11 @@ import (
 	dto "distribution-system-be/models/dto"
 	"distribution-system-be/utils/util"
 	"fmt"
+	"sync"
 	"time"
 )
+
+var approveMu sync.Mutex
 
 // OrderService ...
 type OrderService struct {
@@ -91,12 +94,17 @@ func (o OrderService) Save(order *dbmodels.SalesOrder) (errCode, errDesc, orderN
 // Approve ...
 func (o OrderService) Approve(order *dbmodels.SalesOrder) (errCode, errDesc string) {
 
+	approveMu.Lock()
+	defer approveMu.Unlock()
+	fmt.Println("Approval using Mutex ")
+
 	// cek qty
 	valid, errCode, errDesc := validateQty(order.ID, order.WarehouseID)
 	if !valid {
+
 		return errCode, errDesc
 	}
-	// fmt.Println("isi order ", order)
+
 	err, errDesc := database.SaveSalesOrderApprove(order)
 	if err != constants.ERR_CODE_00 {
 		return err, errDesc

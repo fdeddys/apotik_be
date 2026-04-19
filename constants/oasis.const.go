@@ -3,8 +3,8 @@ package constants
 const (
 	TokenSecretKey        = "OasI$_sEcrET_key$"
 	TokenExpiredInMinutes = 8 * 60 * 60
-	VERSION               = "B180622"
-	VERSION_DATE          = "28OKT2021"
+	VERSION               = "B170326"
+	VERSION_DATE          = "17OKT2021"
 )
 
 // ERR code Global
