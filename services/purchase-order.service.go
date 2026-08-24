@@ -62,7 +62,7 @@ func (r PurchaseOrderService) GetDataPurchaseOrderByID(reveiveID int64) dbmodels
 func (r PurchaseOrderService) Save(purchaseOrder *dbmodels.PurchaseOrder) (errCode, errDesc, purchaseOrderNo string, purchaseOrderID int64, status int8) {
 
 	if purchaseOrder.ID == 0 {
-		newNumber, errCode, errMsg := generateNewPurchaseOrderNo()
+		newNumber, errCode, errMsg := generateNewPurchaseOrderNo(purchaseOrder.TypePO)
 		if errCode != constants.ERR_CODE_00 {
 			return errCode, errMsg, "", 0, 0
 		}
@@ -104,31 +104,53 @@ func (r PurchaseOrderService) ApprovePurchaseOrder(purchaseOrder *dbmodels.Purch
 // 	return constants.ERR_CODE_00, constants.ERR_CODE_00_MSG
 // }
 
-func generateNewPurchaseOrderNo() (newNumber string, errCode string, errMsg string) {
+func generateNewPurchaseOrderNo(typePo string) (newNumber string, errCode string, errMsg string) {
 
 	t := time.Now()
-	bln := t.Format("01")
-	thn := t.Format("06")
-	header := "PO"
 
-	err, number, errdesc := database.AddSequence(bln, thn, header)
-	if err != constants.ERR_CODE_00 {
-		return "", err, errdesc
+	if typePo == "1" {
+		// PO Prekursor: xxx/SP/PREK/yyyy
+		yyyy := t.Format("2006")
+		header := "PO_PREK"
+
+		err, number, errdesc := database.AddSequence("", yyyy, header)
+		if err != constants.ERR_CODE_00 {
+			return "", err, errdesc
+		}
+		newNumb := fmt.Sprintf("%03d", number)
+		newNumber = fmt.Sprintf("%v/SP/PREK/%v", newNumb, yyyy)
+		return newNumber, constants.ERR_CODE_00, constants.ERR_CODE_00_MSG
+
+	} else if typePo == "2" {
+		// PO OTT: xxx/SP/OTT/yyyy
+		yyyy := t.Format("2006")
+		header := "PO_OTT"
+
+		err, number, errdesc := database.AddSequence("", yyyy, header)
+		if err != constants.ERR_CODE_00 {
+			return "", err, errdesc
+		}
+		newNumb := fmt.Sprintf("%03d", number)
+		newNumber = fmt.Sprintf("%v/SP/OTT/%v", newNumb, yyyy)
+		return newNumber, constants.ERR_CODE_00, constants.ERR_CODE_00_MSG
+
+	} else {
+		// Default PO: POyymmxxxxx
+		bln := t.Format("01")
+		thn := t.Format("06")
+		header := "PO"
+
+		err, number, errdesc := database.AddSequence(bln, thn, header)
+		if err != constants.ERR_CODE_00 {
+			return "", err, errdesc
+		}
+		newNumb := fmt.Sprintf("00000%v", number)
+		runes := []rune(newNumb)
+		newNumb = string(runes[len(newNumb)-5 : len(newNumb)])
+		newNumber = fmt.Sprintf("%v%v%v%v", header, thn, bln, newNumb)
+
+		return newNumber, constants.ERR_CODE_00, constants.ERR_CODE_00_MSG
 	}
-	newNumb := fmt.Sprintf("00000%v", number)
-	// newNumb = newNumb[len(newNumb)-5 : len(newNumb)]
-	// newNumber = fmt.Sprintf("%v%v%v%v", header, thn, bln, newNumb)
-
-	fmt.Println("new numb bef : ", newNumb)
-	runes := []rune(newNumb)
-	newNumb = string(runes[len(newNumb)-5 : len(newNumb)])
-	fmt.Println("new numb after : ", newNumb)
-
-	// newNumb = newNumb[len(newNumb)-5 : len(newNumb)]
-	newNumber = fmt.Sprintf("%v%v%v%v", header, thn, bln, newNumb)
-
-	return newNumber, constants.ERR_CODE_00, constants.ERR_CODE_00_MSG
-
 }
 
 // GetDataPurchaseOrderByID ...

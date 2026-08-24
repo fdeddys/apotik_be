@@ -53,6 +53,8 @@ func ApprovePurchaseOrder(purchaseOrder *dbmodels.PurchaseOrder) (errCode string
 		SupplierID:    purchaseOrder.SupplierID,
 		Note:          purchaseOrder.Note,
 		PurchaserDate: purchaseOrder.PurchaserDate,
+		PelangganID:   purchaseOrder.PelangganID,
+		TypePO:        purchaseOrder.TypePO,
 	})
 	if r.Error != nil {
 		fmt.Println("err reject ", r.Error)
@@ -138,46 +140,31 @@ func GetPurchaseOrderPage(param dto.FilterPurchaseOrder, offset, limit, internal
 // AsyncQueryCountsPurchaseOrders ...
 func AsyncQueryCountsPurchaseOrders(db *gorm.DB, total *int, status int, purchaseOrders *[]dbmodels.PurchaseOrder, param dto.FilterPurchaseOrder, resChan chan error) {
 
-	purchaseOrderNumber, byStatus, bySupplierID, suppName := getParamPurchaseOrder(param, status)
-
+	purchaseOrderNumber, byStatus, bySupplierID, suppName, pelangganName, byTypePO, typePo := getParamPurchaseOrder(param, status)
 
 	var err error
-	if strings.TrimSpace(param.StartDate) != "" && strings.TrimSpace(param.EndDate) != "" {
-		fmt.Println("1 Rec Number ", purchaseOrderNumber, "  status ", status, " fill status ", byStatus, " supp name : " , suppName)
-		if (suppName == "%") {
-			err = db.
-			Model(&purchaseOrders).
-			Joins("left join supplier on supplier.id = po.supplier_id and supplier.name ilike ? ", suppName).
-			Where(" ( (po.status = ?) or ( not ?) ) AND COALESCE(po_no, '') ilike ? AND po_date between ? and ?  AND ( ( supplier_id = ? ) or ( not ?) )  ", status, byStatus, purchaseOrderNumber, param.StartDate, param.EndDate, param.SupplierId, bySupplierID).
-			Count(&*total).
-			Error
-		} else {
-			err = db.
-			Model(&purchaseOrders).
-			Joins("inner join supplier on supplier.id = po.supplier_id and supplier.name ilike ? ", suppName).
-			Where(" ( (po.status = ?) or ( not ?) ) AND COALESCE(po_no, '') ilike ? AND po_date between ? and ?  AND ( ( supplier_id = ? ) or ( not ?) )  ", status, byStatus, purchaseOrderNumber, param.StartDate, param.EndDate, param.SupplierId, bySupplierID).
-			Count(&*total).
-			Error
-		}
-		
+	q := db.Model(&dbmodels.PurchaseOrder{})
+
+	if suppName == "%" {
+		q = q.Joins("left join supplier on supplier.id = po.supplier_id")
 	} else {
-		fmt.Println("2 Rec Number ", purchaseOrderNumber, "  status ", status, " fill status ", byStatus, " supp name : " , suppName)
-		if (suppName == "%"){
-			err = db.
-			Model(&purchaseOrders).
-			Joins("left join supplier on supplier.id = po.supplier_id and supplier.name ilike ? ", suppName).
-			Where(" ( (po.status = ?) or ( not ?) ) AND COALESCE(po_no,'') ilike ?  AND ( ( supplier_id = ? ) or ( not ?) ) ", status, byStatus, purchaseOrderNumber, param.SupplierId, bySupplierID).
+		q = q.Joins("inner join supplier on supplier.id = po.supplier_id and supplier.name ilike ? ", suppName)
+	}
+
+	if pelangganName == "%" {
+		q = q.Joins("left join public.pelanggan on public.pelanggan.id = po.pelanggan_id")
+	} else {
+		q = q.Joins("inner join public.pelanggan on public.pelanggan.id = po.pelanggan_id and public.pelanggan.nama ilike ? ", pelangganName)
+	}
+
+	if strings.TrimSpace(param.StartDate) != "" && strings.TrimSpace(param.EndDate) != "" {
+		err = q.Where(" ( (po.status = ?) or ( not ?) ) AND COALESCE(po_no, '') ilike ? AND po_date between ? and ?  AND ( ( supplier_id = ? ) or ( not ?) ) AND ( ( po.type_po = ? ) or ( not ?) ) ", status, byStatus, purchaseOrderNumber, param.StartDate, param.EndDate, param.SupplierId, bySupplierID, typePo, byTypePO).
 			Count(&*total).
 			Error
-		} else {
-			err = db.
-			Model(&purchaseOrders).
-			Joins("inner join supplier on supplier.id = po.supplier_id and supplier.name ilike ? ", suppName).
-			Where(" ( (po.status = ?) or ( not ?) ) AND COALESCE(po_no,'') ilike ?  AND ( ( supplier_id = ? ) or ( not ?) ) ", status, byStatus, purchaseOrderNumber, param.SupplierId, bySupplierID).
+	} else {
+		err = q.Where(" ( (po.status = ?) or ( not ?) ) AND COALESCE(po_no,'') ilike ?  AND ( ( supplier_id = ? ) or ( not ?) ) AND ( ( po.type_po = ? ) or ( not ?) ) ", status, byStatus, purchaseOrderNumber, param.SupplierId, bySupplierID, typePo, byTypePO).
 			Count(&*total).
 			Error
-		}
-		
 	}
 
 	if err != nil {
@@ -191,59 +178,28 @@ func AsyncQuerysPurchaseOrders(db *gorm.DB, offset int, limit int, status int, p
 
 	var err error
 
-	purchaseOrderNumber, byStatus, bySupplierID, suppName := getParamPurchaseOrder(param, status)
+	purchaseOrderNumber, byStatus, bySupplierID, suppName, pelangganName, byTypePO, typePo := getParamPurchaseOrder(param, status)
 
-	fmt.Println(" PurchaseOrder no ", purchaseOrderNumber, "  status ", status, " fill status ", byStatus, " suppname : " , suppName)
+	q := db.Offset(offset).Limit(limit).Preload("Supplier").Preload("Pelanggan").Order("po.id DESC")
 
-	fmt.Println("isi dari filter [", param, "] ")
-	if strings.TrimSpace(param.StartDate) != "" && strings.TrimSpace(param.EndDate) != "" {
-		fmt.Println("3 isi dari filter [", param.StartDate, '-', param.EndDate, "] ")
-
-		if (suppName == "%") {
-			err = db.
-			Joins("left join supplier on supplier.id = po.supplier_id and supplier.name ilike ? ", suppName).
-			Preload("Supplier").
-			Order("id DESC").
-			Offset(offset).
-			Limit(limit).
-			Find(&purchaseOrders, " ( ( po.status = ?) or ( not ?) ) AND COALESCE(po_no, '') ilike ? AND po_date between ? and ?  AND ( ( supplier_id = ? ) or ( not ?) )  ", status, byStatus, purchaseOrderNumber, param.StartDate, param.EndDate, param.SupplierId, bySupplierID).
-			Error
-		} else{
-			err = db.
-			Joins("inner join supplier on supplier.id = po.supplier_id and supplier.name ilike ? ", suppName).
-			Preload("Supplier").
-			Order("id DESC").
-			Offset(offset).
-			Limit(limit).
-			Find(&purchaseOrders, " ( ( po.status = ?) or ( not ?) ) AND COALESCE(po_no, '') ilike ? AND po_date between ? and ?  AND ( ( supplier_id = ? ) or ( not ?) )  ", status, byStatus, purchaseOrderNumber, param.StartDate, param.EndDate, param.SupplierId, bySupplierID).
-			Error
-		}
-		
+	if suppName == "%" {
+		q = q.Joins("left join supplier on supplier.id = po.supplier_id")
 	} else {
-		fmt.Println("4 isi dari kosong ")
-		if (suppName == "%"){
-			err = db.
-			Joins("left join supplier on supplier.id = po.supplier_id and supplier.name ilike ? ", suppName).
-			Offset(offset).
-			Limit(limit).
-			Preload("Supplier").
-			Order("id DESC").Find(&purchaseOrders, " ( ( po.status = ?) or ( not ?) ) AND COALESCE(po_no,'') ilike ?  AND ( ( supplier_id = ? ) or ( not ?) )  ", status, byStatus, purchaseOrderNumber, param.SupplierId, bySupplierID).
-			Error
-		} else {
-			err = db.
-			Joins("inner join supplier on supplier.id = po.supplier_id and supplier.name ilike ? ", suppName).
-			Offset(offset).
-			Limit(limit).
-			Preload("Supplier").
-			Order("id DESC").Find(&purchaseOrders, " ( ( po.status = ?) or ( not ?) ) AND COALESCE(po_no,'') ilike ?  AND ( ( supplier_id = ? ) or ( not ?) )  ", status, byStatus, purchaseOrderNumber, param.SupplierId, bySupplierID).
-			Error
-		}
-		
-		if err != nil {
-			fmt.Println("purchaseOrder --> ", err)
-		}
-		fmt.Println("purchaseOrder--> ", purchaseOrders)
+		q = q.Joins("inner join supplier on supplier.id = po.supplier_id and supplier.name ilike ? ", suppName)
+	}
 
+	if pelangganName == "%" {
+		q = q.Joins("left join public.pelanggan on public.pelanggan.id = po.pelanggan_id")
+	} else {
+		q = q.Joins("inner join public.pelanggan on public.pelanggan.id = po.pelanggan_id and public.pelanggan.nama ilike ? ", pelangganName)
+	}
+
+	if strings.TrimSpace(param.StartDate) != "" && strings.TrimSpace(param.EndDate) != "" {
+		err = q.Find(purchaseOrders, " ( ( po.status = ?) or ( not ?) ) AND COALESCE(po_no, '') ilike ? AND po_date between ? and ?  AND ( ( supplier_id = ? ) or ( not ?) ) AND ( ( po.type_po = ? ) or ( not ?) ) ", status, byStatus, purchaseOrderNumber, param.StartDate, param.EndDate, param.SupplierId, bySupplierID, typePo, byTypePO).
+			Error
+	} else {
+		err = q.Find(purchaseOrders, " ( ( po.status = ?) or ( not ?) ) AND COALESCE(po_no,'') ilike ?  AND ( ( supplier_id = ? ) or ( not ?) ) AND ( ( po.type_po = ? ) or ( not ?) ) ", status, byStatus, purchaseOrderNumber, param.SupplierId, bySupplierID, typePo, byTypePO).
+			Error
 	}
 
 	if err != nil {
@@ -252,7 +208,7 @@ func AsyncQuerysPurchaseOrders(db *gorm.DB, offset int, limit int, status int, p
 	resChan <- nil
 }
 
-func getParamPurchaseOrder(param dto.FilterPurchaseOrder, status int) (purchaseOrderNumber string, byStatus, bySupplierID bool, supplierName string) {
+func getParamPurchaseOrder(param dto.FilterPurchaseOrder, status int) (purchaseOrderNumber string, byStatus, bySupplierID bool, supplierName string, pelangganName string, byTypePO bool, typePo string) {
 
 	purchaseOrderNumber = param.PurchaseOrderNumber
 	if purchaseOrderNumber == "" {
@@ -279,11 +235,18 @@ func getParamPurchaseOrder(param dto.FilterPurchaseOrder, status int) (purchaseO
 		supplierName = "%" + param.SupplierName + "%"
 	}
 
-	// fmt.Println("param ==> ", supplierName)
-	// byDate = true
-	// if param.StartDate == "" || param.EndDate == "" {
-	// 	byDate = false
-	// }
+	pelangganName = param.PelangganName
+	if pelangganName == "" {
+		pelangganName = "%"
+	} else {
+		pelangganName = "%" + param.PelangganName + "%"
+	}
+
+	typePo = param.TypePO
+	byTypePO = true
+	if typePo == "" {
+		byTypePO = false
+	}
 
 	return
 }
@@ -294,7 +257,7 @@ func GetPurchaseOrderByPurchaseOrderID(purchaseOrderID int64) (dbmodels.Purchase
 	db.Debug().LogMode(true)
 	purchaseOrder := dbmodels.PurchaseOrder{}
 
-	err := db.Preload("Supplier").Where(" id = ?  ", purchaseOrderID).First(&purchaseOrder).Error
+	err := db.Preload("Supplier").Preload("Pelanggan").Where(" id = ?  ", purchaseOrderID).First(&purchaseOrder).Error
 
 	return purchaseOrder, err
 
@@ -384,7 +347,7 @@ func GetPurchaseOrderByPurchaseOrderDetailID(purchaseOrderDetailID int64) (dbmod
 	purchaseDetail := dbmodels.PurchaseOrderDetail{}
 	db.Where("id = ? ", purchaseOrderDetailID).First(&purchaseDetail)
 
-	err := db.Preload("Supplier").Where(" id = ?  ", purchaseDetail.PurchaseOrderID).First(&purchaseOrder).Error
+	err := db.Preload("Supplier").Preload("Pelanggan").Where(" id = ?  ", purchaseDetail.PurchaseOrderID).First(&purchaseOrder).Error
 
 	return purchaseOrder, err
 
@@ -396,7 +359,7 @@ func GetPurchaseOrderByPurchaseOrderNo(pono string) (dbmodels.PurchaseOrder, err
 	db.Debug().LogMode(true)
 	purchaseOrder := dbmodels.PurchaseOrder{}
 
-	err := db.Preload("Supplier").Where(" po_no = ?  ", pono).First(&purchaseOrder).Error
+	err := db.Preload("Supplier").Preload("Pelanggan").Where(" po_no = ?  ", pono).First(&purchaseOrder).Error
 
 	return purchaseOrder, err
 

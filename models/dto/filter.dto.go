@@ -30,6 +30,7 @@ type FilterProduct struct {
 	Name        string `json:"name"`
 	WarehouseID int64  `json:"warehouseId"`
 	Composition string `json:"composition"`
+	TipePO      string `json:"tipePo"`
 }
 
 // FilterProductGroup ...

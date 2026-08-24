@@ -105,7 +105,7 @@ func GeneratePurchaseOrderReport(purchaseOrderID int64) {
 
 	// get Data mockup utk display ke grid
 	fmt.Println("data  send to fillData Details : ", purchaseOrderID)
-	dataDetails := fillDataDetailPurchaseOrder(purchaseOrderID)
+	dataDetails, typePo := fillDataDetailPurchaseOrder(purchaseOrderID)
 
 	fmt.Println("hasil fill")
 	for i, ordDetail := range dataDetails {
@@ -113,18 +113,33 @@ func GeneratePurchaseOrderReport(purchaseOrderID int64) {
 	}
 	fmt.Println("=============")
 	// setFont(&pdf, 12)
-	setHeader(&pdf, "po")
-	pdf.Br(20)
 
-	setDetail(&pdf, dataDetails, "po")
-	// setSummary(&pdf)
-	setSign(&pdf, "", "", "Apoteker")
+	if typePo == "0" {
+		setHeader(&pdf, "po")
+		pdf.Br(20)
+
+		setDetail(&pdf, dataDetails, "po")
+		// setSummary(&pdf)
+		setSign(&pdf, "", "", "Apoteker")
+	} else {
+		description := ""
+		if typePo == "1" {
+			description = "Prekursor"
+		} else {
+			description = "OTT"
+		}
+		setHeaderType2(&pdf, "po", description)
+		pdf.Br(20)
+
+		setDetail(&pdf, dataDetails, description)
+		setSign(&pdf, "", "", "Apoteker")
+	}
 
 	pdf.WritePdf("purchase-order.pdf")
 
 }
 
-func fillDataDetailPurchaseOrder(purchaseOrderID int64) []DataDetail {
+func fillDataDetailPurchaseOrder(purchaseOrderID int64) ([]DataDetail, string) {
 
 	purchaseOrder, err := database.GetPurchaseOrderByPurchaseOrderID(purchaseOrderID)
 	if err != nil {
@@ -133,6 +148,7 @@ func fillDataDetailPurchaseOrder(purchaseOrderID int64) []DataDetail {
 	fmt.Println("Header : ", purchaseOrder)
 
 	purchaseOrderNumber = purchaseOrder.PurchaserNo
+	typePo := purchaseOrder.TypePO
 	// purchaseOrderNo = purchaseOrder.PurchaserNo
 
 	purchaseOrderDetails := database.GetAllDataDetailPurchaseOrder(purchaseOrderID)
@@ -165,6 +181,8 @@ func fillDataDetailPurchaseOrder(purchaseOrderID int64) []DataDetail {
 		data.Price = int64(detail.PoPrice)
 		total := data.Price * data.Quantity
 		data.Total = int64(detail.Price) * int64(detail.Qty)
+		data.Sediaan = detail.Product.Sediaan.Name
+		data.Composition = detail.Product.Composition
 		subTotal += total
 		res[i+1] = data
 		fmt.Println("total sub total", subTotal)
@@ -178,5 +196,5 @@ func fillDataDetailPurchaseOrder(purchaseOrderID int64) []DataDetail {
 	}
 	grandTotal = subTotal + tax
 
-	return res
+	return res, typePo
 }

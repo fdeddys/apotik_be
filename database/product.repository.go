@@ -27,7 +27,7 @@ func GetProductDetails(id int) ([]dbmodels.Product, string, string, error) {
 	db.Debug().LogMode(true)
 
 	var product []dbmodels.Product
-	err := db.Model(&dbmodels.Product{}).Preload("ProductGroup").Preload("Brand").Preload("BigUom").Where("id = ?", &id).First(&product).Error
+	err := db.Model(&dbmodels.Product{}).Preload("ProductGroup").Preload("Brand").Preload("BigUom").Preload("Sediaan").Where("id = ?", &id).First(&product).Error
 	// .Preload("StockLookup", "lookup_group=?", "STOCK_STATUS")
 
 	if err != nil {
@@ -98,7 +98,13 @@ func SearchProduct(param dto.FilterProduct, offset int, limit int) ([]dto.Produc
 		criteriaName = "%" + param.Name + "%"
 	}
 
-	err := db.Preload("Brand").Preload("ProductGroup").Preload("BigUom").Preload("SmallUom").Order("name ASC").Offset(offset).Limit(limit).Find(&products, "name ilike ? and  status = 1 ", criteriaName).Error
+	var queryStr = "name ilike ? and status = 1"
+	var queryArgs = []interface{}{criteriaName}
+	if param.TipePO == "1" {
+		queryStr += " and tipe_po = '1'"
+	}
+
+	err := db.Preload("Brand").Preload("ProductGroup").Preload("BigUom").Preload("SmallUom").Preload("Sediaan").Order("name ASC").Offset(offset).Limit(limit).Where(queryStr, queryArgs...).Find(&products).Error
 
 	if err != nil {
 		return productSearchs, err
@@ -129,6 +135,8 @@ func copyToDto(product dbmodels.Product) (productSearch dto.ProductSearch) {
 	productSearch.BigUomID = product.BigUomID
 	productSearch.SmallUomID = product.SmallUomID
 	productSearch.SmallUom = product.SmallUom
+	productSearch.SediaanID = product.SediaanID
+	productSearch.Sediaan = product.Sediaan
 	productSearch.Status = product.Status
 	productSearch.LastUpdateBy = product.LastUpdateBy
 	productSearch.LastUpdate = product.LastUpdate
@@ -137,6 +145,7 @@ func copyToDto(product dbmodels.Product) (productSearch dto.ProductSearch) {
 	productSearch.SellPrice = product.SellPrice
 	productSearch.SellPriceType = product.SellPriceType
 	productSearch.QtyOnHand = 0
+	productSearch.TipePO = product.TipePO
 	return
 }
 
@@ -161,6 +170,14 @@ func UpdateProduct(updatedProduct dbmodels.Product) models.NoContentResponse {
 	product.Code = updatedProduct.Code
 	product.ProductGroupID = updatedProduct.ProductGroupID
 	product.BrandID = updatedProduct.BrandID
+	product.TipePO = updatedProduct.TipePO
+	product.BigUomID = updatedProduct.BigUomID
+	product.SmallUomID = updatedProduct.SmallUomID
+	product.SediaanID = updatedProduct.SediaanID
+	product.Composition = updatedProduct.Composition
+	product.QtyUom = updatedProduct.QtyUom
+	product.SellPrice = updatedProduct.SellPrice
+	product.PLU = updatedProduct.PLU
 
 	err2 := db.Save(&product)
 	if err2 != nil {
@@ -275,6 +292,13 @@ func AsyncProductQuerysCount(db *gorm.DB, total *int, param interface{}, models 
 	varInterface := reflect.ValueOf(param)
 	strQuery := varInterface.Field(0).Interface().(string)
 	strComposition := varInterface.Field(2).Interface().(string)
+	strTipePO := ""
+	if varInterface.Kind() == reflect.Struct && varInterface.NumField() > 3 {
+		fieldVal := varInterface.Field(3)
+		if fieldVal.Kind() == reflect.String {
+			strTipePO = fieldVal.Interface().(string)
+		}
+	}
 	// var criteriaName = ""
 	// if strings.TrimSpace(strQuery) != "" {
 	// 	criteriaName = strQuery
@@ -294,11 +318,20 @@ func AsyncProductQuerysCount(db *gorm.DB, total *int, param interface{}, models 
 	// err := db.Model(models).Where(fieldLookup+" ~* ?", criteriaName).Count(&*total).Error
 
 	var err error
+	var queryStr string
+	var queryArgs []interface{}
 	if allRecord {
-		err = db.Model(models).Where("COALESCE(name, '') ILIKE ? and  composition ilike ?", criteriaName, criteriaComposition).Count(&*total).Error
+		queryStr = "COALESCE(name, '') ILIKE ? and composition ilike ?"
+		queryArgs = []interface{}{criteriaName, criteriaComposition}
 	} else {
-		err = db.Model(models).Where("COALESCE(name, '') ILIKE ? and  composition ilike ? and status = ? ", criteriaName, criteriaComposition, 1).Count(&*total).Error
+		queryStr = "COALESCE(name, '') ILIKE ? and composition ilike ? and status = ?"
+		queryArgs = []interface{}{criteriaName, criteriaComposition, 1}
 	}
+	if strTipePO == "1" {
+		queryStr += " and tipe_po = '1'"
+	}
+
+	err = db.Model(models).Where(queryStr, queryArgs...).Count(&*total).Error
 
 	if err != nil {
 		resChan <- err
@@ -315,6 +348,13 @@ func ProductQuerys(db *gorm.DB, offset int, limit int, product *[]dbmodels.Produ
 	varInterface := reflect.ValueOf(param)
 	strQuery := varInterface.Field(0).Interface().(string)
 	strComposition := varInterface.Field(2).Interface().(string)
+	strTipePO := ""
+	if varInterface.Kind() == reflect.Struct && varInterface.NumField() > 3 {
+		fieldVal := varInterface.Field(3)
+		if fieldVal.Kind() == reflect.String {
+			strTipePO = fieldVal.Interface().(string)
+		}
+	}
 
 	criteriaName := strQuery
 	if criteriaName == "" {
@@ -335,11 +375,20 @@ func ProductQuerys(db *gorm.DB, offset int, limit int, product *[]dbmodels.Produ
 	// err := db.Set("gorm:auto_preload", true).Order("name ASC").Offset(offset).Limit(limit).Find(&user, "name like ?", criteriaUserName).Error
 
 	var err error
+	var queryStr string
+	var queryArgs []interface{}
 	if allRecord {
-		err = db.Preload("Brand").Preload("ProductGroup").Preload("BigUom").Preload("SmallUom").Order("name ASC").Offset(offset).Limit(limit).Find(&product, "name ilike ? and composition ilike ?", criteriaName, criteriaComposition).Error
+		queryStr = "name ilike ? and composition ilike ?"
+		queryArgs = []interface{}{criteriaName, criteriaComposition}
 	} else {
-		err = db.Preload("Brand").Preload("ProductGroup").Preload("BigUom").Preload("SmallUom").Order("name ASC").Offset(offset).Limit(limit).Find(&product, "name ilike ? and composition ilike ? and status = ? ", criteriaName, criteriaComposition, 1).Error
+		queryStr = "name ilike ? and composition ilike ? and status = ?"
+		queryArgs = []interface{}{criteriaName, criteriaComposition, 1}
 	}
+	if strTipePO == "1" {
+		queryStr += " and tipe_po = '1'"
+	}
+
+	err = db.Preload("Brand").Preload("ProductGroup").Preload("BigUom").Preload("SmallUom").Preload("Sediaan").Order("name ASC").Offset(offset).Limit(limit).Where(queryStr, queryArgs...).Find(&product).Error
 	// .Preload("StockLookup", "lookup_group=?", "STOCK_STATUS")
 	if err != nil {
 		resChan <- err
@@ -352,7 +401,7 @@ func ProductList() []dbmodels.Product {
 	db.Debug().LogMode(true)
 
 	var product []dbmodels.Product
-	err := db.Preload("Brand").Preload("ProductGroup").Preload("BigUom").Preload("SmallUom").Order("name ASC").Find(&product).Error
+	err := db.Preload("Brand").Preload("ProductGroup").Preload("BigUom").Preload("SmallUom").Preload("Sediaan").Order("name ASC").Find(&product).Error
 	// .Preload("StockLookup", "lookup_group=?", "STOCK_STATUS")
 
 	if err != nil {
@@ -582,6 +631,34 @@ func UpdateProductByPLU(productID int64, hargaBaru float32) models.NoContentResp
 		res.ErrDesc = "Error select data to DB"
 	}
 	product.SellPrice = hargaBaru
+
+	err2 := db.Save(&product)
+	if err2 != nil {
+		res.ErrCode = "02"
+		res.ErrDesc = "Error update data to DB"
+		return res
+	}
+
+	res.ErrCode = "00"
+	res.ErrDesc = "Success"
+
+	return res
+}
+
+// UpdateProductByPLUAndStatus ...
+func UpdateProductByPLUAndStatus(productID int64, hargaBaru float32, status int) models.NoContentResponse {
+	var res models.NoContentResponse
+	db := GetDbCon()
+	db.Debug().LogMode(true)
+
+	var product dbmodels.Product
+	err := db.Model(&dbmodels.Product{}).Where("id=?", productID).First(&product).Error
+	if err != nil {
+		res.ErrCode = "02"
+		res.ErrDesc = "Error select data to DB"
+	}
+	product.SellPrice = hargaBaru
+	product.Status = status
 
 	err2 := db.Save(&product)
 	if err2 != nil {

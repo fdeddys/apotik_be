@@ -16,6 +16,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/astaxie/beego/logs"
@@ -312,6 +313,7 @@ func (h *ProductController) ProcessCSV(c *gin.Context) {
 		produk.SellPriceType = 0
 		produk.SmallUomID = uomID
 		produk.BigUomID = uomID2
+		produk.SediaanID = 35
 		produk.Status = 1
 		produk.Composition = templateObat.Kadar
 
@@ -324,57 +326,158 @@ func (h *ProductController) ProcessCSV(c *gin.Context) {
 }
 
 func (h *ProductController) ProcessUpdateProd(c *gin.Context) {
+	res := database.ProcessTemplateToProduct()
+	c.JSON(http.StatusOK, res)
+	c.Abort()
+	return
+}
 
-	fmt.Println("Process")
-	fileObat, err := os.Open("update-product.csv")
+// UploadCSV ...
+func (h *ProductController) UploadCSV(c *gin.Context) {
+	var res models.ContentResponse
+	file, err := c.FormFile("file")
 	if err != nil {
-		fmt.Println("Error ==>", err)
-		panic(err)
-	}
-	defer fileObat.Close()
-
-	fmt.Println("reader")
-	csvReader := csv.NewReader(fileObat)
-	csvReader.Comma = ';'
-	records, err2 := csvReader.ReadAll()
-	if err2 != nil {
-		fmt.Println("Error err2 ==>", err2)
+		res.ErrCode = "06"
+		res.ErrDesc = "Failed to upload file: " + err.Error()
+		c.JSON(http.StatusOK, res)
 		return
 	}
 
-	var datas []dto.TemplateObat
-	i := 0
-	for _, value := range records {
-		fmt.Println("data ", value)
-		var template dto.TemplateObat
-		template.Plu = value[0]
-		template.Name = value[1]
-		template.Satuan = value[2]
-		template.HargaJualBaru = util.AtoFloat32(value[3])
+	tempFilePath := "update-product.csv"
+	err = c.SaveUploadedFile(file, tempFilePath)
+	if err != nil {
+		res.ErrCode = "06"
+		res.ErrDesc = "Failed to save file on server: " + err.Error()
+		c.JSON(http.StatusOK, res)
+		return
+	}
 
-		datas = append(datas, template)
-		i++
-		if i > 10 {
-			continue
+	fileObat, err := os.Open(tempFilePath)
+	if err != nil {
+		res.ErrCode = "06"
+		res.ErrDesc = "Failed to open saved file: " + err.Error()
+		c.JSON(http.StatusOK, res)
+		return
+	}
+	defer fileObat.Close()
+
+	csvReader := csv.NewReader(fileObat)
+	csvReader.Comma = ';'
+	
+	// Auto-detect delimiter
+	firstLineBytes, errRead := ioutil.ReadFile(tempFilePath)
+	if errRead == nil && len(firstLineBytes) > 0 {
+		snippet := string(firstLineBytes)
+		if len(snippet) > 1000 {
+			snippet = snippet[:1000]
+		}
+		semicolonCount := strings.Count(snippet, ";")
+		commaCount := strings.Count(snippet, ",")
+		if commaCount > semicolonCount {
+			csvReader.Comma = ','
 		}
 	}
 
-	for _, templateObat := range datas {
-		fmt.Println(templateObat)
-		// var produk dbmodels.Product
-		if templateObat.Plu == "" {
-			continue
-		}
-
-		produk, errCode, _ := database.FindProductByPLU(templateObat.Plu)
-		if errCode != constants.ERR_CODE_00 {
-			continue
-		}
-		fmt.Println("Product ", produk)
-		database.UpdateProductByPLU(produk.ID, templateObat.HargaJualBaru)
+	records, err2 := csvReader.ReadAll()
+	if err2 != nil {
+		res.ErrCode = "06"
+		res.ErrDesc = "Failed to read CSV: " + err2.Error()
+		c.JSON(http.StatusOK, res)
+		return
 	}
 
-	c.JSON(http.StatusOK, "ok")
-	c.Abort()
-	return
+	clearRes := database.ClearTemplateProducts()
+	if clearRes.ErrCode != "00" {
+		res.ErrCode = clearRes.ErrCode
+		res.ErrDesc = clearRes.ErrDesc
+		c.JSON(http.StatusOK, res)
+		return
+	}
+
+	for i, value := range records {
+		var code, name, plu, priceStr, statusStr string
+
+		if len(value) >= 9 {
+			// Layout A: Full Export Layout (10 columns)
+			// No;Name;Code;Big UOM;Small UOM;Qty UOM;Status;Sell Price;PLU;Composition
+			name = strings.TrimSpace(value[1])
+			code = strings.TrimSpace(value[2])
+			statusStr = strings.TrimSpace(value[6])
+			priceStr = strings.TrimSpace(value[7])
+			plu = strings.TrimSpace(value[8])
+		} else if len(value) >= 5 {
+			// Layout B: Short Layout (5 columns)
+			// Code;Name;PLU;HargaJual;Status
+			code = strings.TrimSpace(value[0])
+			name = strings.TrimSpace(value[1])
+			plu = strings.TrimSpace(value[2])
+			priceStr = strings.TrimSpace(value[3])
+			statusStr = strings.TrimSpace(value[4])
+		} else {
+			continue
+		}
+
+		sellPrice := util.AtoFloat32(priceStr)
+		if i == 0 && priceStr != "" {
+			_, parseErr := strconv.ParseFloat(priceStr, 32)
+			if parseErr != nil {
+				// Skip header row
+				continue
+			}
+		}
+
+		status := 1
+		if statusStr != "" {
+			if strings.ToLower(statusStr) == "inactive" || statusStr == "0" || strings.ToLower(statusStr) == "tidak aktif" {
+				status = 0
+			}
+		}
+
+		var tp dbmodels.TemplateProduct
+		tp.Code = code
+		tp.Plu = plu
+		tp.Nama = name
+		tp.HargaJual = sellPrice
+		tp.Status = status
+
+		errSave := database.SaveTemplateProduct(tp)
+		if errSave != nil {
+			fmt.Println("Error saving to template_product:", errSave)
+		}
+	}
+
+	list, errList := database.GetTemplateProducts()
+	if errList != nil {
+		res.ErrCode = "02"
+		res.ErrDesc = "CSV processed, but failed to fetch display list: " + errList.Error()
+		c.JSON(http.StatusOK, res)
+		return
+	}
+
+	res.ErrCode = "00"
+	res.ErrDesc = "Success upload and import CSV"
+	res.Contents = list
+	c.JSON(http.StatusOK, res)
+}
+
+// GetTemplateProducts ...
+func (h *ProductController) GetTemplateProducts(c *gin.Context) {
+	var res models.ContentResponse
+	list, err := database.GetTemplateProducts()
+	if err != nil {
+		res.ErrCode = "02"
+		res.ErrDesc = "Failed to fetch template products: " + err.Error()
+		c.JSON(http.StatusOK, res)
+		return
+	}
+	res.ErrCode = "00"
+	res.ErrDesc = "Success"
+	res.Contents = list
+	c.JSON(http.StatusOK, res)
+}
+
+// ClearTemplate ...
+func (h *ProductController) ClearTemplate(c *gin.Context) {
+	res := database.ClearTemplateProducts()
+	c.JSON(http.StatusOK, res)
 }

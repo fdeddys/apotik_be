@@ -40,6 +40,7 @@ func InitRouter() *gin.Engine {
 
 	UserController := new(controllers.UserController)
 	CustomerController := new(controllers.CustomerController)
+	PelangganController := new(controllers.PelangganController)
 	SupplierController := new(controllers.SupplierController)
 	OrderController := new(controllers.OrderController)
 	OrderDetailController := new(controllers.OrderDetailController)
@@ -109,6 +110,11 @@ func InitRouter() *gin.Engine {
 	api.POST("/list", CustomerController.ListDataCustomerByName)
 	// api.POST("/check/supplier", MerchantController.CheckOrderMerchantSupplier)
 
+	api = r.Group("/api/pelanggan")
+	api.POST("/page/:page/count/:count", PelangganController.FilterDataPelanggan)
+	api.POST("", PelangganController.SaveDataPelanggan)
+	api.DELETE("/:id", PelangganController.DeleteDataPelanggan)
+
 	api = r.Group("/api/supplier")
 	api.POST("/page/:page/count/:count", SupplierController.FilterDataSupplier)
 	api.GET("/id/:id", SupplierController.FilterByID)
@@ -134,6 +140,9 @@ func InitRouter() *gin.Engine {
 	product.GET("", ProductController.GetProductLike)
 	product.GET("/processCSV", ProductController.ProcessCSV)
 	product.GET("/process-update", ProductController.ProcessUpdateProd)
+	product.POST("/upload", cekToken, ProductController.UploadCSV)
+	product.GET("/template", cekToken, ProductController.GetTemplateProducts)
+	product.POST("/clear-template", cekToken, ProductController.ClearTemplate)
 
 	ProductGroupController := new(controllers.ProductGroupController)
 	productGroup := r.Group("/api/product-group")

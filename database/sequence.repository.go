@@ -13,7 +13,11 @@ func AddSequence(month, year, header string) (errcd string, newNumb int32, errde
 	var seq dbmodels.Sequence
 	var urut int32
 
-	db.Where("year = ? and month = ? and subj = ?", year, month, header).First(&seq)
+	if month == "" {
+		db.Where("year = ? and (month = ? or month IS NULL) and subj = ?", year, "", header).First(&seq)
+	} else {
+		db.Where("year = ? and month = ? and subj = ?", year, month, header).First(&seq)
+	}
 
 	fmt.Println("Seq ID == ", seq.ID)
 	if seq.ID == 0 {

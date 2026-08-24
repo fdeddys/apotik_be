@@ -14,7 +14,7 @@ import (
 	"github.com/jinzhu/gorm"
 )
 
-//SaveReceive ...
+// SaveReceive ...
 func SaveReceive(receive *dbmodels.Receive) (errCode string, errDesc string, id int64, status int8) {
 
 	db := GetDbCon()
@@ -146,11 +146,20 @@ func SaveReceiveApprove(receive *dbmodels.Receive) (errCode string, errDesc stri
 
 func reCalculateHpp(hpp1 float32, qty1 int64, price2 float32, qty2 int64, disc1, disc2 float32) float32 {
 
+	fmt.Println("hpp1 -> ", hpp1)
+	fmt.Println("qty1 -> ", qty1)
+	fmt.Println("price2 -> ", price2)
+	fmt.Println("qty2 -> ", qty2)
+	fmt.Println("disc1 -> ", disc1)
+	fmt.Println("disc2 -> ", disc2)
 	newHpp := price2
+	fmt.Println("new hpp 0-> ", newHpp)
 	newHpp = newHpp * ((100 - disc1) / 100)
+	fmt.Println("new hpp 1-> ", newHpp)
 	newHpp = newHpp * ((100 - disc2) / 100)
+	fmt.Println("new hpp 2-> ", newHpp)
 
-	totalRp := (hpp1 * float32(qty1)) + (price2 * float32(qty2))
+	totalRp := (hpp1 * float32(qty1)) + (newHpp * float32(qty2))
 	totalQty := qty1 + qty2
 	return (totalRp / float32(totalQty))
 }
@@ -318,7 +327,7 @@ func GetReceiveByReceiveID(receiveID int64) (dbmodels.Receive, error) {
 
 }
 
-//RejectReceive ...
+// RejectReceive ...
 func RejectReceive(receive *dbmodels.Receive) (errCode string, errDesc string) {
 
 	fmt.Println(" Reject Receive numb ------------------------------------------ ")

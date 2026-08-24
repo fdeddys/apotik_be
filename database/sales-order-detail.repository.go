@@ -106,7 +106,7 @@ func AsyncQuerysOrderDetails(db *gorm.DB, offset int, limit int, orderDetails *[
 	// err = db.Order("name ASC").Offset(offset).Limit(limit).Find(&supplier, "name ilike ?", searchName).Error
 	// fmt.Println("isi dari kosong ")
 
-	err = db.Offset(offset).Limit(limit).Preload("Product").Preload("UOM").Order("id asc").Find(&orderDetails, " sales_order_id = ? ", orderID).Error
+	err = db.Offset(offset).Limit(limit).Preload("Product").Preload("UOM").Order("id desc").Find(&orderDetails, " sales_order_id = ? ", orderID).Error
 	if err != nil {
 		fmt.Println("error --> ", err)
 	}
@@ -122,7 +122,7 @@ func AsyncQuerysOrderDetails(db *gorm.DB, offset int, limit int, orderDetails *[
 	resChan <- nil
 }
 
-//SaveSalesOrderDetail ...
+// SaveSalesOrderDetail ...
 func SaveSalesOrderDetail(orderDetail *dbmodels.SalesOrderDetail) (errCode string, errDesc string) {
 
 	fmt.Println(" Update Sales Order Detail  ------------------------------------------ ")
@@ -183,7 +183,7 @@ func DeleteSalesOrderDetailById(id int64) (errCode string, errDesc string) {
 
 }
 
-//UpdateQtyReceiveSalesOrderDetail ...
+// UpdateQtyReceiveSalesOrderDetail ...
 func UpdateQtyReceiveSalesOrderDetail(orderDetailId int64, qtyReceive int64) (errCode string, errDesc string) {
 
 	fmt.Println(" Update Qty receive Sales Order Detail  -- ")

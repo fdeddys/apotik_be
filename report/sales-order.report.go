@@ -21,12 +21,14 @@ type InvHdrInfo struct {
 }
 
 type DataDetail struct {
-	Item     string
-	Quantity int64
-	Unit     string
-	Price    int64
-	Total    int64
-	disc     int64
+	Item        string
+	Quantity    int64
+	Unit        string
+	Price       int64
+	Total       int64
+	disc        int64
+	Sediaan     string
+	Composition string
 }
 
 var (
@@ -230,6 +232,17 @@ func fillDataCustomer(custCode, custName, transDate, orderNo, address, city stri
 	invInfo.City = city
 }
 
+func setHeaderType2(pdf *gopdf.GoPdf, poType string, description string) {
+
+	fmt.Println("set header", title)
+	showLogo(pdf)
+	showCompanyType2(pdf)
+	space(pdf)
+	space(pdf)
+	showLine(pdf)
+
+}
+
 func setHeader(pdf *gopdf.GoPdf, poType string) {
 
 	fmt.Println("set header", title)
@@ -261,6 +274,51 @@ func showInvNo(pdf *gopdf.GoPdf) {
 	pdf.Text("")
 	// pdf.Text(invoiceNo)
 
+}
+
+func showCompanyType2(pdf *gopdf.GoPdf) {
+
+	line1 := beego.AppConfig.DefaultString("report.line1", "")
+	line2 := beego.AppConfig.DefaultString("report.line2", "")
+	line3 := beego.AppConfig.DefaultString("report.line3", "")
+	line4 := beego.AppConfig.DefaultString("report.line4", "")
+	line5 := beego.AppConfig.DefaultString("report.line5", "")
+	line6 := beego.AppConfig.DefaultString("report.line6", "")
+
+	pdf.Br(15)
+
+	setFontBold(pdf, 24)
+	pdf.SetX(200)
+	pdf.SetTextColor(0, 0, 255)
+	pdf.Text(line1 + " " + line2)
+	space(pdf)
+	// pdf.SetX(248)
+	// pdf.SetTextColor(255, 0, 0)
+	// pdf.Text(line2)
+
+	// pdf.SetTextColor(0, 0, 0)
+	// space(pdf)
+	// pdf.SetX(200)
+	// pdf.Text(line2)
+
+	setFont(pdf, 12)
+	space(pdf)
+	pdf.SetTextColor(0, 0, 0)
+	pdf.SetX(200)
+	pdf.Text(line3 + " " + line4)
+
+	// space(pdf)
+	// pdf.SetX(200)
+	// pdf.Text(line4)
+
+	setFont(pdf, 10)
+	space(pdf)
+	pdf.SetX(200)
+	pdf.Text(line5 + " " + line6)
+
+	// space(pdf)
+	// pdf.SetX(200)
+	// pdf.Text(line6)
 }
 
 func showCompany(pdf *gopdf.GoPdf) {
@@ -325,6 +383,7 @@ func setDetail(pdf *gopdf.GoPdf, data []DataDetail, param ...string) {
 	pdf.SetY(spaceLen * 8)
 
 	fmt.Println("set detail", param[0])
+	showOttDesc := false
 	if len(param) > 0 {
 		switch strings.TrimSpace(param[0]) {
 		case "mt":
@@ -341,6 +400,10 @@ func setDetail(pdf *gopdf.GoPdf, data []DataDetail, param ...string) {
 		case "rr":
 			fmt.Println("set supplier rr")
 			showSupplier(pdf, "Number")
+		case "Prekursor", "OTT":
+			showSupplierPrekursor(pdf, param[0])
+			showOttDesc = true
+			isPo = true
 		default:
 			showCustomer(pdf)
 		}
@@ -350,7 +413,11 @@ func setDetail(pdf *gopdf.GoPdf, data []DataDetail, param ...string) {
 
 	space(pdf)
 	if isPo {
-		showHeaderTablePO(pdf)
+		if strings.TrimSpace(param[0]) == "Prekursor" || strings.TrimSpace(param[0]) == "OTT" {
+			showHeaderTablePrekursor(pdf, param[0])
+		} else {
+			showHeaderTablePO(pdf, showOttDesc, param[0])
+		}
 	} else {
 		if isInv {
 			showHeaderTableInv(pdf)
@@ -363,12 +430,21 @@ func setDetail(pdf *gopdf.GoPdf, data []DataDetail, param ...string) {
 	fmt.Println("Total rec => set detail => ", totalRec, "] ")
 	fmt.Println("start iterate")
 	// var dataDetail DataDetail
+	maxRecord := 25
+	if showOttDesc {
+		maxRecord = 18
+	}
 	if totalRec > 1 {
-		for i := 1; i <= 25; i++ {
+		for i := 1; i <= maxRecord; i++ {
 			fmt.Println("idx ke [", i, "]", data[number])
 			space(pdf)
 			if isPo {
-				showDataPO(pdf, fmt.Sprintf("%v", number), data[number].Item, data[number].Unit, data[number].Quantity)
+				if strings.TrimSpace(param[0]) == "Prekursor" || strings.TrimSpace(param[0]) == "OTT" {
+					showDataPOPrekursor(pdf, fmt.Sprintf("%v", number), data[number].Item, data[number].Unit, data[number].Quantity, data[number].Sediaan, data[number].Composition)
+				} else {
+					showDataPO(pdf, fmt.Sprintf("%v", number), data[number].Item, data[number].Unit, data[number].Quantity)
+				}
+
 			} else if isInv {
 				showDataInv(pdf, fmt.Sprintf("%v", number), data[number].Item, data[number].Unit, data[number].Quantity, data[number].Price, data[number].Total, data[number].disc)
 			} else {
@@ -385,6 +461,10 @@ func setDetail(pdf *gopdf.GoPdf, data []DataDetail, param ...string) {
 
 	space(pdf)
 	showLine(pdf)
+	if showOttDesc {
+		setDetailOTT(pdf, param[0])
+		// setSign(pdf, "", "", "Apoteker")
+	}
 
 	// jika data masih ada utk next page
 	// 1. add page
@@ -397,7 +477,137 @@ func setDetail(pdf *gopdf.GoPdf, data []DataDetail, param ...string) {
 		pdf.AddPage()
 		setHeader(pdf, param[0])
 		setDetail(pdf, data, param[0])
+	} else {
+		// setSign(pdf, "", "", "Apoteker")
 	}
+
+}
+
+func setDetailOTT(pdf *gopdf.GoPdf, titlePO string) {
+	space(pdf)
+	space(pdf)
+	pdf.SetX(25)
+	pdf.Text("Obat mengandung " + titlePO + " tersebut akan digunakan untuk memenuhi kebutuhan :")
+
+	line1 := beego.AppConfig.DefaultString("report.line1", "")
+	line2 := beego.AppConfig.DefaultString("report.line2", "")
+	line3 := beego.AppConfig.DefaultString("report.line3", "")
+	line4 := beego.AppConfig.DefaultString("report.line4", "")
+
+	space(pdf)
+	setFont(pdf, 10)
+	pdf.SetX(25)
+	pdf.Text("Nama Apotik")
+	pdf.SetX(130)
+	pdf.Text(":")
+	pdf.SetX(140)
+	pdf.Text(line1 + " " + line2)
+
+	space(pdf)
+	pdf.SetX(25)
+	pdf.Text("Alamat Lengkap")
+	pdf.SetX(130)
+	pdf.Text(":")
+	pdf.SetX(140)
+	pdf.Text(line3 + " " + line4)
+
+	space(pdf)
+	pdf.SetX(25)
+	pdf.Text("No. SIA")
+	pdf.SetX(130)
+	pdf.Text(":")
+	pdf.SetX(140)
+	pdf.Text(sia)
+
+}
+
+func showSupplierPrekursor(pdf *gopdf.GoPdf, titlePO string) {
+
+	setFontBold(pdf, 12)
+	pdf.SetX(200)
+	pdf.Text("Surat Pesanan " + titlePO)
+
+	space(pdf)
+	setFont(pdf, 10)
+	pdf.SetX(190)
+	pdf.Text("No ")
+	pdf.SetX(250)
+	pdf.Text(":")
+	pdf.SetX(300)
+	pdf.Text(invInfo.SourceDoc)
+
+	space(pdf)
+	pdf.SetX(190)
+	pdf.Text("Tanggal")
+	pdf.SetX(250)
+	pdf.Text(":")
+	pdf.SetX(300)
+	pdf.Text(invInfo.TransAt)
+
+	space(pdf)
+	space(pdf)
+	space(pdf)
+
+	spaceTitikInfo := spaceCustomerInfo1 + 80
+	spaceValueInfo := spaceCustomerInfo1 + 100
+
+	pdf.SetX(25)
+	pdf.Text("Yang bertanda tangan di bawah ini")
+	space(pdf)
+	space(pdf)
+
+	pdf.SetX(25)
+	pdf.Text("Nama")
+	pdf.SetX(spaceTitikInfo)
+	pdf.Text(":")
+	pdf.SetX(spaceValueInfo)
+	pdf.Text(apoteker)
+
+	space(pdf)
+	pdf.SetX(25)
+	pdf.Text("Jabatan")
+	pdf.SetX(spaceTitikInfo)
+	pdf.Text(":")
+	pdf.SetX(spaceValueInfo)
+	pdf.Text("Apoteker Penanggung Jawab")
+
+	space(pdf)
+	pdf.SetX(25)
+	pdf.Text("No. SIPA")
+	pdf.SetX(spaceTitikInfo)
+	pdf.Text(":")
+	pdf.SetX(spaceValueInfo)
+	pdf.Text(sipa)
+
+	space(pdf)
+	space(pdf)
+	pdf.SetX(25)
+	pdf.Text("Mengajukan pemesanan obat mengandung " + titlePO + " kepada :")
+	space(pdf)
+	space(pdf)
+
+	pdf.SetX(25)
+	pdf.Text("Nama PBF")
+	pdf.SetX(spaceTitikInfo)
+	pdf.Text(":")
+	pdf.SetX(spaceValueInfo)
+	pdf.Text(invInfo.CustName)
+
+	space(pdf)
+	pdf.SetX(25)
+	pdf.Text("Alamat")
+	pdf.SetX(spaceTitikInfo)
+	pdf.Text(":")
+	pdf.SetX(spaceValueInfo)
+	pdf.Text(invInfo.Address)
+
+	space(pdf)
+	pdf.SetX(25)
+	pdf.Text("Telp")
+	pdf.SetX(spaceTitikInfo)
+	pdf.Text(":")
+	pdf.SetX(spaceValueInfo)
+	pdf.Text("")
 }
 
 func setSummary(pdf *gopdf.GoPdf) {
@@ -512,6 +722,47 @@ func showHeaderTable(pdf *gopdf.GoPdf) {
 	showLine(pdf)
 }
 
+func showHeaderTablePrekursor(pdf *gopdf.GoPdf, title string) {
+
+	showLine(pdf)
+	space(pdf)
+	setFontBold(pdf, 10)
+	pdf.SetX(tblCol1)
+	pdf.Text("#")
+
+	pdf.SetX(tblCol2)
+	pdf.Text("Nama Obat yang mengandung")
+
+	pdf.SetX(tblCol3)
+	pdf.Text("Zat Aktif ")
+
+	pdf.SetX(tblCol4)
+	pdf.Text("Bentuk")
+
+	pdf.SetX(tblCol5)
+	pdf.Text("Satuan")
+
+	pdf.SetX(tblCol5 + 50)
+	pdf.Text("Jumlah")
+
+	pdf.SetX(tblCol6 + 20)
+	pdf.Text("Keterangan")
+
+	space(pdf)
+
+	pdf.SetX(tblCol2)
+	pdf.Text("ZAT " + title)
+
+	pdf.SetX(tblCol3)
+	pdf.Text(title)
+
+	pdf.SetX(tblCol4)
+	pdf.Text("sediaan")
+
+	space(pdf)
+	showLine(pdf)
+}
+
 func showDataInv(pdf *gopdf.GoPdf, no, item, unit string, qty, price, total int64, disc int64) {
 
 	ac := accounting.Accounting{Symbol: "", Precision: 0, Thousand: ".", Decimal: ","}
@@ -569,8 +820,15 @@ func showData(pdf *gopdf.GoPdf, no, item, unit string, qty, price, total int64) 
 	pdf.Text(ac.FormatMoney(total))
 }
 
-func showHeaderTablePO(pdf *gopdf.GoPdf) {
+func showHeaderTablePO(pdf *gopdf.GoPdf, showDesc bool, titlePO string) {
 
+	if showDesc == true {
+		space(pdf)
+		space(pdf)
+		pdf.SetX(25)
+		pdf.Text("Jenis obat mengandung " + titlePO + " yang di pesan adalah")
+		space(pdf)
+	}
 	showLine(pdf)
 	space(pdf)
 	setFontBold(pdf, 10)
@@ -603,6 +861,50 @@ func showDataPO(pdf *gopdf.GoPdf, no, item, unit string, qty int64) {
 
 	pdf.SetX(tblCol4 + 120)
 	pdf.Text(unit)
+
+}
+
+func showDataPOPrekursor(pdf *gopdf.GoPdf, no, item, unit string, qty int64, sediaan string, composition string) {
+
+	// pdf.SetX(tblCol1)
+	// pdf.Text("#")
+
+	// pdf.SetX(tblCol2)
+	// pdf.Text("Nama Obat yang mengandung")
+
+	// pdf.SetX(tblCol3)
+	// pdf.Text("Zat Aktif ")
+
+	// pdf.SetX(tblCol4)
+	// pdf.Text("Bentuk")
+
+	// pdf.SetX(tblCol5)
+	// pdf.Text("Jumlah")
+
+	// pdf.SetX(tblCol6)
+	// pdf.Text("Keterangan")
+
+	setFont(pdf, 10)
+	pdf.SetX(tblCol1)
+	pdf.Text(no)
+
+	pdf.SetX(tblCol2)
+	pdf.Text(item)
+
+	pdf.SetX(tblCol3)
+	pdf.Text(composition)
+
+	pdf.SetX(tblCol4)
+	pdf.Text(sediaan)
+
+	pdf.SetX(tblCol5)
+	pdf.Text(unit)
+
+	pdf.SetX(tblCol5 + 50)
+	pdf.Text(fmt.Sprintf("%v", qty))
+
+	pdf.SetX(tblCol6 + 20)
+	pdf.Text(Terbilang(qty))
 
 }
 
@@ -831,4 +1133,74 @@ func setSign(pdf *gopdf.GoPdf, sign1, sign2, sign3 string) {
 		}
 	}
 
+}
+
+func toWords(number int64) string {
+	var words = []string{"", "Satu", "Dua", "Tiga", "Empat", "Lima", "Enam", "Tujuh", "Delapan", "Sembilan", "Sepuluh", "Sebelas"}
+	if number < 12 {
+		return words[number]
+	}
+	if number < 20 {
+		return toWords(number-10) + " Belas"
+	}
+	if number < 100 {
+		res := toWords(number/10) + " Puluh"
+		if number%10 > 0 {
+			res += " " + toWords(number%10)
+		}
+		return res
+	}
+	if number < 200 {
+		res := "Seratus"
+		if number-100 > 0 {
+			res += " " + toWords(number-100)
+		}
+		return res
+	}
+	if number < 1000 {
+		res := toWords(number/100) + " Ratus"
+		if number%100 > 0 {
+			res += " " + toWords(number%100)
+		}
+		return res
+	}
+	if number < 2000 {
+		res := "Seribu"
+		if number-1000 > 0 {
+			res += " " + toWords(number-1000)
+		}
+		return res
+	}
+	if number < 1000000 {
+		res := toWords(number/1000) + " Ribu"
+		if number%1000 > 0 {
+			res += " " + toWords(number%1000)
+		}
+		return res
+	}
+	if number < 1000000000 {
+		res := toWords(number/1000000) + " Juta"
+		if number%1000000 > 0 {
+			res += " " + toWords(number%1000000)
+		}
+		return res
+	}
+	if number < 1000000000000 {
+		res := toWords(number/1000000000) + " Milyar"
+		if number%1000000000 > 0 {
+			res += " " + toWords(number%1000000000)
+		}
+		return res
+	}
+	return ""
+}
+
+func Terbilang(number int64) string {
+	if number == 0 {
+		return "Nol"
+	}
+	if number < 0 {
+		return "Minus " + toWords(-number)
+	}
+	return toWords(number)
 }

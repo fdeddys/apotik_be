@@ -11,6 +11,9 @@ type PurchaseOrder struct {
 	SupplierID int64    `json:"supplierId" gorm:"column:supplier_id"`
 	Supplier   Supplier `json:"supplier" gorm:"foreignkey:id;association_foreignkey:SupplierID;association_autoupdate:false;association_autocreate:false"`
 
+	PelangganID *int64     `json:"pelangganId" gorm:"column:pelanggan_id"`
+	Pelanggan   *Pelanggan `json:"pelanggan" gorm:"foreignkey:id;association_foreignkey:PelangganID;association_autoupdate:false;association_autocreate:false"`
+
 	// SalesmanID int64    `json:"salesmanId" gorm:"column:sales_id"`
 	// Salesman   Salesman `json:"salesman" gorm:"foreignkey:id;association_foreignkey:SalesmanID;association_autoupdate:false;association_autocreate:false"`
 
@@ -25,6 +28,7 @@ type PurchaseOrder struct {
 	// 30 = reject
 	// 40 = ditarik
 	Status       int8      `json:"status" gorm:"column:status"`
+	TypePO       string    `json:"typePo" gorm:"column:type_po;default:'0'"`
 	LastUpdateBy string    `json:"lastUpdateBy" gorm:"column:last_update_by"`
 	LastUpdate   time.Time `json:"lastUpdate" gorm:"column:last_update"`
 }

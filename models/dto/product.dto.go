@@ -18,6 +18,9 @@ type ProductSearch struct {
 	SmallUomID int64           `json:"smallUomId" `
 	SmallUom   dbmodels.Lookup `json:"smallUom" `
 
+	SediaanID int64           `json:"sediaanId" `
+	Sediaan   dbmodels.Lookup `json:"sediaan" `
+
 	Status        int       `json:"status" `
 	LastUpdateBy  string    `json:"lastUpdateBy" `
 	LastUpdate    time.Time `json:"lastUpdate"`
@@ -26,4 +29,5 @@ type ProductSearch struct {
 	SellPrice     float32   `json:"sellPrice"`
 	SellPriceType int       `json:"sellPriceType"`
 	QtyOnHand     int64     `json:"qtyOnHand"`
+	TipePO        string    `json:"tipePo"`
 }

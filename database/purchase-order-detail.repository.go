@@ -19,7 +19,7 @@ func GetAllDataDetailPurchaseOrder(purchaseOrderID int64) []dbmodels.PurchaseOrd
 
 	var purchaseOrderDetails []dbmodels.PurchaseOrderDetail
 
-	db.Preload("Product").Preload("UOM").Preload("PoUOM").Find(&purchaseOrderDetails, " po_id = ? and qty > 0 ", purchaseOrderID)
+	db.Preload("Product").Preload("Product.Sediaan").Preload("UOM").Preload("PoUOM").Find(&purchaseOrderDetails, " po_id = ? and qty > 0 ", purchaseOrderID)
 
 	return purchaseOrderDetails
 }

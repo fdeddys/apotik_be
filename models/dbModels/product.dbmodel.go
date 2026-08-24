@@ -23,6 +23,9 @@ type Product struct {
 	SmallUomID int64  `json:"smallUomId" gorm:"column:small_uom_id"`
 	SmallUom   Lookup `json:"smallUom" gorm:"foreignkey:ID; association_foreignkey:SmallUomID;association_autoupdate:false;association_autocreate:false"`
 
+	SediaanID int64  `json:"sediaanId" gorm:"column:sediaan_id;default:35"`
+	Sediaan   Lookup `json:"sediaan"   gorm:"foreignkey:ID; association_foreignkey:SediaanID; association_autoupdate:false;association_autocreate:false"`
+
 	Status       int       `json:"status" gorm:"column:status"`
 	LastUpdateBy string    `json:"lastUpdateBy" gorm:"column:last_update_by"`
 	LastUpdate   time.Time `json:"lastUpdate"  gorm:"column:last_update"`
@@ -34,6 +37,7 @@ type Product struct {
 	// SellPricePercent float32 `json:"sellPricePercent" gorm:"column:sell_price_percent"`
 
 	Composition string `json:"composition" gorm:"column:composition"`
+	TipePO      string `json:"tipePo" gorm:"column:tipe_po"`
 }
 
 // TableName ...
