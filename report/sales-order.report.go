@@ -61,6 +61,7 @@ var (
 	// totalRec    int
 	invoiceNumb string
 	invoiceNo   string
+	pelanggan   string
 
 	// count by system
 	// subTotal   int64
@@ -169,6 +170,7 @@ func fillDataDetail(orderID int64) []DataDetail {
 	// invoiceNumb = "IVyymm999999"
 	invoiceNumb = order.SalesOrderNo
 	invoiceNo = order.InvoiceNo
+	pelanggan = order.Pelanggan.Nama
 
 	orderDetails := database.GetAllDataDetail(order.ID)
 
@@ -432,7 +434,10 @@ func setDetail(pdf *gopdf.GoPdf, data []DataDetail, param ...string) {
 	// var dataDetail DataDetail
 	maxRecord := 25
 	if showOttDesc {
-		maxRecord = 18
+		if totalRec > 15 && totalRec < 25 {
+			// if (totalRec-number) > 15 && (totalRec-number) < 25 {
+			maxRecord = 15
+		}
 	}
 	if totalRec > 1 {
 		for i := 1; i <= maxRecord; i++ {
@@ -461,17 +466,21 @@ func setDetail(pdf *gopdf.GoPdf, data []DataDetail, param ...string) {
 
 	space(pdf)
 	showLine(pdf)
-	if showOttDesc {
-		setDetailOTT(pdf, param[0])
-		// setSign(pdf, "", "", "Apoteker")
-	}
+	// if showOttDesc {
+	// 	setDetailOTT(pdf, param[0])
+	// 	// setSign(pdf, "", "", "Apoteker")
+	// }
 
 	// jika data masih ada utk next page
 	// 1. add page
 	// 2. set header
 	// 3. rekursif
 	if totalRec > number {
-		setSign(pdf, "", "", "Apoteker")
+		if showOttDesc {
+
+		} else {
+			setSign(pdf, "", "", "Apoteker")
+		}
 		fmt.Println("NEW page")
 		curPage++
 		pdf.AddPage()
@@ -479,13 +488,14 @@ func setDetail(pdf *gopdf.GoPdf, data []DataDetail, param ...string) {
 		setDetail(pdf, data, param[0])
 	} else {
 		// setSign(pdf, "", "", "Apoteker")
+
 	}
 
 }
 
 func setDetailOTT(pdf *gopdf.GoPdf, titlePO string) {
 	space(pdf)
-	space(pdf)
+	// space(pdf)
 	pdf.SetX(25)
 	pdf.Text("Obat mengandung " + titlePO + " tersebut akan digunakan untuk memenuhi kebutuhan :")
 
@@ -730,13 +740,13 @@ func showHeaderTablePrekursor(pdf *gopdf.GoPdf, title string) {
 	pdf.SetX(tblCol1)
 	pdf.Text("#")
 
-	pdf.SetX(tblCol2)
-	pdf.Text("Nama Obat yang mengandung")
+	pdf.SetX(tblCol2 - 35)
+	pdf.Text("Nama Obat yang mengandung ")
 
-	pdf.SetX(tblCol3)
+	pdf.SetX(tblCol3 - 30)
 	pdf.Text("Zat Aktif ")
 
-	pdf.SetX(tblCol4)
+	pdf.SetX(tblCol4 + 10)
 	pdf.Text("Bentuk")
 
 	pdf.SetX(tblCol5)
@@ -750,13 +760,13 @@ func showHeaderTablePrekursor(pdf *gopdf.GoPdf, title string) {
 
 	space(pdf)
 
-	pdf.SetX(tblCol2)
+	pdf.SetX(tblCol2 - 35)
 	pdf.Text("ZAT " + title)
 
-	pdf.SetX(tblCol3)
+	pdf.SetX(tblCol3 - 30)
 	pdf.Text(title)
 
-	pdf.SetX(tblCol4)
+	pdf.SetX(tblCol4 + 10)
 	pdf.Text("sediaan")
 
 	space(pdf)
@@ -888,13 +898,13 @@ func showDataPOPrekursor(pdf *gopdf.GoPdf, no, item, unit string, qty int64, sed
 	pdf.SetX(tblCol1)
 	pdf.Text(no)
 
-	pdf.SetX(tblCol2)
+	pdf.SetX(tblCol2 - 35)
 	pdf.Text(item)
 
-	pdf.SetX(tblCol3)
+	pdf.SetX(tblCol3 - 30)
 	pdf.Text(composition)
 
-	pdf.SetX(tblCol4)
+	pdf.SetX(tblCol4 + 10)
 	pdf.Text(sediaan)
 
 	pdf.SetX(tblCol5)
@@ -1008,7 +1018,6 @@ func showCustomerInvoice(pdf *gopdf.GoPdf) {
 	// pdf.Text(":")
 	// pdf.SetX(110)
 	pdf.Text(invInfo.CustName)
-
 	pdf.SetX(spaceCustomerInfo)
 	pdf.Text("Order Date ")
 	pdf.SetX(spaceTitik)
@@ -1030,6 +1039,14 @@ func showCustomerInvoice(pdf *gopdf.GoPdf) {
 	pdf.Text(":")
 	pdf.SetX(spaceValue)
 	pdf.Text(invoiceNo)
+
+	space(pdf)
+	pdf.SetX(spaceCustomerInfo)
+	pdf.Text("Pelanggan ")
+	pdf.SetX(spaceTitik)
+	pdf.Text(":")
+	pdf.SetX(spaceValue)
+	pdf.Text(pelanggan)
 
 }
 
@@ -1085,9 +1102,9 @@ func setSign(pdf *gopdf.GoPdf, sign1, sign2, sign3 string) {
 	xLengSign3 := xSign3 + float64(maxLengLine)
 
 	space(pdf)
-	space(pdf)
-	space(pdf)
-	space(pdf)
+	// space(pdf)
+	// space(pdf)
+	// space(pdf)
 
 	if sign1 != "" {
 		pdf.SetX(xSign1)

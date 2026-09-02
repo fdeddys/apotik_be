@@ -7,7 +7,7 @@ type FilterPurchaseOrder struct {
 	PurchaseOrderNumber string `json:"purchaseOrderNumber"`
 	SupplierId          int64  `json:"supplierId"`
 	SupplierName        string `json:"supplierName"`
-	PelangganName       string `json:"pelangganName"`
+
 	TypePO              string `json:"typePo"`
 }
 

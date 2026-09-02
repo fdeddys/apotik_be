@@ -14,7 +14,7 @@ import (
 	"github.com/jinzhu/gorm"
 )
 
-//SavePurchaseOrder ...
+// SavePurchaseOrder ...
 func SavePurchaseOrder(purchaseOrder *dbmodels.PurchaseOrder) (errCode string, errDesc string, id int64, status int8) {
 
 	db := GetDbCon()
@@ -35,7 +35,7 @@ func SavePurchaseOrder(purchaseOrder *dbmodels.PurchaseOrder) (errCode string, e
 
 func ApprovePurchaseOrder(purchaseOrder *dbmodels.PurchaseOrder) (errCode string, errDesc string) {
 
-	fmt.Println(" Reject Purchase Order numb ------------------------------------------ ")
+	fmt.Println(" approve Purchase Order numb ------------------------------------------ ")
 	db := GetDbCon()
 	db.Debug().LogMode(true)
 	totalPO := CountTotalPO(purchaseOrder.PurchaserNo)
@@ -53,7 +53,6 @@ func ApprovePurchaseOrder(purchaseOrder *dbmodels.PurchaseOrder) (errCode string
 		SupplierID:    purchaseOrder.SupplierID,
 		Note:          purchaseOrder.Note,
 		PurchaserDate: purchaseOrder.PurchaserDate,
-		PelangganID:   purchaseOrder.PelangganID,
 		TypePO:        purchaseOrder.TypePO,
 	})
 	if r.Error != nil {
@@ -140,7 +139,7 @@ func GetPurchaseOrderPage(param dto.FilterPurchaseOrder, offset, limit, internal
 // AsyncQueryCountsPurchaseOrders ...
 func AsyncQueryCountsPurchaseOrders(db *gorm.DB, total *int, status int, purchaseOrders *[]dbmodels.PurchaseOrder, param dto.FilterPurchaseOrder, resChan chan error) {
 
-	purchaseOrderNumber, byStatus, bySupplierID, suppName, pelangganName, byTypePO, typePo := getParamPurchaseOrder(param, status)
+	purchaseOrderNumber, byStatus, bySupplierID, suppName, byTypePO, typePo := getParamPurchaseOrder(param, status)
 
 	var err error
 	q := db.Model(&dbmodels.PurchaseOrder{})
@@ -149,12 +148,6 @@ func AsyncQueryCountsPurchaseOrders(db *gorm.DB, total *int, status int, purchas
 		q = q.Joins("left join supplier on supplier.id = po.supplier_id")
 	} else {
 		q = q.Joins("inner join supplier on supplier.id = po.supplier_id and supplier.name ilike ? ", suppName)
-	}
-
-	if pelangganName == "%" {
-		q = q.Joins("left join public.pelanggan on public.pelanggan.id = po.pelanggan_id")
-	} else {
-		q = q.Joins("inner join public.pelanggan on public.pelanggan.id = po.pelanggan_id and public.pelanggan.nama ilike ? ", pelangganName)
 	}
 
 	if strings.TrimSpace(param.StartDate) != "" && strings.TrimSpace(param.EndDate) != "" {
@@ -178,20 +171,14 @@ func AsyncQuerysPurchaseOrders(db *gorm.DB, offset int, limit int, status int, p
 
 	var err error
 
-	purchaseOrderNumber, byStatus, bySupplierID, suppName, pelangganName, byTypePO, typePo := getParamPurchaseOrder(param, status)
+	purchaseOrderNumber, byStatus, bySupplierID, suppName, byTypePO, typePo := getParamPurchaseOrder(param, status)
 
-	q := db.Offset(offset).Limit(limit).Preload("Supplier").Preload("Pelanggan").Order("po.id DESC")
+	q := db.Offset(offset).Limit(limit).Preload("Supplier").Order("po.id DESC")
 
 	if suppName == "%" {
 		q = q.Joins("left join supplier on supplier.id = po.supplier_id")
 	} else {
 		q = q.Joins("inner join supplier on supplier.id = po.supplier_id and supplier.name ilike ? ", suppName)
-	}
-
-	if pelangganName == "%" {
-		q = q.Joins("left join public.pelanggan on public.pelanggan.id = po.pelanggan_id")
-	} else {
-		q = q.Joins("inner join public.pelanggan on public.pelanggan.id = po.pelanggan_id and public.pelanggan.nama ilike ? ", pelangganName)
 	}
 
 	if strings.TrimSpace(param.StartDate) != "" && strings.TrimSpace(param.EndDate) != "" {
@@ -208,7 +195,7 @@ func AsyncQuerysPurchaseOrders(db *gorm.DB, offset int, limit int, status int, p
 	resChan <- nil
 }
 
-func getParamPurchaseOrder(param dto.FilterPurchaseOrder, status int) (purchaseOrderNumber string, byStatus, bySupplierID bool, supplierName string, pelangganName string, byTypePO bool, typePo string) {
+func getParamPurchaseOrder(param dto.FilterPurchaseOrder, status int) (purchaseOrderNumber string, byStatus, bySupplierID bool, supplierName string, byTypePO bool, typePo string) {
 
 	purchaseOrderNumber = param.PurchaseOrderNumber
 	if purchaseOrderNumber == "" {
@@ -235,13 +222,6 @@ func getParamPurchaseOrder(param dto.FilterPurchaseOrder, status int) (purchaseO
 		supplierName = "%" + param.SupplierName + "%"
 	}
 
-	pelangganName = param.PelangganName
-	if pelangganName == "" {
-		pelangganName = "%"
-	} else {
-		pelangganName = "%" + param.PelangganName + "%"
-	}
-
 	typePo = param.TypePO
 	byTypePO = true
 	if typePo == "" {
@@ -257,13 +237,13 @@ func GetPurchaseOrderByPurchaseOrderID(purchaseOrderID int64) (dbmodels.Purchase
 	db.Debug().LogMode(true)
 	purchaseOrder := dbmodels.PurchaseOrder{}
 
-	err := db.Preload("Supplier").Preload("Pelanggan").Where(" id = ?  ", purchaseOrderID).First(&purchaseOrder).Error
+	err := db.Preload("Supplier").Where(" id = ?  ", purchaseOrderID).First(&purchaseOrder).Error
 
 	return purchaseOrder, err
 
 }
 
-//RejectPurchaseOrder ...
+// RejectPurchaseOrder ...
 func RejectPurchaseOrder(purchaseOrder dbmodels.PurchaseOrder) (errCode string, errDesc string) {
 
 	fmt.Println(" Reject PurchaseOrder numb ------------------------------------------ ")
@@ -282,7 +262,7 @@ func RejectPurchaseOrder(purchaseOrder dbmodels.PurchaseOrder) (errCode string, 
 	return constants.ERR_CODE_00, constants.ERR_CODE_00_MSG
 }
 
-//RejectPurchaseOrder ...
+// RejectPurchaseOrder ...
 func CancelSubmitPurchaseOrder(purchaseOrder dbmodels.PurchaseOrder) (errCode string, errDesc string) {
 
 	fmt.Println(" Reject PurchaseOrder numb ------------------------------------------ ")
@@ -347,7 +327,7 @@ func GetPurchaseOrderByPurchaseOrderDetailID(purchaseOrderDetailID int64) (dbmod
 	purchaseDetail := dbmodels.PurchaseOrderDetail{}
 	db.Where("id = ? ", purchaseOrderDetailID).First(&purchaseDetail)
 
-	err := db.Preload("Supplier").Preload("Pelanggan").Where(" id = ?  ", purchaseDetail.PurchaseOrderID).First(&purchaseOrder).Error
+	err := db.Preload("Supplier").Where(" id = ?  ", purchaseDetail.PurchaseOrderID).First(&purchaseOrder).Error
 
 	return purchaseOrder, err
 
@@ -359,13 +339,13 @@ func GetPurchaseOrderByPurchaseOrderNo(pono string) (dbmodels.PurchaseOrder, err
 	db.Debug().LogMode(true)
 	purchaseOrder := dbmodels.PurchaseOrder{}
 
-	err := db.Preload("Supplier").Preload("Pelanggan").Where(" po_no = ?  ", pono).First(&purchaseOrder).Error
+	err := db.Preload("Supplier").Where(" po_no = ?  ", pono).First(&purchaseOrder).Error
 
 	return purchaseOrder, err
 
 }
 
-//UpdateReceiveDetail ...
+// UpdateReceiveDetail ...
 // purchaseOrderDetail.ID, purchaseOrderDetail.Qty, purchaseOrderDetail.Price, purchaseOrderDetail.UomID
 func UpdatePODetail(poDetail dbmodels.PurchaseOrderDetail) (errCode string, errDesc string) {
 

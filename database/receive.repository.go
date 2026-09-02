@@ -54,6 +54,7 @@ func SaveReceiveApprove(receive *dbmodels.Receive) (errCode string, errDesc stri
 	total = 0
 	grandTotal = 0
 	subtotal = 0
+
 	receiveDetails := GetAllDataDetailReceive(receive.ID)
 	for idx, receiveDetail := range receiveDetails {
 		fmt.Println("idx -> ", idx)
@@ -75,11 +76,11 @@ func SaveReceiveApprove(receive *dbmodels.Receive) (errCode string, errDesc stri
 		newHpp := float32(0)
 		if addNewStock {
 			updateQty = receiveDetail.Qty
-			newHpp = receiveDetail.Price
+			newHpp = reCalculateHpp(0, 0, receiveDetail.Price, receiveDetail.Qty, receiveDetail.Disc1, receiveDetail.Disc2, receive.Tax)
 		} else {
 			curQty = checkStock.Qty
 			updateQty = curQty + receiveDetail.Qty
-			newHpp = reCalculateHpp(product.Hpp, checkStock.Qty, receiveDetail.Price, receiveDetail.Qty, receiveDetail.Disc1, receiveDetail.Disc2)
+			newHpp = reCalculateHpp(product.Hpp, checkStock.Qty, receiveDetail.Price, receiveDetail.Qty, receiveDetail.Disc1, receiveDetail.Disc2, receive.Tax)
 		}
 		// curQty := checkStock.Qty
 
@@ -104,6 +105,9 @@ func SaveReceiveApprove(receive *dbmodels.Receive) (errCode string, errDesc stri
 		total = receiveDetail.Price * float32(receiveDetail.Qty)
 		total = total * ((100 - receiveDetail.Disc1) / 100)
 		total = total * ((100 - receiveDetail.Disc2) / 100)
+
+		preTaxTotal := total
+		total = total + (total * receive.Tax / 100)
 		historyStock.Total = total
 		fmt.Println("total -> ", total)
 
@@ -113,7 +117,7 @@ func SaveReceiveApprove(receive *dbmodels.Receive) (errCode string, errDesc stri
 			UpdateStockAndHppProductByID(receiveDetail.ProductID, receive.WarehouseID, updateQty, newHpp)
 		}
 		db.Save(&historyStock)
-		subtotal += total
+		subtotal += preTaxTotal
 	}
 
 	db.Debug().LogMode(true)
@@ -144,7 +148,7 @@ func SaveReceiveApprove(receive *dbmodels.Receive) (errCode string, errDesc stri
 	return constants.ERR_CODE_00, constants.ERR_CODE_00_MSG
 }
 
-func reCalculateHpp(hpp1 float32, qty1 int64, price2 float32, qty2 int64, disc1, disc2 float32) float32 {
+func reCalculateHpp(hpp1 float32, qty1 int64, price2 float32, qty2 int64, disc1, disc2 float32, tax float32) float32 {
 
 	fmt.Println("hpp1 -> ", hpp1)
 	fmt.Println("qty1 -> ", qty1)
@@ -158,6 +162,10 @@ func reCalculateHpp(hpp1 float32, qty1 int64, price2 float32, qty2 int64, disc1,
 	fmt.Println("new hpp 1-> ", newHpp)
 	newHpp = newHpp * ((100 - disc2) / 100)
 	fmt.Println("new hpp 2-> ", newHpp)
+
+	taxAmt := (newHpp * tax) / 100
+	newHpp = newHpp + taxAmt
+	fmt.Println("new hpp with tax-> ", newHpp)
 
 	totalRp := (hpp1 * float32(qty1)) + (newHpp * float32(qty2))
 	totalQty := qty1 + qty2
@@ -385,3 +393,187 @@ func RemovePO(receive *dbmodels.Receive, removeItem bool) (errCode string, errDe
 	tx.Commit()
 	return constants.ERR_CODE_00, constants.ERR_CODE_00_MSG
 }
+
+// GetPurchasePriceHistory ...
+func GetPurchasePriceHistory(param dto.FilterPurchasePrice, offset, limit int) ([]dto.PurchasePriceRow, int, error) {
+	db := GetDbCon()
+	db.Debug().LogMode(true)
+
+	var rows []dto.PurchasePriceRow
+	var total int
+
+	query := db.Table("public.receive_detail rd").
+		Select("s.name as supplier_name, r.receive_no, r.receive_date, p.name as product_name, l.name as uom_name, rd.qty, rd.price, rd.disc1, rd.disc2, r.tax").
+		Joins("inner join public.receive r on r.id = rd.receive_id").
+		Joins("inner join public.supplier s on s.id = r.supplier_id").
+		Joins("inner join public.product p on p.id = rd.product_id").
+		Joins("left join public.lookup l on l.id = rd.uom").
+		Where("r.status = 20") // status approve
+
+	if param.ProductID > 0 {
+		query = query.Where("rd.product_id = ?", param.ProductID)
+	} else if strings.TrimSpace(param.ProductName) != "" {
+		query = query.Where("p.name ilike ?", "%"+strings.TrimSpace(param.ProductName)+"%")
+	}
+
+	if strings.TrimSpace(param.StartDate) != "" && strings.TrimSpace(param.EndDate) != "" {
+		query = query.Where("r.receive_date::date between ?::date and ?::date", param.StartDate, param.EndDate)
+	} else if strings.TrimSpace(param.StartDate) != "" {
+		query = query.Where("r.receive_date::date >= ?::date", param.StartDate)
+	} else if strings.TrimSpace(param.EndDate) != "" {
+		query = query.Where("r.receive_date::date <= ?::date", param.EndDate)
+	}
+
+	// Get total count
+	errCount := query.Count(&total).Error
+	if errCount != nil {
+		return nil, 0, errCount
+	}
+
+	// Get paged rows ordered by rd.id desc
+	errQuery := query.Order("rd.id desc").Offset(offset).Limit(limit).Scan(&rows).Error
+	if errQuery != nil {
+		return nil, 0, errQuery
+	}
+
+	return rows, total, nil
+}
+
+// GetPurchasePriceMatrix ...
+func GetPurchasePriceMatrix(param dto.FilterPurchasePriceMatrix, offset, limit int) (dto.PurchasePriceMatrixResponse, error) {
+	db := GetDbCon()
+	db.Debug().LogMode(true)
+
+	var res dto.PurchasePriceMatrixResponse
+
+	// 1. Get all suppliers ordered by name
+	var suppliers []dto.SupplierHeaderDto
+	errSupp := db.Table("public.supplier").Select("id, name").Where("status = 1").Order("name asc").Scan(&suppliers).Error
+	if errSupp != nil || len(suppliers) == 0 {
+		db.Table("public.supplier").Select("id, name").Order("name asc").Scan(&suppliers)
+	}
+	res.Suppliers = suppliers
+
+	// 2. Query products with pagination & name filter
+	type ProductRowQuery struct {
+		ID      int64  `gorm:"column:id"`
+		Code    string `gorm:"column:code"`
+		Name    string `gorm:"column:name"`
+		UomName string `gorm:"column:uom_name"`
+	}
+	var prodRows []ProductRowQuery
+	var total int
+
+	productQuery := db.Table("public.product p").Where("p.status = 1")
+	if strings.TrimSpace(param.ProductName) != "" {
+		productQuery = productQuery.Where("p.name ilike ?", "%"+strings.TrimSpace(param.ProductName)+"%")
+	}
+
+	errCount := productQuery.Count(&total).Error
+	if errCount != nil {
+		return res, errCount
+	}
+	res.TotalRow = total
+
+	if total == 0 {
+		res.Products = []dto.ProductMatrixRowDto{}
+		return res, nil
+	}
+
+	errQuery := productQuery.
+		Select("p.id, p.code, p.name, COALESCE(l.name, '') as uom_name").
+		Joins("LEFT JOIN public.lookup l ON l.id = p.small_uom_id").
+		Order("p.name asc").
+		Offset(offset).
+		Limit(limit).
+		Scan(&prodRows).Error
+
+	if errQuery != nil {
+		return res, errQuery
+	}
+
+	// 3. Extract product IDs and query latest receive price per (product_id, supplier_id)
+	var prodIDs []int64
+	for _, p := range prodRows {
+		prodIDs = append(prodIDs, p.ID)
+	}
+
+	type LatestPriceQuery struct {
+		ProductID   int64     `gorm:"column:product_id"`
+		SupplierID  int64     `gorm:"column:supplier_id"`
+		Price       float32   `gorm:"column:price"`
+		Disc1       float32   `gorm:"column:disc1"`
+		Disc2       float32   `gorm:"column:disc2"`
+		Tax         float32   `gorm:"column:tax"`
+		NetPrice    float32   `gorm:"column:net_price"`
+		ReceiveDate time.Time `gorm:"column:receive_date"`
+		ReceiveNo   string    `gorm:"column:receive_no"`
+	}
+
+	var priceRows []LatestPriceQuery
+
+	if len(prodIDs) > 0 {
+		rawSQL := `
+		WITH latest_receive AS (
+			SELECT 
+				rd.product_id,
+				r.supplier_id,
+				rd.price,
+				COALESCE(rd.disc1, 0) AS disc1,
+				COALESCE(rd.disc2, 0) AS disc2,
+				COALESCE(r.tax, 0) AS tax,
+				(rd.price * (1 - COALESCE(rd.disc1, 0) / 100.0) * (1 - COALESCE(rd.disc2, 0) / 100.0) * (1 + COALESCE(r.tax, 0) / 100.0)) AS net_price,
+				r.receive_date,
+				r.receive_no,
+				ROW_NUMBER() OVER (
+					PARTITION BY rd.product_id, r.supplier_id 
+					ORDER BY rd.id DESC
+				) AS rn
+			FROM public.receive_detail rd
+			JOIN public.receive r ON r.id = rd.receive_id
+			WHERE r.status = 20
+			  AND rd.product_id IN (?)
+		)
+		SELECT product_id, supplier_id, price, disc1, disc2, tax, net_price, receive_date, receive_no 
+		FROM latest_receive 
+		WHERE rn = 1;
+		`
+		_ = db.Raw(rawSQL, prodIDs).Scan(&priceRows).Error
+	}
+
+	productPriceMap := make(map[int64]map[int64]dto.PriceDetailDto)
+	for _, pr := range priceRows {
+		if _, exists := productPriceMap[pr.ProductID]; !exists {
+			productPriceMap[pr.ProductID] = make(map[int64]dto.PriceDetailDto)
+		}
+		productPriceMap[pr.ProductID][pr.SupplierID] = dto.PriceDetailDto{
+			NetPrice:    pr.NetPrice,
+			Price:       pr.Price,
+			Disc1:       pr.Disc1,
+			Disc2:       pr.Disc2,
+			Tax:         pr.Tax,
+			ReceiveDate: pr.ReceiveDate,
+			ReceiveNo:   pr.ReceiveNo,
+		}
+	}
+
+	// 4. Assemble product matrix rows
+	var products []dto.ProductMatrixRowDto
+	for _, p := range prodRows {
+		row := dto.ProductMatrixRowDto{
+			ProductID:   p.ID,
+			ProductCode: p.Code,
+			ProductName: p.Name,
+			UomName:     p.UomName,
+			Prices:      make(map[int64]dto.PriceDetailDto),
+		}
+		if priceMap, ok := productPriceMap[p.ID]; ok {
+			row.Prices = priceMap
+		}
+		products = append(products, row)
+	}
+
+	res.Products = products
+	return res, nil
+}
+

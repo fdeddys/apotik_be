@@ -194,6 +194,10 @@ INSERT INTO public.pelanggan (tgl_masuk, nama, instansi, no_str, profesi, no_hp)
     ('2026-07-07 00:00:00', 'VICTORIA ANGELICA NURLITA', NULL, NULL, 'AKPER YATNA YUANA', '87770522213'),
     ('2026-07-08 00:00:00', 'EVI SUNANDAR', 'RS ADJIDARMO', 'RS00000595122472', 'PERAWAT', '87717777748');
 
+-- Update ID 1 of pelanggan to CASH as the default value
+UPDATE public.pelanggan SET nama = 'CASH', profesi = 'UMUM', instansi = NULL, no_str = NULL, no_hp = NULL, tgl_masuk = NULL WHERE id = 1;
+
+
 
 INSERT INTO public.m_menus(
 	name, description, link, parent_id, status, icon, ordering)
@@ -204,9 +208,21 @@ INSERT INTO public.m_role_menu (role_id, menu_id, status, last_update_by, last_u
 SELECT id, (SELECT id FROM public.m_menus WHERE name = 'pelanggan'), 0, 'system', CURRENT_TIMESTAMP
 FROM public.m_roles;
 
--- Add relation to pelanggan in table po
-ALTER TABLE public.po ADD COLUMN pelanggan_id int8 NULL;
-ALTER TABLE public.po ADD CONSTRAINT fk_po_pelanggan FOREIGN KEY (pelanggan_id) REFERENCES public.pelanggan(id);
+-- remove pelanggan from po and add pelanggan from sales order
+-- ALTER TABLE public.po ADD COLUMN pelanggan_id int8 NULL;
+-- ALTER TABLE public.po ADD CONSTRAINT fk_po_pelanggan FOREIGN KEY (pelanggan_id) REFERENCES public.pelanggan(id);
+
+-- Add relation to pelanggan in table sales_order
+ALTER TABLE public.sales_order ADD COLUMN pelanggan_id int8 NOT NULL DEFAULT 1;
+ALTER TABLE public.sales_order ADD CONSTRAINT fk_sales_order_pelanggan FOREIGN KEY (pelanggan_id) REFERENCES public.pelanggan(id);
+
+-- CEK DULU --
+-- UPDATE public.sales_order SET pelanggan_id = 1 WHERE pelanggan_id IS NULL;
+-- 3. Set default value kolom pelanggan_id ke 1
+-- ALTER TABLE public.sales_order ALTER COLUMN pelanggan_id SET DEFAULT 1;
+-- 4. Ubah kolom pelanggan_id menjadi NOT NULL
+-- ALTER TABLE public.sales_order ALTER COLUMN pelanggan_id SET NOT NULL;
+
 
 -- Add type_po column to table po
 ALTER TABLE public.po ADD COLUMN type_po varchar(1) DEFAULT '0';
@@ -235,3 +251,13 @@ SELECT 1, id, 1, 'system', CURRENT_DATE FROM public.m_menus WHERE name='proses-m
 
 -- Alter table product to add sediaan_id column
 ALTER TABLE public.product ADD COLUMN sediaan_id bigint DEFAULT 35;
+
+-- Register dynamic menu item for purchase-price-history
+INSERT INTO public.m_menus (name, description, link, parent_id, status, icon, ordering)
+VALUES ('purchase-price-history', 'Cek Harga Beli', 'purchase-price-history', 4, 1, 'fa fa-history', 450);
+
+INSERT INTO public.m_role_menu (role_id, menu_id, status, last_update_by, last_update)
+SELECT r.id, m.id, 1, 'system', CURRENT_DATE 
+FROM public.m_roles r 
+CROSS JOIN public.m_menus m 
+WHERE m.name = 'purchase-price-history';

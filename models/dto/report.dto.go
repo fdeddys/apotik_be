@@ -19,9 +19,10 @@ type FilterReportDate struct {
 }
 
 type ReportSales struct {
-	OrderDate    string
-	SalesOrderNo string
-	Status       string
+	OrderDate     string
+	SalesOrderNo  string
+	PelangganName string
+	Status        string
 	Plu          string
 	ProductName  string
 	QtyOrder     int64

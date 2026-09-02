@@ -116,14 +116,15 @@ func ExportToExcelReportSales(reportSales []dto.ReportSales, dateStart, dateEnd,
 	xls.SetCellValue(sheet1Name, fmt.Sprintf("A%d", no), "No")
 	xls.SetCellValue(sheet1Name, fmt.Sprintf("B%d", no), "OrderDate")
 	xls.SetCellValue(sheet1Name, fmt.Sprintf("C%d", no), "SalesOrderNo")
-	xls.SetCellValue(sheet1Name, fmt.Sprintf("D%d", no), "Status")
-	xls.SetCellValue(sheet1Name, fmt.Sprintf("E%d", no), "PLU")
-	xls.SetCellValue(sheet1Name, fmt.Sprintf("F%d", no), "ProductName")
-	xls.SetCellValue(sheet1Name, fmt.Sprintf("G%d", no), "QtyOrder")
-	xls.SetCellValue(sheet1Name, fmt.Sprintf("H%d", no), "Uom")
-	xls.SetCellValue(sheet1Name, fmt.Sprintf("I%d", no), "Price")
-	xls.SetCellValue(sheet1Name, fmt.Sprintf("J%d", no), "Disc1")
-	xls.SetCellValue(sheet1Name, fmt.Sprintf("K%d", no), "Final Price")
+	xls.SetCellValue(sheet1Name, fmt.Sprintf("D%d", no), "PelangganName")
+	xls.SetCellValue(sheet1Name, fmt.Sprintf("E%d", no), "Status")
+	xls.SetCellValue(sheet1Name, fmt.Sprintf("F%d", no), "PLU")
+	xls.SetCellValue(sheet1Name, fmt.Sprintf("G%d", no), "ProductName")
+	xls.SetCellValue(sheet1Name, fmt.Sprintf("H%d", no), "QtyOrder")
+	xls.SetCellValue(sheet1Name, fmt.Sprintf("I%d", no), "Uom")
+	xls.SetCellValue(sheet1Name, fmt.Sprintf("J%d", no), "Price")
+	xls.SetCellValue(sheet1Name, fmt.Sprintf("K%d", no), "Disc1")
+	xls.SetCellValue(sheet1Name, fmt.Sprintf("L%d", no), "Final Price")
 	urut := 0
 	for _, rs := range reportSales {
 		no++
@@ -131,17 +132,18 @@ func ExportToExcelReportSales(reportSales []dto.ReportSales, dateStart, dateEnd,
 		xls.SetCellValue(sheet1Name, fmt.Sprintf("A%d", no), urut)
 		xls.SetCellValue(sheet1Name, fmt.Sprintf("B%d", no), rs.OrderDate)
 		xls.SetCellValue(sheet1Name, fmt.Sprintf("C%d", no), rs.SalesOrderNo)
-		xls.SetCellValue(sheet1Name, fmt.Sprintf("D%d", no), rs.Status)
-		xls.SetCellValue(sheet1Name, fmt.Sprintf("E%d", no), rs.Plu)
-		xls.SetCellValue(sheet1Name, fmt.Sprintf("F%d", no), rs.ProductName)
-		xls.SetCellValue(sheet1Name, fmt.Sprintf("G%d", no), rs.QtyOrder)
-		xls.SetCellValue(sheet1Name, fmt.Sprintf("H%d", no), rs.Uom)
-		xls.SetCellValue(sheet1Name, fmt.Sprintf("I%d", no), rs.Price)
-		xls.SetCellValue(sheet1Name, fmt.Sprintf("J%d", no), rs.Disc1)
+		xls.SetCellValue(sheet1Name, fmt.Sprintf("D%d", no), rs.PelangganName)
+		xls.SetCellValue(sheet1Name, fmt.Sprintf("E%d", no), rs.Status)
+		xls.SetCellValue(sheet1Name, fmt.Sprintf("F%d", no), rs.Plu)
+		xls.SetCellValue(sheet1Name, fmt.Sprintf("G%d", no), rs.ProductName)
+		xls.SetCellValue(sheet1Name, fmt.Sprintf("H%d", no), rs.QtyOrder)
+		xls.SetCellValue(sheet1Name, fmt.Sprintf("I%d", no), rs.Uom)
+		xls.SetCellValue(sheet1Name, fmt.Sprintf("J%d", no), rs.Price)
+		xls.SetCellValue(sheet1Name, fmt.Sprintf("K%d", no), rs.Disc1)
 		total := rs.QtyOrder * rs.Price
 		disc := total * rs.Disc1 / 100
 		finalPrice := total - disc
-		xls.SetCellValue(sheet1Name, fmt.Sprintf("K%d", no), finalPrice)
+		xls.SetCellValue(sheet1Name, fmt.Sprintf("L%d", no), finalPrice)
 
 	}
 

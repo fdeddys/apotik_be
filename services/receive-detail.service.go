@@ -135,3 +135,42 @@ func (r ReceiveDetailService) GetDataPriceProduct(productId int64) models.Respon
 
 	return res
 }
+
+// GetPurchasePriceHistory ...
+func (r ReceiveDetailService) GetPurchasePriceHistory(param dto.FilterPurchasePrice, page int, limit int) models.ResponsePagination {
+	var res models.ResponsePagination
+
+	offset := (page - 1) * limit
+	data, totalData, err := database.GetPurchasePriceHistory(param, offset, limit)
+
+	if err != nil {
+		res.Error = err.Error()
+		return res
+	}
+
+	res.Contents = data
+	res.TotalRow = totalData
+	res.Page = page
+	res.Count = limit
+
+	return res
+}
+
+// GetPurchasePriceMatrix ...
+func (r ReceiveDetailService) GetPurchasePriceMatrix(param dto.FilterPurchasePriceMatrix, page int, limit int) dto.PurchasePriceMatrixResponse {
+	var res dto.PurchasePriceMatrixResponse
+
+	offset := (page - 1) * limit
+	data, err := database.GetPurchasePriceMatrix(param, offset, limit)
+
+	if err != nil {
+		res.Error = err.Error()
+		return res
+	}
+
+	data.Page = page
+	data.Count = limit
+
+	return data
+}
+

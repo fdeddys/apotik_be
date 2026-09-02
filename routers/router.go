@@ -236,6 +236,7 @@ func InitRouter() *gin.Engine {
 	api.DELETE("/:id", cekToken, ReceiveDetailController.DeleteByID)
 	api.POST("/deleteMulti", cekToken, ReceiveDetailController.DeleteByIDMultiple)
 	api.POST("/search-batch-expired/page/:page/count/:count", ReceiveDetailController.SearchBatchExpired)
+	api.POST("/purchase-price-history/page/:page/count/:count", cekToken, ReceiveDetailController.GetPurchasePriceHistory)
 
 	// RETURN RECEIVE
 	api = r.Group("/api/return-receive")

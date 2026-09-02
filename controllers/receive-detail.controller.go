@@ -236,3 +236,40 @@ func (r *ReceiveDetailController) GetLastPrice(c *gin.Context) {
 
 	return
 }
+
+// GetPurchasePriceHistory ...
+func (r *ReceiveDetailController) GetPurchasePriceHistory(c *gin.Context) {
+	req := dto.FilterPurchasePriceMatrix{}
+	res := dto.PurchasePriceMatrixResponse{}
+
+	page, errPage := strconv.Atoi(c.Param("page"))
+	if errPage != nil {
+		logs.Info("error", errPage)
+		res.Error = errPage.Error()
+		c.JSON(http.StatusBadRequest, res)
+		c.Abort()
+		return
+	}
+
+	count, errCount := strconv.Atoi(c.Param("count"))
+	if errCount != nil {
+		logs.Info("error", errCount)
+		res.Error = errCount.Error()
+		c.JSON(http.StatusBadRequest, res)
+		c.Abort()
+		return
+	}
+
+	body := c.Request.Body
+	dataBodyReq, _ := ioutil.ReadAll(body)
+
+	if len(dataBodyReq) > 0 {
+		if err := json.Unmarshal(dataBodyReq, &req); err != nil {
+			fmt.Println("Error, body Request unmarshal FilterPurchasePriceMatrix")
+		}
+	}
+
+	res = receiveDetailService.GetPurchasePriceMatrix(req, page, count)
+	c.JSON(http.StatusOK, res)
+}
+

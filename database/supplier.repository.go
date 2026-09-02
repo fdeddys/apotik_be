@@ -7,7 +7,7 @@ import (
 	dto "distribution-system-be/models/dto"
 	"fmt"
 	"log"
-	_ "strconv"
+	"strconv"
 	"strings"
 	"sync"
 
@@ -70,7 +70,15 @@ func AsyncQueryCountsSupplier(db *gorm.DB, total *int, param dto.FilterPaging, r
 		searchCode += param.Code + "%"
 	}
 
-	err := db.Model(&dbmodels.Supplier{}).Where("name ilike ? AND code ilike ?", searchName, searchCode).Count(&*total).Error
+	query := db.Model(&dbmodels.Supplier{}).Where("name ilike ? AND code ilike ?", searchName, searchCode)
+	if strings.TrimSpace(param.Status) != "" {
+		statusVal, err := strconv.Atoi(param.Status)
+		if err == nil {
+			query = query.Where("status = ?", statusVal)
+		}
+	}
+
+	err := query.Count(&*total).Error
 
 	if err != nil {
 		resChan <- err
@@ -90,7 +98,15 @@ func AsyncQuerysSupplier(db *gorm.DB, offset int, limit int, supplier *[]dbmodel
 		searchCode += param.Code + "%"
 	}
 
-	err := db.Preload("Bank").Order("id asc").Offset(offset).Limit(limit).Find(&supplier, "name ilike ? AND code ilike ?", searchName, searchCode).Error
+	query := db.Preload("Bank").Order("id asc").Offset(offset).Limit(limit)
+	if strings.TrimSpace(param.Status) != "" {
+		statusVal, err := strconv.Atoi(param.Status)
+		if err == nil {
+			query = query.Where("status = ?", statusVal)
+		}
+	}
+
+	err := query.Find(&supplier, "name ilike ? AND code ilike ?", searchName, searchCode).Error
 	if err != nil {
 		resChan <- err
 	}

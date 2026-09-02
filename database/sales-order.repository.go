@@ -181,7 +181,7 @@ func GetOrderByOrderNo(orderNo string) (dbmodels.SalesOrder, error) {
 	db.Debug().LogMode(true)
 	order := dbmodels.SalesOrder{}
 
-	err := db.Preload("Customer").Where(" sales_order_no = ?  ", orderNo).First(&order).Error
+	err := db.Preload("Customer").Preload("Pelanggan").Where(" sales_order_no = ?  ", orderNo).First(&order).Error
 
 	return order, err
 
@@ -193,7 +193,7 @@ func GetSalesOrderByOrderId(orderID int64) (dbmodels.SalesOrder, error) {
 	db.Debug().LogMode(true)
 	order := dbmodels.SalesOrder{}
 
-	err := db.Preload("Customer").Preload("Salesman").Where(" id = ?  ", orderID).First(&order).Error
+	err := db.Preload("Customer").Preload("Salesman").Preload("Pelanggan").Where(" id = ?  ", orderID).First(&order).Error
 
 	return order, err
 }
@@ -206,6 +206,7 @@ func GetSalesOrderByOrderIdLockForUpdate(tx *gorm.DB, orderID int64) (dbmodels.S
 		Set("gorm:query_option", "FOR UPDATE"). // ← kunci di sini
 		Preload("Customer").
 		Preload("Salesman").
+		Preload("Pelanggan").
 		Where("id = ?", orderID).
 		First(&order).Error
 
@@ -255,7 +256,7 @@ func GetOrderPage(param dto.FilterOrder, offset, limit, internalStatus int) ([]d
 	return orders, total, nil
 }
 
-func getParam(param dto.FilterOrder, status int) (merchantCode, orderNumber string, byStatus, isCash bool) {
+func getParam(param dto.FilterOrder, status int) (merchantCode, orderNumber string, byStatus, isCash bool, pelangganName string) {
 
 	merchantCode = "%"
 
@@ -272,21 +273,36 @@ func getParam(param dto.FilterOrder, status int) (merchantCode, orderNumber stri
 	}
 
 	isCash = param.IsCash
+
+	pelangganName = param.PelangganName
+	if pelangganName == "" {
+		pelangganName = "%"
+	} else {
+		pelangganName = "%" + param.PelangganName + "%"
+	}
 	return
 }
 
 // AsyncQueryCountsOrders ...
 func AsyncQueryCountsOrders(db *gorm.DB, total *int, status int, orders *[]dbmodels.SalesOrder, param dto.FilterOrder, resChan chan error) {
 
-	merchantCode, orderNumber, byStatus, isCash := getParam(param, status)
+	merchantCode, orderNumber, byStatus, isCash, pelangganName := getParam(param, status)
 
 	fmt.Println("ISI MERCHANT ", merchantCode, " orderNumber ", orderNumber, "  status ", status, " fill status ", byStatus, "  Is Cash : ", isCash)
 
 	var err error
-	if strings.TrimSpace(param.StartDate) != "" && strings.TrimSpace(param.EndDate) != "" {
-		err = db.Model(&orders).Where(" ( (status = ?) or ( not ?) ) AND  COALESCE(sales_order_no, '') ilike ? AND order_date between ? and ?  and is_cash = ? ", status, byStatus, orderNumber, param.StartDate, param.EndDate, isCash).Count(&*total).Error
+	q := db.Model(&orders)
+
+	if pelangganName == "%" {
+		q = q.Joins("left join public.pelanggan on public.pelanggan.id = sales_order.pelanggan_id")
 	} else {
-		err = db.Model(&orders).Where(" ( (status = ?) or ( not ?) ) AND COALESCE(sales_order_no,'') ilike ? and is_cash = ?", status, byStatus, orderNumber, isCash).Count(&*total).Error
+		q = q.Joins("inner join public.pelanggan on public.pelanggan.id = sales_order.pelanggan_id and public.pelanggan.nama ilike ? ", pelangganName)
+	}
+
+	if strings.TrimSpace(param.StartDate) != "" && strings.TrimSpace(param.EndDate) != "" {
+		err = q.Where(" ( (sales_order.status = ?) or ( not ?) ) AND  COALESCE(sales_order_no, '') ilike ? AND order_date between ? and ?  and is_cash = ? ", status, byStatus, orderNumber, param.StartDate, param.EndDate, isCash).Count(&*total).Error
+	} else {
+		err = q.Where(" ( (sales_order.status = ?) or ( not ?) ) AND COALESCE(sales_order_no,'') ilike ? and is_cash = ?", status, byStatus, orderNumber, isCash).Count(&*total).Error
 	}
 
 	if err != nil {
@@ -300,17 +316,25 @@ func AsyncQuerysOrders(db *gorm.DB, offset int, limit int, status int, orders *[
 
 	var err error
 
-	merchantCode, orderNumber, byStatus, isCash := getParam(param, status)
+	merchantCode, orderNumber, byStatus, isCash, pelangganName := getParam(param, status)
 
 	fmt.Println("ISI MERCHANT ", merchantCode, " order no ", orderNumber, "  status ", status, " fill status ", byStatus)
+
+	q := db.Offset(offset).Limit(limit).Preload("Customer").Preload("Salesman").Preload("Pelanggan").Order("sales_order.id DESC")
+
+	if pelangganName == "%" {
+		q = q.Joins("left join public.pelanggan on public.pelanggan.id = sales_order.pelanggan_id")
+	} else {
+		q = q.Joins("inner join public.pelanggan on public.pelanggan.id = sales_order.pelanggan_id and public.pelanggan.nama ilike ? ", pelangganName)
+	}
 
 	fmt.Println("isi dari filter [", param, "] ")
 	if strings.TrimSpace(param.StartDate) != "" && strings.TrimSpace(param.EndDate) != "" {
 		fmt.Println("isi dari filter [", param.StartDate, '-', param.EndDate, "] ")
-		err = db.Preload("Customer").Preload("Salesman").Order("id DESC").Offset(offset).Limit(limit).Find(&orders, " ( ( status = ?) or ( not ?) ) AND COALESCE(sales_order_no, '') ilike ? AND order_date between ? and ?  and is_cash = ? ", status, byStatus, orderNumber, param.StartDate, param.EndDate, isCash).Error
+		err = q.Find(&orders, " ( ( sales_order.status = ?) or ( not ?) ) AND COALESCE(sales_order_no, '') ilike ? AND order_date between ? and ?  and is_cash = ? ", status, byStatus, orderNumber, param.StartDate, param.EndDate, isCash).Error
 	} else {
 		fmt.Println("isi dari kosong ")
-		err = db.Offset(offset).Limit(limit).Preload("Customer").Preload("Salesman").Order("id DESC").Find(&orders, " ( ( status = ?) or ( not ?) ) AND COALESCE(sales_order_no,'') ilike ?  and is_cash = ? ", status, byStatus, orderNumber, isCash).Error
+		err = q.Find(&orders, " ( ( sales_order.status = ?) or ( not ?) ) AND COALESCE(sales_order_no,'') ilike ?  and is_cash = ? ", status, byStatus, orderNumber, isCash).Error
 		if err != nil {
 			fmt.Println("error --> ", err)
 		}
@@ -332,7 +356,7 @@ func GetSalesOrderForPayment(param dto.FilterOrder, offset, limit int) ([]dbmode
 	var total int
 
 	total = 0
-	err := db.Offset(offset).Limit(limit).Preload("Customer").Preload("Salesman").Order("order_date DESC").Find(&orders, "  ( status  in ('20','40') ) AND (is_paid is null or is_paid = false) AND customer_id = ? ", param.CustomerID).Error
+	err := db.Offset(offset).Limit(limit).Preload("Customer").Preload("Salesman").Preload("Pelanggan").Order("order_date DESC").Find(&orders, "  ( status  in ('20','40') ) AND (is_paid is null or is_paid = false) AND customer_id = ? ", param.CustomerID).Error
 
 	if err != nil {
 		return orders, total, err

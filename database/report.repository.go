@@ -43,7 +43,7 @@ func ReportSalesByDate(dateStart, dateEnd string) []dto.ReportSales {
 	var datas []dto.ReportSales
 
 	db.Raw("select "+
-		" to_char(so.order_date , 'DD/Mon/YYYY') as order_date , so.sales_order_no , "+
+		" to_char(so.order_date , 'DD/Mon/YYYY') as order_date , so.sales_order_no , pl.nama as pelanggan_name , "+
 		" ( case  "+
 		"      when so.status = 0 or so.status = 1 or so.status = 10   then 'Outstanding' "+
 		"      when  so.status = 20 then 'Submit' "+
@@ -58,6 +58,7 @@ func ReportSalesByDate(dateStart, dateEnd string) []dto.ReportSales {
 		" inner join sales_order_detail sod on sod.sales_order_id = so.id "+
 		" left join product p on sod.product_id = p.id "+
 		" left join lookup l on l.id = sod.uom  "+
+		" left join pelanggan pl on pl.id = so.pelanggan_id "+
 		" where so.order_date between ?  and ?  "+
 		" and so.status in (20, 50)"+
 		" order by so.order_date, so.sales_order_no ", dateStart, dateEnd).Scan(&datas)

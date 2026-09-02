@@ -58,8 +58,9 @@ type LoginResponseDto struct {
 
 // FilterPaging ...
 type FilterPaging struct {
-	Name string `json:"name"`
-	Code string `json:"code"`
+	Name   string `json:"name"`
+	Code   string `json:"code"`
+	Status string `json:"status"`
 }
 
 // FilterMerchant ...

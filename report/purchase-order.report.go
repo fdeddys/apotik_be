@@ -132,6 +132,10 @@ func GeneratePurchaseOrderReport(purchaseOrderID int64) {
 		pdf.Br(20)
 
 		setDetail(&pdf, dataDetails, description)
+		// if showOttDesc {
+		setDetailOTT(&pdf, description)
+		// setSign(pdf, "", "", "Apoteker")
+		// }
 		setSign(&pdf, "", "", "Apoteker")
 	}
 
